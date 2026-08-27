@@ -1,0 +1,104 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "Male",
+        "Female",
+        "Non-Binary",
+        "Two-Spirit",
+        "Prefer Not to Say"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Inactive",
+        "Pending Intake",
+        "Closed",
+        "Referred"
+      ],
+      "default": "Pending Intake"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "province": {
+      "type": "string",
+      "default": "Saskatchewan"
+    },
+    "postal_code": {
+      "type": "string"
+    },
+    "indigenous_identity": {
+      "type": "string",
+      "enum": [
+        "First Nations",
+        "M\u00e9tis",
+        "Inuit",
+        "Non-Indigenous",
+        "Prefer Not to Say"
+      ]
+    },
+    "band_nation": {
+      "type": "string"
+    },
+    "treaty_number": {
+      "type": "string"
+    },
+    "emergency_contact_name": {
+      "type": "string"
+    },
+    "emergency_contact_phone": {
+      "type": "string"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Low"
+    },
+    "assigned_worker_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "family_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name"
+  ]
+}

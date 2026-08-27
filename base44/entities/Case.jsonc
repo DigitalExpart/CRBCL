@@ -1,0 +1,121 @@
+{
+  "name": "Case",
+  "type": "object",
+  "properties": {
+    "case_number": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "family_id": {
+      "type": "string"
+    },
+    "case_type": {
+      "type": "string",
+      "enum": [
+        "Child Protection",
+        "Family Support",
+        "Youth Services",
+        "Mental Health",
+        "Housing",
+        "Cultural",
+        "Crisis Intervention",
+        "Prevention",
+        "Other"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Open",
+        "In Progress",
+        "Under Review",
+        "Pending",
+        "Closed",
+        "Escalated"
+      ],
+      "default": "Open"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Urgent",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Low"
+    },
+    "assigned_worker_id": {
+      "type": "string"
+    },
+    "assigned_worker_name": {
+      "type": "string"
+    },
+    "intake_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "target_resolution_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "closed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "description": {
+      "type": "string"
+    },
+    "service_plan": {
+      "type": "string"
+    },
+    "interventions": {
+      "type": "string"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "referral_source": {
+      "type": "string",
+      "enum": [
+        "Self-Referral",
+        "Family",
+        "School",
+        "Healthcare",
+        "Law Enforcement",
+        "Government Agency",
+        "Community",
+        "Other"
+      ]
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "case_type"
+  ]
+}

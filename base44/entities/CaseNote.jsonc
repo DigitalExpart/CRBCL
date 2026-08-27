@@ -1,0 +1,48 @@
+{
+  "name": "CaseNote",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "note_type": {
+      "type": "string",
+      "enum": [
+        "Progress Note",
+        "Contact Note",
+        "Assessment",
+        "Incident Report",
+        "Court Report",
+        "Meeting Summary",
+        "General"
+      ],
+      "default": "General"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "is_confidential": {
+      "type": "boolean",
+      "default": false
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "case_id",
+    "content"
+  ]
+}
