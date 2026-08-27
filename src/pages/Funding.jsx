@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,13 +24,13 @@ export default function Funding() {
   const [form, setForm] = useState({ name: "", funder: "", grant_type: "Federal", amount: 0, status: "Applied", start_date: "", end_date: "", reporting_deadline: "", program_area: "", description: "", contact_name: "", contact_email: "" });
   const [saving, setSaving] = useState(false);
 
-  const load = async () => { setLoading(true); setGrants(await base44.entities.FundingGrant.list("-created_date", 50)); setLoading(false); };
+  const load = async () => { setLoading(true); setGrants(await api.entities.FundingGrant.list("-created_date", 50)); setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.FundingGrant.create(form);
+    await api.entities.FundingGrant.create(form);
     setSaving(false);
     setShowForm(false);
     load();
@@ -48,7 +48,7 @@ export default function Funding() {
         <div className="flex items-center gap-2">
           <ImportExport data={filtered} filename="grants" exportFields={GRANT_EXPORT_FIELDS} fieldLabels={GRANT_LABELS} onImport={async (rows) => {
             for (const row of rows) {
-              if (row.name && row.funder) await base44.entities.FundingGrant.create({ status: "Applied", grant_type: "Federal", ...row, amount: parseFloat(row.amount) || 0 });
+              if (row.name && row.funder) await api.entities.FundingGrant.create({ status: "Applied", grant_type: "Federal", ...row, amount: parseFloat(row.amount) || 0 });
             }
             load();
           }} />

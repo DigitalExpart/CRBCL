@@ -1,16 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { appParams } from "@/lib/app-params";
+import { appParams } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 
-// App-side OAuth consent page for the app's MCP server. The platform redirects
-// AI clients here (see base44/mcp/config.json `consent_path`) with an opaque
-// `ctx` handle — the authorization request itself lives on the server. This page
-// gates on the app-user session, fetches the display info for that handle, shows
-// the categories of access being granted, and posts the approve/deny decision.
-// Do not change the fetch calls, headers, or the `ctx` handle handling — styling
-// and copy are safe to edit.
+// OAuth consent page for authorization requests
 export default function OAuthConsent() {
   const ctx = new URLSearchParams(window.location.search).get("ctx");
   const [info, setInfo] = useState(null);
@@ -28,12 +22,6 @@ export default function OAuthConsent() {
           setError("This authorization link is invalid or has expired.");
           return;
         }
-        // Resolve the handle first: a dead handle must never render
-        // approve/deny, and the response carries the app's configured login
-        // route for the signed-out redirect below. Send the session (cookie +
-        // bearer token) so the server can list the granted tools for a
-        // signed-in user — the same auth the approve/deny call sends; without
-        // it the display request is anonymous and shows no tools.
         /** @type {Record<string, string>} */
         const infoHeaders = {};
         if (appParams.token) infoHeaders.Authorization = "Bearer " + appParams.token;
@@ -46,12 +34,6 @@ export default function OAuthConsent() {
           return;
         }
         const data = await res.json();
-        // Gate on the server's auth result, NOT base44.auth.isAuthenticated():
-        // the SDK check runs the bearer path, so a cookie-only session (platform
-        // login/SSO, or a private app with a stale localStorage token) would read
-        // as signed-out and redirect — even though /consent-info just
-        // authenticated this same request via its cookie fallback. data.authenticated
-        // keeps the redirect decision in agreement with what the server returned.
         if (!data.authenticated) {
           // The short handle rides back in returnTo; login_path is
           // owner-configured and validated server-side as a same-origin path.

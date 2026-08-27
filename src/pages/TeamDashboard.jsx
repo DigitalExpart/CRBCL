@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { useParams, Link } from "react-router-dom";
 import { ChevronLeft, FolderOpen, Users, Heart, AlertTriangle, Calendar, BookOpen, DollarSign, UserCog, Clock, TrendingUp, Lock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -47,7 +47,7 @@ export default function TeamDashboard() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const hasAccess = currentUser?.role === "admin" ||
@@ -58,15 +58,15 @@ export default function TeamDashboard() {
     if (!currentUser || !hasAccess) return;
     async function load() {
       const fetches = {};
-      if (focus.cases)       fetches.cases       = base44.entities.Case.list("-created_date", 100);
-      if (focus.clients)     fetches.clients     = base44.entities.Client.list("-created_date", 100);
-      if (focus.families)    fetches.families    = base44.entities.Family.list("-created_date", 100);
-      if (focus.programs)    fetches.programs    = base44.entities.Program.list("-created_date", 100);
-      if (focus.funding)     fetches.funding     = base44.entities.FundingGrant.list("-created_date", 50);
-      if (focus.donations)   fetches.donations   = base44.entities.Donation.list("-created_date", 50);
-      if (focus.employees)   fetches.employees   = base44.entities.Employee.list("-created_date", 100);
-      if (focus.incidents)   fetches.incidents   = base44.entities.Incident.list("-created_date", 50);
-      if (focus.appointments) fetches.appointments = base44.entities.Appointment.list("-created_date", 50);
+      if (focus.cases)       fetches.cases       = api.entities.Case.list("-created_date", 100);
+      if (focus.clients)     fetches.clients     = api.entities.Client.list("-created_date", 100);
+      if (focus.families)    fetches.families    = api.entities.Family.list("-created_date", 100);
+      if (focus.programs)    fetches.programs    = api.entities.Program.list("-created_date", 100);
+      if (focus.funding)     fetches.funding     = api.entities.FundingGrant.list("-created_date", 50);
+      if (focus.donations)   fetches.donations   = api.entities.Donation.list("-created_date", 50);
+      if (focus.employees)   fetches.employees   = api.entities.Employee.list("-created_date", 100);
+      if (focus.incidents)   fetches.incidents   = api.entities.Incident.list("-created_date", 50);
+      if (focus.appointments) fetches.appointments = api.entities.Appointment.list("-created_date", 50);
 
       const keys = Object.keys(fetches);
       const results = await Promise.all(Object.values(fetches));

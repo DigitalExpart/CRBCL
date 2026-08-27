@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +22,13 @@ export default function Programs() {
   const [form, setForm] = useState({ name: "", category: "Youth Services", status: "Active", description: "", capacity: 0, enrolled_count: 0, location: "", coordinator_name: "", budget: 0, funding_source: "" });
   const [saving, setSaving] = useState(false);
 
-  const load = async () => { setLoading(true); setPrograms(await base44.entities.Program.list("-created_date", 50)); setLoading(false); };
+  const load = async () => { setLoading(true); setPrograms(await api.entities.Program.list("-created_date", 50)); setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.Program.create(form);
+    await api.entities.Program.create(form);
     setSaving(false);
     setShowForm(false);
     load();

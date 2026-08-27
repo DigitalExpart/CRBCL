@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Link } from "react-router-dom";
 import { 
   FolderOpen, Users, Heart, BookOpen, DollarSign, Gift,
@@ -20,14 +20,14 @@ export default function Dashboard() {
     async function load() {
       try {
         const [cases, clients, families, programs, donations, funding, incidents, appointments] = await Promise.all([
-          base44.entities.Case.list("-created_date", 50),
-          base44.entities.Client.list("-created_date", 50),
-          base44.entities.Family.list("-created_date", 50),
-          base44.entities.Program.list("-created_date", 50),
-          base44.entities.Donation.list("-created_date", 50),
-          base44.entities.FundingGrant.list("-created_date", 50),
-          base44.entities.Incident.list("-created_date", 50),
-          base44.entities.Appointment.list("-created_date", 50),
+          api.entities.Case.list("-created_date", 50),
+          api.entities.Client.list("-created_date", 50),
+          api.entities.Family.list("-created_date", 50),
+          api.entities.Program.list("-created_date", 50),
+          api.entities.Donation.list("-created_date", 50),
+          api.entities.FundingGrant.list("-created_date", 50),
+          api.entities.Incident.list("-created_date", 50),
+          api.entities.Appointment.list("-created_date", 50),
         ]);
         setStats({ cases, clients, families, programs, donations, funding, incidents, appointments });
       } catch (e) { /* empty state */ }

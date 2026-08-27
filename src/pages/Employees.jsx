@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,12 +24,12 @@ export default function Employees() {
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", position: "", department: "Administration", status: "Active", hire_date: "", supervisor_name: "" });
   const [saving, setSaving] = useState(false);
 
-  const load = async () => { setLoading(true); setEmployees(await base44.entities.Employee.list("-created_date", 50)); setLoading(false); };
+  const load = async () => { setLoading(true); setEmployees(await api.entities.Employee.list("-created_date", 50)); setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleImport = async (rows) => {
     for (const row of rows) {
-      if (row.first_name && row.last_name && row.position) await base44.entities.Employee.create({ status: "Active", department: "Administration", ...row });
+      if (row.first_name && row.last_name && row.position) await api.entities.Employee.create({ status: "Active", department: "Administration", ...row });
     }
     load();
   };
@@ -37,7 +37,7 @@ export default function Employees() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.Employee.create(form);
+    await api.entities.Employee.create(form);
     setSaving(false);
     setShowForm(false);
     load();

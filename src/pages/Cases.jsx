@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Link } from "react-router-dom";
 import { Plus, Search, Filter, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ export default function Cases() {
 
   const load = async () => {
     setLoading(true);
-    const data = await base44.entities.Case.list("-created_date", 50);
+    const data = await api.entities.Case.list("-created_date", 50);
     setCases(data);
     setLoading(false);
   };
@@ -32,7 +32,7 @@ export default function Cases() {
 
   const handleCreate = async (form) => {
     const caseNum = `CRB-${Date.now().toString().slice(-6)}`;
-    await base44.entities.Case.create({ ...form, case_number: caseNum, status: "Open" });
+    await api.entities.Case.create({ ...form, case_number: caseNum, status: "Open" });
     load();
   };
 
@@ -60,7 +60,7 @@ export default function Cases() {
               fieldLabels={CASE_LABELS}
               onImport={async (rows) => {
                 for (const row of rows) {
-                  if (row.title) await base44.entities.Case.create({ ...row, case_number: row.case_number || `CRB-${Date.now().toString().slice(-6)}`, status: row.status || "Open" });
+                  if (row.title) await api.entities.Case.create({ ...row, case_number: row.case_number || `CRB-${Date.now().toString().slice(-6)}`, status: row.status || "Open" });
                 }
                 load();
               }}

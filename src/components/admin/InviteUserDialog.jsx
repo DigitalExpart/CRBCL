@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Loader2, UserPlus, Mail, Lock } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
 import { toast } from "@/components/ui/use-toast";
 
@@ -41,10 +41,10 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
 
   const assignRoleAndTeam = async () => {
     try {
-      const users = await base44.entities.User.list();
+      const users = await api.entities.User.list();
       const newUser = users.find((u) => u.email === email.trim());
       if (newUser) {
-        await base44.entities.User.update(newUser.id, { role, team_access: teamAccess });
+        await api.entities.User.update(newUser.id, { role, team_access: teamAccess });
       }
     } catch (err) {
       console.warn("Could not assign role/team:", err);
@@ -65,7 +65,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
     setLoading(true);
     setError("");
     try {
-      await base44.auth.register({ email: email.trim(), password });
+      await api.auth.register({ email: email.trim(), password });
       setStep("otp");
       toast({ title: "Verification code sent", description: `A code was sent to ${email.trim()}` });
     } catch (err) {
@@ -80,7 +80,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
     setLoading(true);
     setError("");
     try {
-      await base44.auth.verifyOtp({ email: email.trim(), otpCode });
+      await api.auth.verifyOtp({ email: email.trim(), otpCode });
       await assignRoleAndTeam();
       if (onInvited) onInvited();
       toast({ title: "Account created", description: `${email.trim()} is verified and ready to log in.` });
@@ -107,7 +107,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
 
   const handleResend = async () => {
     try {
-      await base44.auth.resendOtp(email.trim());
+      await api.auth.resendOtp(email.trim());
       toast({ title: "Code sent", description: "A new verification code was sent." });
     } catch (err) {
       setError(err.message || "Failed to resend code");

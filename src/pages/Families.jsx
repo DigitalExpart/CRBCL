@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ export default function Families() {
 
   const load = async () => {
     setLoading(true);
-    setFamilies(await base44.entities.Family.list("-created_date", 50));
+    setFamilies(await api.entities.Family.list("-created_date", 50));
     setLoading(false);
   };
 
@@ -30,7 +30,7 @@ export default function Families() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.Family.create(form);
+    await api.entities.Family.create(form);
     setSaving(false);
     setShowForm(false);
     load();

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
 
 export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {
@@ -25,7 +25,7 @@ export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {
     setLoading(true);
     setError("");
     try {
-      await base44.entities.User.update(user.id, { role, team_access: teamAccess });
+      await api.entities.User.update(user.id, { role, team_access: teamAccess });
       if (onSaved) onSaved();
       onOpenChange(false);
     } catch (err) {

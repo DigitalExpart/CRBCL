@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, UserPlus, Search, Shield, Users as UsersIcon, Pencil, Ban } from "lucide-react";
@@ -21,7 +21,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const list = await base44.entities.User.list();
+      const list = await api.entities.User.list();
       setUsers(list);
     } catch (err) {
       setError(err.response?.data?.detail || err.message || "Failed to load users.");

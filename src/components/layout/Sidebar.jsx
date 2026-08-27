@@ -6,7 +6,7 @@ import {
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
   Shield, LogOut, Menu, X, LayoutGrid
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/" },
@@ -32,11 +32,11 @@ export default function Sidebar() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   React.useEffect(() => {
-    base44.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => {});
+    api.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => {});
   }, []);
 
   const handleLogout = () => {
-    base44.auth.logout("/login");
+    api.auth.logout("/login");
   };
 
   const navContent = (

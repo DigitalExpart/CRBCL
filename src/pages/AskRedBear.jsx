@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Send, Bot, User, Loader2, Sparkles, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,11 +32,11 @@ export default function AskRedBear() {
 
   const gatherContext = async () => {
     const [cases, clients, programs, funding, appointments] = await Promise.all([
-      base44.entities.Case.list("-created_date", 20),
-      base44.entities.Client.list("-created_date", 20),
-      base44.entities.Program.list("-created_date", 20),
-      base44.entities.FundingGrant.list("-created_date", 20),
-      base44.entities.Appointment.list("-date", 10),
+      api.entities.Case.list("-created_date", 20),
+      api.entities.Client.list("-created_date", 20),
+      api.entities.Program.list("-created_date", 20),
+      api.entities.FundingGrant.list("-created_date", 20),
+      api.entities.Appointment.list("-date", 10),
     ]);
 
     const activeCases = cases.filter(c => c.status !== "Closed");
@@ -69,7 +69,7 @@ export default function AskRedBear() {
 
     const context = await gatherContext();
 
-    const response = await base44.integrations.Core.InvokeLLM({
+    const response = await api.integrations.Core.InvokeLLM({
       prompt: `You are "Ask Red Bear", the AI assistant for Chief Red Bear Children's Lodge (CRBCL), an Indigenous child and family services organization in Saskatchewan, Canada.
 
 You help staff with:

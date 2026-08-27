@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,15 +23,15 @@ export default function Documents() {
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const load = async () => { setLoading(true); setDocs(await base44.entities.Document.list("-created_date", 50)); setLoading(false); };
+  const load = async () => { setLoading(true); setDocs(await api.entities.Document.list("-created_date", 50)); setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!file) return;
     setSaving(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    await base44.entities.Document.create({ ...form, file_url, file_type: file.name.split(".").pop(), file_size: `${(file.size / 1024).toFixed(1)} KB` });
+    const { file_url } = await api.integrations.Core.UploadFile({ file });
+    await api.entities.Document.create({ ...form, file_url, file_type: file.name.split(".").pop(), file_size: `${(file.size / 1024).toFixed(1)} KB` });
     setSaving(false);
     setShowForm(false);
     setFile(null);

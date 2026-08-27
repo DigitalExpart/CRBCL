@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { useNavigate } from "react-router-dom";
 import { Users, ChevronRight, Lock } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
@@ -35,7 +35,7 @@ export default function Teams() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.auth.me().then((u) => {
+    api.auth.me().then((u) => {
       setUser(u);
       setLoading(false);
     }).catch(() => setLoading(false));

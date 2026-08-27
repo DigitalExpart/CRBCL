@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,13 +23,13 @@ export default function Donations() {
   const [form, setForm] = useState({ donor_name: "", donor_email: "", donor_type: "Individual", amount: 0, donation_type: "One-Time", payment_method: "Credit Card", designation: "General Fund", status: "Completed", notes: "" });
   const [saving, setSaving] = useState(false);
 
-  const load = async () => { setLoading(true); setDonations(await base44.entities.Donation.list("-created_date", 50)); setLoading(false); };
+  const load = async () => { setLoading(true); setDonations(await api.entities.Donation.list("-created_date", 50)); setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.Donation.create(form);
+    await api.entities.Donation.create(form);
     setSaving(false);
     setShowForm(false);
     load();
@@ -46,7 +46,7 @@ export default function Donations() {
         <div className="flex items-center gap-2">
           <ImportExport data={filtered} filename="donations" exportFields={DON_EXPORT_FIELDS} fieldLabels={DON_LABELS} onImport={async (rows) => {
             for (const row of rows) {
-              if (row.donor_name && row.amount) await base44.entities.Donation.create({ status: "Completed", donor_type: "Individual", ...row, amount: parseFloat(row.amount) || 0 });
+              if (row.donor_name && row.amount) await api.entities.Donation.create({ status: "Completed", donor_type: "Individual", ...row, amount: parseFloat(row.amount) || 0 });
             }
             load();
           }} />

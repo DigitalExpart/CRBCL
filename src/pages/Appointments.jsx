@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,13 +21,13 @@ export default function Appointments() {
   const [form, setForm] = useState({ title: "", appointment_type: "Follow-Up", date: "", time: "", duration_minutes: 60, client_name: "", staff_name: "", location: "", status: "Scheduled", notes: "" });
   const [saving, setSaving] = useState(false);
 
-  const load = async () => { setLoading(true); setAppointments(await base44.entities.Appointment.list("-date", 50)); setLoading(false); };
+  const load = async () => { setLoading(true); setAppointments(await api.entities.Appointment.list("-date", 50)); setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.Appointment.create(form);
+    await api.entities.Appointment.create(form);
     setSaving(false);
     setShowForm(false);
     load();

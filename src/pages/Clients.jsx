@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ export default function Clients() {
 
   const load = async () => {
     setLoading(true);
-    setClients(await base44.entities.Client.list("-created_date", 50));
+    setClients(await api.entities.Client.list("-created_date", 50));
     setLoading(false);
   };
 
@@ -39,7 +39,7 @@ export default function Clients() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.Client.create(form);
+    await api.entities.Client.create(form);
     setSaving(false);
     setShowForm(false);
     setForm({ first_name: "", last_name: "", status: "Pending Intake", risk_level: "Low", gender: "", indigenous_identity: "", phone: "", email: "", address: "", city: "", province: "Saskatchewan", band_nation: "", notes: "" });
@@ -69,7 +69,7 @@ export default function Clients() {
               fieldLabels={CLIENT_LABELS}
               onImport={async (rows) => {
                 for (const row of rows) {
-                  if (row.first_name && row.last_name) await base44.entities.Client.create({ status: "Pending Intake", risk_level: "Low", province: "Saskatchewan", ...row });
+                  if (row.first_name && row.last_name) await api.entities.Client.create({ status: "Pending Intake", risk_level: "Low", province: "Saskatchewan", ...row });
                 }
                 load();
               }}

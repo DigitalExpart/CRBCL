@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Edit2, Trash2, Plus, FileText, Clock, AlertTriangle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,8 @@ export default function CaseDetail() {
   useEffect(() => {
     async function load() {
       const [caseItem, caseNotes] = await Promise.all([
-        base44.entities.Case.filter({ id }),
-        base44.entities.CaseNote.filter({ case_id: id }, "-created_date", 50),
+        api.entities.Case.filter({ id }),
+        api.entities.CaseNote.filter({ case_id: id }, "-created_date", 50),
       ]);
       setCaseData(caseItem[0] || null);
       setNotes(caseNotes);
@@ -35,13 +35,13 @@ export default function CaseDetail() {
   }, [id]);
 
   const handleUpdate = async (form) => {
-    await base44.entities.Case.update(id, form);
+    await api.entities.Case.update(id, form);
     setCaseData({ ...caseData, ...form });
   };
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this case?")) {
-      await base44.entities.Case.delete(id);
+      await api.entities.Case.delete(id);
       navigate("/cases");
     }
   };
@@ -49,7 +49,7 @@ export default function CaseDetail() {
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     setAddingNote(true);
-    const note = await base44.entities.CaseNote.create({
+    const note = await api.entities.CaseNote.create({
       case_id: id,
       content: newNote,
       note_type: noteType,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api";
 import { Plus, Search, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,13 +21,13 @@ export default function Incidents() {
   const [form, setForm] = useState({ title: "", incident_type: "Safety Concern", severity: "Medium", description: "", date_occurred: new Date().toISOString().split("T")[0], location: "", reported_by: "", actions_taken: "" });
   const [saving, setSaving] = useState(false);
 
-  const load = async () => { setLoading(true); setIncidents(await base44.entities.Incident.list("-created_date", 50)); setLoading(false); };
+  const load = async () => { setLoading(true); setIncidents(await api.entities.Incident.list("-created_date", 50)); setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.Incident.create({ ...form, status: "Reported" });
+    await api.entities.Incident.create({ ...form, status: "Reported" });
     setSaving(false);
     setShowForm(false);
     load();
