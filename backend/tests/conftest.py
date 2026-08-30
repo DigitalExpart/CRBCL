@@ -10,8 +10,10 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 # Set test environment
 os.environ["APP_ENV"] = "development"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-os.environ["SESSION_SECRET"] = "test-secret-key-at-least-32-chars-long-here-12345"
+if "TEST_POSTGRES_DB" not in os.environ:
+    os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+if "SESSION_SECRET" not in os.environ:
+    os.environ["SESSION_SECRET"] = "test-secret-key-at-least-32-chars-long-here-12345"
 
 # Register SQLite compilation handlers for PostgreSQL types
 @compiles(JSONB, "sqlite")
@@ -30,12 +32,12 @@ from app.models.team import Team, TeamMembership
 from app.models.user import User
 from app.permissions.constants import Permissions
 
-TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
+TEST_DB_URL = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 test_engine = create_async_engine(
     TEST_DB_URL,
     echo=False,
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False} if "sqlite" in TEST_DB_URL else {},
 )
 test_session_factory = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -46,8 +48,11 @@ def anyio_backend():
 
 
 @pytest.fixture(autouse=True)
-async def setup_database():
-    """Create all tables in memory before each test and drop after."""
+async def setup_database(request):
+    """Create all tables in memory before each test and drop after (only for SQLite unit tests)."""
+    if "test_supabase" in request.node.nodeid or os.environ.get("TEST_POSTGRES_DB"):
+        yield
+        return
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
