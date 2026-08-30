@@ -16,6 +16,13 @@ import ResetPassword from '@/pages/ResetPassword';
 // Layout
 import AppLayout from '@/components/layout/AppLayout';
 
+// Phase 3 Intake & Referrals
+import IntakeList from '@/pages/IntakeList';
+import NewIntake from '@/pages/NewIntake';
+import IntakeDetail from '@/pages/IntakeDetail';
+import IntakeDecision from '@/pages/IntakeDecision';
+import SupervisorApprovalQueue from '@/pages/SupervisorApprovalQueue';
+
 // Pages
 import Dashboard from '@/pages/Dashboard';
 import Cases from '@/pages/Cases';
@@ -69,6 +76,11 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/intake" element={<IntakeList />} />
+          <Route path="/intake/new" element={<NewIntake />} />
+          <Route path="/intake/approvals" element={<SupervisorApprovalQueue />} />
+          <Route path="/intake/:id" element={<IntakeDetail />} />
+          <Route path="/intake/:id/decision" element={<IntakeDecision />} />
           <Route path="/cases" element={<Cases />} />
           <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/clients" element={<Clients />} />

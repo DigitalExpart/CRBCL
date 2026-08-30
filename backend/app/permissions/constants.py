@@ -4,6 +4,23 @@ from enum import StrEnum
 
 
 class Permissions(StrEnum):
+    # Intake & Referral permissions (Phase 3)
+    INTAKE_READ = "intake.read"
+    INTAKE_CREATE = "intake.create"
+    INTAKE_UPDATE = "intake.update"
+    INTAKE_DELETE = "intake.delete"
+    INTAKE_ASSIGN = "intake.assign"
+    INTAKE_SUBMIT = "intake.submit"
+    INTAKE_APPROVE = "intake.approve"
+    INTAKE_RETURN = "intake.return"
+    INTAKE_REPORTER_READ = "intake.reporter.read"
+    INTAKE_REPORTER_WRITE = "intake.reporter.write"
+    INTAKE_DECISION_READ = "intake.decision.read"
+    INTAKE_DECISION_WRITE = "intake.decision.write"
+    INTAKE_HISTORY_READ = "intake.history.read"
+    INTAKE_LINK_READ = "intake.link.read"
+    INTAKE_LINK_WRITE = "intake.link.write"
+
     # Client permissions
     CLIENT_READ = "client.read"
     CLIENT_CREATE = "client.create"

@@ -113,6 +113,22 @@ ROLES_DATA = [
 
 # ── 2. Permissions Definition ────────────────────────────────
 PERMISSIONS_DATA = [
+    # Intake & Referrals (Phase 3)
+    {"key": Permissions.INTAKE_READ, "name": "Read Intake Referrals", "category": "intake"},
+    {"key": Permissions.INTAKE_CREATE, "name": "Create Intake Referrals", "category": "intake"},
+    {"key": Permissions.INTAKE_UPDATE, "name": "Update Intake Referrals", "category": "intake"},
+    {"key": Permissions.INTAKE_DELETE, "name": "Delete Intake Referrals", "category": "intake"},
+    {"key": Permissions.INTAKE_ASSIGN, "name": "Assign Intake Referrals", "category": "intake"},
+    {"key": Permissions.INTAKE_SUBMIT, "name": "Submit Intake for Supervisor Approval", "category": "intake"},
+    {"key": Permissions.INTAKE_APPROVE, "name": "Approve Intake Referrals & Dispositions", "category": "intake"},
+    {"key": Permissions.INTAKE_RETURN, "name": "Return Intake Referrals to Worker", "category": "intake"},
+    {"key": Permissions.INTAKE_REPORTER_READ, "name": "Read Confidential Reporter Details", "category": "intake"},
+    {"key": Permissions.INTAKE_REPORTER_WRITE, "name": "Write Confidential Reporter Details", "category": "intake"},
+    {"key": Permissions.INTAKE_DECISION_READ, "name": "Read Intake Decisions & Dispositions", "category": "intake"},
+    {"key": Permissions.INTAKE_DECISION_WRITE, "name": "Write Intake Decisions & Dispositions", "category": "intake"},
+    {"key": Permissions.INTAKE_HISTORY_READ, "name": "Read Prior History across Cases & Referrals", "category": "intake"},
+    {"key": Permissions.INTAKE_LINK_READ, "name": "Read Cross-Referral Links", "category": "intake"},
+    {"key": Permissions.INTAKE_LINK_WRITE, "name": "Create / Manage Cross-Referral Links", "category": "intake"},
     # Clients
     {"key": Permissions.CLIENT_READ, "name": "Read Clients", "category": "clients"},
     {"key": Permissions.CLIENT_CREATE, "name": "Create Clients", "category": "clients"},
@@ -174,6 +190,11 @@ PERMISSIONS_DATA = [
 ROLE_PERMISSIONS_MAP = {
     "executive_director": [p["key"] for p in PERMISSIONS_DATA],
     "director_manager": [
+        Permissions.INTAKE_READ, Permissions.INTAKE_CREATE, Permissions.INTAKE_UPDATE,
+        Permissions.INTAKE_ASSIGN, Permissions.INTAKE_SUBMIT, Permissions.INTAKE_APPROVE, Permissions.INTAKE_RETURN,
+        Permissions.INTAKE_REPORTER_READ, Permissions.INTAKE_REPORTER_WRITE,
+        Permissions.INTAKE_DECISION_READ, Permissions.INTAKE_DECISION_WRITE,
+        Permissions.INTAKE_HISTORY_READ, Permissions.INTAKE_LINK_READ, Permissions.INTAKE_LINK_WRITE,
         Permissions.CLIENT_READ, Permissions.CLIENT_CREATE, Permissions.CLIENT_UPDATE,
         Permissions.CLIENT_IDENTIFIERS_READ, Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ, Permissions.CLIENT_SCHOOL_READ, Permissions.CLIENT_CULTURAL_READ,
@@ -190,6 +211,11 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "supervisor": [
+        Permissions.INTAKE_READ, Permissions.INTAKE_CREATE, Permissions.INTAKE_UPDATE,
+        Permissions.INTAKE_ASSIGN, Permissions.INTAKE_SUBMIT, Permissions.INTAKE_APPROVE, Permissions.INTAKE_RETURN,
+        Permissions.INTAKE_REPORTER_READ, Permissions.INTAKE_REPORTER_WRITE,
+        Permissions.INTAKE_DECISION_READ, Permissions.INTAKE_DECISION_WRITE,
+        Permissions.INTAKE_HISTORY_READ, Permissions.INTAKE_LINK_READ, Permissions.INTAKE_LINK_WRITE,
         Permissions.CLIENT_READ, Permissions.CLIENT_CREATE, Permissions.CLIENT_UPDATE,
         Permissions.CLIENT_IDENTIFIERS_READ, Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ, Permissions.CLIENT_MEDICAL_WRITE,
@@ -207,6 +233,11 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "caseworker": [
+        Permissions.INTAKE_READ, Permissions.INTAKE_CREATE, Permissions.INTAKE_UPDATE,
+        Permissions.INTAKE_SUBMIT,
+        Permissions.INTAKE_REPORTER_READ, Permissions.INTAKE_REPORTER_WRITE,
+        Permissions.INTAKE_DECISION_READ, Permissions.INTAKE_DECISION_WRITE,
+        Permissions.INTAKE_HISTORY_READ, Permissions.INTAKE_LINK_READ, Permissions.INTAKE_LINK_WRITE,
         Permissions.CLIENT_READ, Permissions.CLIENT_CREATE, Permissions.CLIENT_UPDATE,
         Permissions.CLIENT_IDENTIFIERS_READ, Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ, Permissions.CLIENT_MEDICAL_WRITE,
@@ -224,6 +255,7 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "case_aide": [
+        Permissions.INTAKE_READ, Permissions.INTAKE_HISTORY_READ,
         Permissions.CLIENT_READ,
         Permissions.CLIENT_SCHOOL_READ, Permissions.CLIENT_CULTURAL_READ, Permissions.CLIENT_DOCUMENTS_READ,
         Permissions.FAMILY_READ,
@@ -351,6 +383,60 @@ LOOKUPS_DATA = {
         {"key": "justice_involvement", "label": "Justice System Involvement", "sort_order": 4},
         {"key": "mental_health_distress", "label": "Mental Health & Emotional Distress", "sort_order": 5},
         {"key": "housing_instability", "label": "Housing Instability / Overcrowding", "sort_order": 6},
+    ],
+    # ── Phase 3: Intake & Referral Lookups ────────────────────
+    "referral_methods": [
+        {"key": "phone", "label": "Telephone Call", "sort_order": 1},
+        {"key": "in_person", "label": "In Person / Walk-In", "sort_order": 2},
+        {"key": "electronic", "label": "Electronic / Web Intake Portal", "sort_order": 3},
+        {"key": "law_enforcement", "label": "Law Enforcement / Police Referral", "sort_order": 4},
+        {"key": "school", "label": "School / Educator Referral", "sort_order": 5},
+        {"key": "healthcare", "label": "Healthcare / Hospital Referral", "sort_order": 6},
+        {"key": "self_referral", "label": "Child / Youth Self-Referral", "sort_order": 7},
+        {"key": "community_member", "label": "Community Member / Relative", "sort_order": 8},
+        {"key": "other", "label": "Other Referral Source", "sort_order": 9},
+    ],
+    "referral_priorities": [
+        {"key": "Crisis", "label": "Crisis (Immediate Safety Intervention Required)", "sort_order": 1},
+        {"key": "High", "label": "High (Response Required within 24 Hours)", "sort_order": 2},
+        {"key": "Medium", "label": "Medium (Response Required within 5 Days)", "sort_order": 3},
+        {"key": "Low", "label": "Low (Standard Intake Assessment)", "sort_order": 4},
+    ],
+    "referral_concern_types": [
+        {"key": "physical_abuse", "label": "Physical Abuse / Non-Accidental Injury", "sort_order": 1},
+        {"key": "neglect", "label": "Severe Neglect / Basic Needs Unmet", "sort_order": 2},
+        {"key": "emotional_harm", "label": "Emotional Harm / Mental Cruelty", "sort_order": 3},
+        {"key": "sexual_abuse", "label": "Sexual Abuse / Child Exploitation", "sort_order": 4},
+        {"key": "domestic_violence", "label": "Domestic / Intimate Partner Violence in Home", "sort_order": 5},
+        {"key": "substance_use", "label": "Caregiver Substance Misuse / Impairment", "sort_order": 6},
+        {"key": "food_insecurity", "label": "Severe Food Insecurity", "sort_order": 7},
+        {"key": "housing_insecurity", "label": "Housing Insecurity / Inadequate Shelter", "sort_order": 8},
+        {"key": "caregiver_incapacity", "label": "Caregiver Incapacity / Abandonment", "sort_order": 9},
+        {"key": "welfare_concern", "label": "General Family Welfare / Support Concern", "sort_order": 10},
+        {"key": "other", "label": "Other Structured Concern", "sort_order": 11},
+    ],
+    "child_dispositions": [
+        {"key": "PROTECTION", "label": "Child Protection Investigation (Open Protection Case)", "sort_order": 1},
+        {"key": "PREVENTION", "label": "Family Prevention & Wellness Services (Open Prevention Case)", "sort_order": 2},
+        {"key": "POST_MAJORITY", "label": "Post-Majority Transition Services", "sort_order": 3},
+        {"key": "SCREEN_OUT", "label": "Screen Out (Unsubstantiated / No Services Required)", "sort_order": 4},
+        {"key": "EXTERNAL_REFERRAL", "label": "External Agency / Community Referral", "sort_order": 5},
+    ],
+    "referral_person_roles": [
+        {"key": "child", "label": "Child / Youth (Subject of Intake)", "sort_order": 1},
+        {"key": "parent", "label": "Parent / Biological Parent", "sort_order": 2},
+        {"key": "guardian", "label": "Legal Guardian / Custodian", "sort_order": 3},
+        {"key": "alleged_person_of_concern", "label": "Alleged Person of Concern", "sort_order": 4},
+        {"key": "relative", "label": "Extended Kin / Relative", "sort_order": 5},
+        {"key": "other_adult", "label": "Household Adult / Other", "sort_order": 6},
+        {"key": "collateral", "label": "Collateral Contact / Witness", "sort_order": 7},
+    ],
+    "referral_link_types": [
+        {"key": "duplicate_report", "label": "Duplicate / Secondary Report of Same Incident", "sort_order": 1},
+        {"key": "related_incident", "label": "Related Incident / Concurrent Referral", "sort_order": 2},
+        {"key": "prior_history", "label": "Prior Intake History", "sort_order": 3},
+        {"key": "split_family", "label": "Cross-Household / Sibling Split Connection", "sort_order": 4},
+        {"key": "subsequent_report", "label": "Subsequent Report on Open Case", "sort_order": 5},
     ],
 }
 

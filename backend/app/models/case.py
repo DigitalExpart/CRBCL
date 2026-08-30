@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import Date, Index, String, Text
+from sqlalchemy import Date, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -36,7 +36,16 @@ class Case(Base, AuditMixin, SoftDeleteMixin):
     assigned_worker_name: Mapped[str | None] = mapped_column(String(300), nullable=True)
     assigned_team_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
 
+    # Provenance from Phase 3 Intake
+    origin_referral_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("referrals.id", ondelete="SET NULL", use_alter=True), nullable=True, index=True
+    )
+    origin_disposition_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("child_dispositions.id", ondelete="SET NULL", use_alter=True), nullable=True, index=True
+    )
+
     __table_args__ = (
         Index("ix_cases_status", "status"),
         Index("ix_cases_priority", "priority"),
+        Index("ix_cases_origin_referral", "origin_referral_id"),
     )

@@ -1,5 +1,6 @@
 export { api, apiClient, ApiClient, default } from './client';
 export { authApi } from './auth';
+export { referralsApi } from './referrals';
 export { clientsApi } from './clients';
 export { familiesApi } from './families';
 export { casesApi } from './cases';

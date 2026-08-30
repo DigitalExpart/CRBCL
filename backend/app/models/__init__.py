@@ -49,3 +49,14 @@ from app.models.relationship import (  # noqa: F401
 from app.models.case import Case  # noqa: F401
 from app.models.case_note import CaseNote  # noqa: F401
 from app.models.idempotency import IdempotencyKey  # noqa: F401
+from app.models.referral import (  # noqa: F401
+    Referral,
+    ReferralSequence,
+    ReferralPerson,
+    ReferralReporter,
+    ReferralIncident,
+    ReferralConcern,
+    ChildDisposition,
+    IntakeDecision,
+    ReferralLink,
+)

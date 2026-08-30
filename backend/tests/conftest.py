@@ -88,6 +88,14 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     # Create Permissions
     perms = {}
     for p_key in [
+        # Phase 3 Intake Permissions
+        Permissions.INTAKE_READ, Permissions.INTAKE_CREATE, Permissions.INTAKE_UPDATE,
+        Permissions.INTAKE_DELETE, Permissions.INTAKE_ASSIGN, Permissions.INTAKE_SUBMIT,
+        Permissions.INTAKE_APPROVE, Permissions.INTAKE_RETURN,
+        Permissions.INTAKE_REPORTER_READ, Permissions.INTAKE_REPORTER_WRITE,
+        Permissions.INTAKE_DECISION_READ, Permissions.INTAKE_DECISION_WRITE,
+        Permissions.INTAKE_HISTORY_READ, Permissions.INTAKE_LINK_READ, Permissions.INTAKE_LINK_WRITE,
+        # Phase 1 & 2 Permissions
         Permissions.CLIENT_READ, Permissions.CLIENT_CREATE, Permissions.CLIENT_UPDATE,
         Permissions.CLIENT_IDENTIFIERS_READ, Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ, Permissions.CLIENT_MEDICAL_WRITE,
@@ -113,9 +121,23 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     # Create Caseworker Role
     caseworker_role = Role(key="caseworker", name="Caseworker", is_system=True)
     db_session.add(caseworker_role)
+
+    # Create Supervisor Role
+    supervisor_role = Role(key="supervisor", name="Supervisor", is_system=True)
+    db_session.add(supervisor_role)
+
+    # Create IT Admin Role (NO clinical/client/intake permissions!)
+    it_admin_role = Role(key="it_admin", name="IT Admin", is_system=True)
+    db_session.add(it_admin_role)
     await db_session.flush()
 
+    # Grant Caseworker permissions
     for p_key in [
+        Permissions.INTAKE_READ, Permissions.INTAKE_CREATE, Permissions.INTAKE_UPDATE,
+        Permissions.INTAKE_SUBMIT,
+        Permissions.INTAKE_REPORTER_READ, Permissions.INTAKE_REPORTER_WRITE,
+        Permissions.INTAKE_DECISION_READ, Permissions.INTAKE_DECISION_WRITE,
+        Permissions.INTAKE_HISTORY_READ, Permissions.INTAKE_LINK_READ, Permissions.INTAKE_LINK_WRITE,
         Permissions.CLIENT_READ, Permissions.CLIENT_CREATE, Permissions.CLIENT_UPDATE,
         Permissions.CLIENT_IDENTIFIERS_READ, Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ, Permissions.CLIENT_MEDICAL_WRITE,
@@ -133,11 +155,31 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         rp = RolePermission(role_id=caseworker_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
 
-    # Create IT Admin Role (NO clinical/client permissions!)
-    it_admin_role = Role(key="it_admin", name="IT Admin", is_system=True)
-    db_session.add(it_admin_role)
-    await db_session.flush()
+    # Grant Supervisor permissions (including intake approval & return)
+    for p_key in [
+        Permissions.INTAKE_READ, Permissions.INTAKE_CREATE, Permissions.INTAKE_UPDATE,
+        Permissions.INTAKE_ASSIGN, Permissions.INTAKE_SUBMIT, Permissions.INTAKE_APPROVE, Permissions.INTAKE_RETURN,
+        Permissions.INTAKE_REPORTER_READ, Permissions.INTAKE_REPORTER_WRITE,
+        Permissions.INTAKE_DECISION_READ, Permissions.INTAKE_DECISION_WRITE,
+        Permissions.INTAKE_HISTORY_READ, Permissions.INTAKE_LINK_READ, Permissions.INTAKE_LINK_WRITE,
+        Permissions.CLIENT_READ, Permissions.CLIENT_CREATE, Permissions.CLIENT_UPDATE,
+        Permissions.CLIENT_IDENTIFIERS_READ, Permissions.CLIENT_IDENTIFIERS_WRITE,
+        Permissions.CLIENT_MEDICAL_READ, Permissions.CLIENT_MEDICAL_WRITE,
+        Permissions.CLIENT_SCHOOL_READ, Permissions.CLIENT_SCHOOL_WRITE,
+        Permissions.CLIENT_CULTURAL_READ, Permissions.CLIENT_CULTURAL_WRITE,
+        Permissions.FAMILY_READ, Permissions.FAMILY_CREATE, Permissions.FAMILY_UPDATE,
+        Permissions.FAMILY_RELATIONSHIPS_READ, Permissions.FAMILY_RELATIONSHIPS_WRITE,
+        Permissions.HOUSEHOLD_READ, Permissions.HOUSEHOLD_WRITE,
+        Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
+        Permissions.SCHOOL_READ, Permissions.SCHOOL_WRITE,
+        Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE,
+        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
+        Permissions.TIMELINE_READ,
+    ]:
+        rp = RolePermission(role_id=supervisor_role.id, permission_id=perms[p_key].id)
+        db_session.add(rp)
 
+    # IT Admin gets ONLY system admin
     for p_key in [
         Permissions.ADMIN_USERS_MANAGE, Permissions.ADMIN_ROLES_MANAGE,
         Permissions.ADMIN_TEAMS_MANAGE, Permissions.ADMIN_CONFIGURATION_MANAGE,
@@ -151,7 +193,14 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     db_session.add(team)
 
     await db_session.commit()
-    return {"roles": {"caseworker": caseworker_role, "it_admin": it_admin_role}, "team": team}
+    return {
+        "roles": {
+            "caseworker": caseworker_role,
+            "supervisor": supervisor_role,
+            "it_admin": it_admin_role,
+        },
+        "team": team,
+    }
 
 
 @pytest.fixture
@@ -169,6 +218,32 @@ async def caseworker_user(db_session: AsyncSession, seed_roles_and_permissions):
     await db_session.flush()
 
     ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["caseworker"].id)
+    db_session.add(ur)
+
+    tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)
+    db_session.add(tm)
+
+    await db_session.commit()
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
+
+
+@pytest.fixture
+async def supervisor_user(db_session: AsyncSession, seed_roles_and_permissions):
+    """Create an active supervisor user with token."""
+    user = User(
+        email="supervisor@crbcl.ca",
+        email_normalized="supervisor@crbcl.ca",
+        password_hash=hash_password("password123"),
+        full_name="Karen Supervisor",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["supervisor"].id)
     db_session.add(ur)
 
     tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)
