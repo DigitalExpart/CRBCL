@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: crbcl-postgres
+    environment:
+      POSTGRES_USER: crbcl
+      POSTGRES_PASSWORD: crbcl_dev_password
+      POSTGRES_DB: crbcl
+    ports:
+      - "5432:5432"
+    volumes:
+      - crbcl_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crbcl"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: crbcl-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: crbcl-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://crbcl:crbcl_dev_password@postgres:5432/crbcl
+      DATABASE_SYNC_URL: postgresql://crbcl:crbcl_dev_password@postgres:5432/crbcl
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+      - crbcl_uploads:/app/uploads
+
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: crbcl-worker
+    command: ["python", "-m", "app.jobs.worker"]
+    env_file:
+      - ../backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://crbcl:crbcl_dev_password@postgres:5432/crbcl
+      DATABASE_SYNC_URL: postgresql://crbcl:crbcl_dev_password@postgres:5432/crbcl
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+
+volumes:
+  crbcl_pgdata:
+  crbcl_uploads:

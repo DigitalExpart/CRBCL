@@ -54,5 +54,6 @@ export const appParams = {
 export const config = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '',
   appId: import.meta.env.VITE_APP_ID || 'crbcl-portal',
+  enableDemoData: import.meta.env.VITE_ENABLE_DEMO_DATA === 'true',
   ...appParams,
 };

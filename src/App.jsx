@@ -21,7 +21,9 @@ import Dashboard from '@/pages/Dashboard';
 import Cases from '@/pages/Cases';
 import CaseDetail from '@/pages/CaseDetail';
 import Clients from '@/pages/Clients';
+import ClientDetail from '@/pages/ClientDetail';
 import Families from '@/pages/Families';
+import FamilyDetail from '@/pages/FamilyDetail';
 import Programs from '@/pages/Programs';
 import Employees from '@/pages/Employees';
 import Appointments from '@/pages/Appointments';
@@ -70,7 +72,9 @@ const AuthenticatedApp = () => {
           <Route path="/cases" element={<Cases />} />
           <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:id" element={<ClientDetail />} />
           <Route path="/families" element={<Families />} />
+          <Route path="/families/:id" element={<FamilyDetail />} />
           <Route path="/programs" element={<Programs />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/appointments" element={<Appointments />} />
