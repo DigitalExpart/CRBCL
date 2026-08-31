@@ -98,7 +98,20 @@ from app.models.school import (  # noqa: F401
     ClientSchoolEnrolment,
     School,
 )
+from app.models.placement import (  # noqa: F401
+    ActiveEffort,
+    BackgroundCheck,
+    CourtEvent,
+    DischargeEpisode,
+    InHomePlacement,
+    PermanencyPlan,
+    PlacementEpisode,
+    RemovalEpisode,
+    RespiteEpisode,
+    VisitationPlan,
+)
 from app.models.team import Team, TeamMembership, UserTeamAccess  # noqa: F401
 from app.models.terminology import TerminologyKey, TerminologyTranslation  # noqa: F401
 from app.models.timeline import TimelineEvent  # noqa: F401
 from app.models.user import EmailVerificationCode, Session, User, UserPreference  # noqa: F401
+

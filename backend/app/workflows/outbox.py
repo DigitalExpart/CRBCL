@@ -38,6 +38,9 @@ class OutboxService:
         await self.db.flush()
         return event
 
+    publish_event = enqueue
+
+
     async def get_pending_events(self, limit: int = 10) -> list[OutboxEvent]:
         """Fetch pending outbox events that are available for processing."""
         now = datetime.now(UTC)

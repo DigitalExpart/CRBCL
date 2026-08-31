@@ -155,3 +155,22 @@ class Permissions(StrEnum):
     AUDIT_READ = "audit.read"
     ACCESS_EVENT_READ = "access_event.read"
     TIMELINE_READ = "timeline.read"
+
+    # Placement, Removal, Active Efforts, Permanency, Court & Background Checks (Phase 7)
+    ACTIVE_EFFORTS_READ = "active_efforts.read"
+    ACTIVE_EFFORTS_WRITE = "active_efforts.write"
+    BACKGROUND_CHECK_READ = "background_check.read"
+    BACKGROUND_CHECK_WRITE = "background_check.write"
+    BACKGROUND_CHECK_ADJUDICATE = "background_check.adjudicate"
+    PLACEMENT_READ = "placement.read"
+    PLACEMENT_WRITE = "placement.write"
+    PLACEMENT_DISCHARGE = "placement.discharge"
+    REMOVAL_READ = "removal.read"
+    REMOVAL_WRITE = "removal.write"
+    PERMANENCY_READ = "permanency.read"
+    PERMANENCY_WRITE = "permanency.write"
+    VISITATION_READ = "visitation.read"
+    VISITATION_WRITE = "visitation.write"
+    COURT_READ = "court.read"
+    COURT_WRITE = "court.write"
+

@@ -13,3 +13,5 @@ export { householdsApi } from './households';
 export { assessmentsApi } from './assessments';
 export { assessmentTemplatesApi } from './assessmentTemplates';
 export { plansApi } from './plans';
+export { placementsApi } from './placements';
+

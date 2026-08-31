@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,13 +23,23 @@ def _sanitize_dict(data: dict[str, Any] | None) -> dict[str, Any] | None:
             sanitized[k] = "[REDACTED]"
         elif isinstance(v, dict):
             sanitized[k] = _sanitize_dict(v)
+        elif isinstance(v, Decimal):
+            sanitized[k] = float(v)
         elif isinstance(v, uuid.UUID | date | datetime):
             sanitized[k] = str(v)
         elif isinstance(v, list):
-            sanitized[k] = [str(item) if isinstance(item, uuid.UUID | date | datetime) else item for item in v]
+            sanitized[k] = [
+                float(item)
+                if isinstance(item, Decimal)
+                else str(item)
+                if isinstance(item, uuid.UUID | date | datetime)
+                else item
+                for item in v
+            ]
         else:
             sanitized[k] = v
     return sanitized
+
 
 
 class AuditService:
@@ -66,6 +77,9 @@ class AuditService:
         self.db.add(event)
         await self.db.flush()
         return event
+
+    log = log_event
+
 
     async def log_access(
         self,

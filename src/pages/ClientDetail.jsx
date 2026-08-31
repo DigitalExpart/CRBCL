@@ -30,8 +30,10 @@ import {
   Activity,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import ClientEpisodesTab from "@/components/placements/ClientEpisodesTab";
 
 export default function ClientDetail() {
+
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -569,19 +571,11 @@ export default function ClientDetail() {
         </TabsContent>
 
         {/* Tab 14: Episodes & History */}
-        <TabsContent value="history">
-          <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Clock className="w-4 h-4 text-primary" /> Service Episodes & Placement History</CardTitle></CardHeader>
-            <CardContent>
-              <div className="p-8 text-center border border-dashed rounded-lg text-muted-foreground text-xs">
-                <Shield className="w-8 h-8 mx-auto mb-2 opacity-40 text-primary" />
-                <p className="font-semibold text-sm text-foreground">Future Phases: Intake, Assessment & Placement</p>
-                <p className="mt-1">Historical service episode tracking will automatically populate as formal Intake and Placement modules are implemented in upcoming phases.</p>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="history" className="pt-2">
+          <ClientEpisodesTab clientId={id} clientData={client} />
         </TabsContent>
       </Tabs>
+
     </div>
   );
 }

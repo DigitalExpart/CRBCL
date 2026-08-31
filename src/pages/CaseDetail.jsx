@@ -23,6 +23,10 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CaseFormDialog from "@/components/cases/CaseFormDialog";
 import PlansTab from "@/components/plans/PlansTab";
+import ActiveEffortsTab from "@/components/placements/ActiveEffortsTab";
+import PlacementsTab from "@/components/placements/PlacementsTab";
+import PermanencyCourtTab from "@/components/placements/PermanencyCourtTab";
+import BackgroundChecksDialog from "@/components/placements/BackgroundChecksDialog";
 
 export default function CaseDetail() {
   const { id } = useParams();
@@ -47,7 +51,9 @@ export default function CaseDetail() {
   const [availableTemplates, setAvailableTemplates] = useState([]);
   const [plans, setPlans] = useState([]);
   const [activeGoals, setActiveGoals] = useState([]);
+  const [showBgChecksModal, setShowBgChecksModal] = useState(false);
   const [loading, setLoading] = useState(true);
+
 
   // Modals & Actions
   const [showEdit, setShowEdit] = useState(false);
@@ -304,6 +310,10 @@ export default function CaseDetail() {
             <Edit2 className="w-4 h-4 mr-1.5" /> Edit File
           </Button>
 
+          <Button variant="outline" size="sm" onClick={() => setShowBgChecksModal(true)} className="text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10">
+            <ShieldCheck className="w-4 h-4 mr-1.5" /> Background Checks
+          </Button>
+
           <Button variant="outline" size="sm" onClick={() => setShowAddRestrictionModal(true)} className="text-amber-600 border-amber-500/30 hover:bg-amber-500/10">
             <ShieldAlert className="w-4 h-4 mr-1.5" /> Conflict Restriction
           </Button>
@@ -312,18 +322,22 @@ export default function CaseDetail() {
 
       {/* 360° Navigation Tabs */}
       <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val })}>
-        <TabsList className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 h-auto p-1 bg-muted/60">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 xl:grid-cols-13 h-auto p-1 bg-muted/60 gap-1">
           <TabsTrigger value="snapshot" className="text-xs py-2">Snapshot</TabsTrigger>
           <TabsTrigger value="people" className="text-xs py-2">People ({people.length})</TabsTrigger>
           <TabsTrigger value="workers" className="text-xs py-2">Workers ({assignments.length})</TabsTrigger>
           <TabsTrigger value="notes" className="text-xs py-2">Clinical Notes ({notes.length})</TabsTrigger>
-          <TabsTrigger value="plans" className="text-xs py-2 font-medium text-purple-600 dark:text-purple-400">Plans ({plans.length})</TabsTrigger>
+          <TabsTrigger value="active_efforts" className="text-xs py-2 font-medium text-pink-600 dark:text-pink-400">Active Efforts</TabsTrigger>
+          <TabsTrigger value="placements" className="text-xs py-2 font-medium text-blue-600 dark:text-blue-400">Placements</TabsTrigger>
+          <TabsTrigger value="permanency_court" className="text-xs py-2 font-medium text-purple-600 dark:text-purple-400">Permanency & Court</TabsTrigger>
+          <TabsTrigger value="plans" className="text-xs py-2 font-medium text-indigo-600 dark:text-indigo-400">Plans ({plans.length})</TabsTrigger>
           <TabsTrigger value="assessments" className="text-xs py-2 font-medium text-emerald-600 dark:text-emerald-400">Assessments ({assessments.length})</TabsTrigger>
           <TabsTrigger value="sources" className="text-xs py-2">Sources ({sources.length})</TabsTrigger>
           <TabsTrigger value="links" className="text-xs py-2">Linked ({links.length})</TabsTrigger>
           <TabsTrigger value="transfers" className="text-xs py-2">Transfers ({transfers.length})</TabsTrigger>
           <TabsTrigger value="history" className="text-xs py-2">Audit & History</TabsTrigger>
         </TabsList>
+
 
         {/* ── TAB 1: SNAPSHOT ───────────────────────────── */}
         <TabsContent value="snapshot" className="space-y-6 mt-6">
@@ -1113,15 +1127,37 @@ export default function CaseDetail() {
           </div>
         </TabsContent>
 
+        {/* ── TAB: ACTIVE EFFORTS ──────────────────────── */}
+        <TabsContent value="active_efforts" className="mt-6">
+          <ActiveEffortsTab caseId={id} caseData={caseData} people={people} />
+        </TabsContent>
+
+        {/* ── TAB: PLACEMENTS ──────────────────────────── */}
+        <TabsContent value="placements" className="mt-6">
+          <PlacementsTab caseId={id} caseData={caseData} people={people} />
+        </TabsContent>
+
+        {/* ── TAB: PERMANENCY & COURT ──────────────────── */}
+        <TabsContent value="permanency_court" className="mt-6">
+          <PermanencyCourtTab caseId={id} caseData={caseData} people={people} />
+        </TabsContent>
+
         {/* ── TAB: PLANS & SIGNATURES ─────────────────────── */}
         <TabsContent value="plans" className="mt-6">
           <PlansTab caseId={id} caseData={caseData} people={people} />
         </TabsContent>
       </Tabs>
 
+      {/* ── Background Checks Registry Modal ──────────────── */}
+      <BackgroundChecksDialog
+        open={showBgChecksModal}
+        onOpenChange={setShowBgChecksModal}
+      />
+
       {/* ── Modals ────────────────────────────────────────── */}
       {/* Close Case Dialog */}
       <Dialog open={showCloseModal} onOpenChange={setShowCloseModal}>
+
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Controlled Case Closure</DialogTitle>
