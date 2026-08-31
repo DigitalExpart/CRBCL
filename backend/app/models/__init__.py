@@ -47,7 +47,23 @@ from app.models.relationship import (  # noqa: F401
     HouseholdMembership,
 )
 from app.models.case import Case  # noqa: F401
-from app.models.case_note import CaseNote  # noqa: F401
+from app.models.case_management import (  # noqa: F401
+    CaseSequence,
+    CasePerson,
+    CaseAssignment,
+    CaseExternalWorker,
+    CaseSource,
+    CaseLink,
+    CaseRestriction,
+    CaseTransfer,
+    CaseStatusHistory,
+)
+from app.models.case_note import (  # noqa: F401
+    CaseNote,
+    CaseNotePerson,
+    CaseNoteAttachment,
+    CaseNoteAddendum,
+)
 from app.models.idempotency import IdempotencyKey  # noqa: F401
 from app.models.referral import (  # noqa: F401
     Referral,

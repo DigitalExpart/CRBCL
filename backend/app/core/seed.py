@@ -2,7 +2,7 @@
 
 Seeds:
 - 11 Default Roles
-- 35+ Capability-based Permissions (including Phase 2 field-level permissions)
+- 80+ Capability-based Permissions (including Phase 2, 3, and 4 Case Management permissions)
 - Role-Permission Mappings (IT Admin gets NO client/case permissions)
 - 22 CRBCL Teams
 - Standard Lookup Lists & Values
@@ -129,11 +129,13 @@ PERMISSIONS_DATA = [
     {"key": Permissions.INTAKE_HISTORY_READ, "name": "Read Prior History across Cases & Referrals", "category": "intake"},
     {"key": Permissions.INTAKE_LINK_READ, "name": "Read Cross-Referral Links", "category": "intake"},
     {"key": Permissions.INTAKE_LINK_WRITE, "name": "Create / Manage Cross-Referral Links", "category": "intake"},
+    
     # Clients
     {"key": Permissions.CLIENT_READ, "name": "Read Clients", "category": "clients"},
     {"key": Permissions.CLIENT_CREATE, "name": "Create Clients", "category": "clients"},
     {"key": Permissions.CLIENT_UPDATE, "name": "Update Clients", "category": "clients"},
     {"key": Permissions.CLIENT_DELETE, "name": "Delete Clients", "category": "clients"},
+    
     # Field-level Client
     {"key": Permissions.CLIENT_IDENTIFIERS_READ, "name": "Read Sensitive Identifiers (Treaty, Health Card)", "category": "clients"},
     {"key": Permissions.CLIENT_IDENTIFIERS_WRITE, "name": "Write Sensitive Identifiers", "category": "clients"},
@@ -145,6 +147,7 @@ PERMISSIONS_DATA = [
     {"key": Permissions.CLIENT_CULTURAL_WRITE, "name": "Write Cultural Connections & Identity", "category": "clients"},
     {"key": Permissions.CLIENT_DOCUMENTS_READ, "name": "Read Client Documents", "category": "clients"},
     {"key": Permissions.CLIENT_DOCUMENTS_WRITE, "name": "Write Client Documents", "category": "clients"},
+    
     # Families & Households
     {"key": Permissions.FAMILY_READ, "name": "Read Families", "category": "families"},
     {"key": Permissions.FAMILY_CREATE, "name": "Create Families", "category": "families"},
@@ -154,32 +157,60 @@ PERMISSIONS_DATA = [
     {"key": Permissions.FAMILY_RELATIONSHIPS_WRITE, "name": "Write Family Relationships & Genograms", "category": "families"},
     {"key": Permissions.HOUSEHOLD_READ, "name": "Read Households & Locations", "category": "families"},
     {"key": Permissions.HOUSEHOLD_WRITE, "name": "Write Households & Locations", "category": "families"},
+    
     # Providers & Schools
     {"key": Permissions.PROVIDER_READ, "name": "Read Providers Pool", "category": "providers"},
     {"key": Permissions.PROVIDER_WRITE, "name": "Write Providers Pool", "category": "providers"},
     {"key": Permissions.SCHOOL_READ, "name": "Read Schools Directory", "category": "schools"},
     {"key": Permissions.SCHOOL_WRITE, "name": "Write Schools Directory", "category": "schools"},
-    # Cases
+    
+    # Core Cases & Lifecycle (Phase 4)
     {"key": Permissions.CASE_READ, "name": "Read Cases", "category": "cases"},
     {"key": Permissions.CASE_CREATE, "name": "Create Cases", "category": "cases"},
     {"key": Permissions.CASE_UPDATE, "name": "Update Cases", "category": "cases"},
     {"key": Permissions.CASE_DELETE, "name": "Delete Cases", "category": "cases"},
-    {"key": Permissions.CASE_ASSIGN, "name": "Assign Cases", "category": "cases"},
-    # Case Notes
+    {"key": Permissions.CASE_ASSIGN, "name": "Assign Case Workers & Teams", "category": "cases"},
+    {"key": Permissions.CASE_CLOSE, "name": "Close Cases with Reason & Audit", "category": "cases"},
+    {"key": Permissions.CASE_REOPEN, "name": "Reopen Closed Cases with Reason", "category": "cases"},
+    
+    # Case Sub-domains (Phase 4)
+    {"key": Permissions.CASE_PEOPLE_READ, "name": "Read People Involved in Case", "category": "cases"},
+    {"key": Permissions.CASE_PEOPLE_WRITE, "name": "Manage People Involved in Case", "category": "cases"},
+    {"key": Permissions.CASE_ASSIGNMENT_READ, "name": "Read Worker Assignments & History", "category": "cases"},
+    {"key": Permissions.CASE_ASSIGNMENT_WRITE, "name": "Manage Worker Assignments", "category": "cases"},
+    {"key": Permissions.CASE_EXTERNAL_WORKER_READ, "name": "Read External Workers", "category": "cases"},
+    {"key": Permissions.CASE_EXTERNAL_WORKER_WRITE, "name": "Manage External Workers", "category": "cases"},
+    {"key": Permissions.CASE_SOURCE_READ, "name": "Read Other & Collateral Sources", "category": "cases"},
+    {"key": Permissions.CASE_SOURCE_WRITE, "name": "Manage Other & Collateral Sources", "category": "cases"},
+    {"key": Permissions.CASE_LINK_READ, "name": "Read Cross-Case Links", "category": "cases"},
+    {"key": Permissions.CASE_LINK_WRITE, "name": "Create & Manage Cross-Case Links", "category": "cases"},
+    {"key": Permissions.CASE_RESTRICTION_READ, "name": "Read Case Restrictions & Conflicts", "category": "cases"},
+    {"key": Permissions.CASE_RESTRICTION_MANAGE, "name": "Manage Case Restrictions & Conflicts", "category": "cases"},
+    {"key": Permissions.CASE_TRANSFER_READ, "name": "Read Case & Child Transfer Requests", "category": "cases"},
+    {"key": Permissions.CASE_TRANSFER_CREATE, "name": "Create Case & Child Transfer Requests", "category": "cases"},
+    {"key": Permissions.CASE_TRANSFER_APPROVE, "name": "Approve / Review Case Transfer Requests", "category": "cases"},
+
+    # Case Notes (Phase 4)
     {"key": Permissions.CASE_NOTE_READ, "name": "Read Case Notes", "category": "case_notes"},
     {"key": Permissions.CASE_NOTE_CREATE, "name": "Create Case Notes", "category": "case_notes"},
     {"key": Permissions.CASE_NOTE_UPDATE, "name": "Update Case Notes", "category": "case_notes"},
-    {"key": Permissions.CASE_NOTE_LOCK, "name": "Lock Case Notes", "category": "case_notes"},
-    {"key": Permissions.CASE_NOTE_UNLOCK, "name": "Unlock Case Notes", "category": "case_notes"},
+    {"key": Permissions.CASE_NOTE_COMPLETE, "name": "Complete Draft Case Notes", "category": "case_notes"},
+    {"key": Permissions.CASE_NOTE_LOCK, "name": "Lock Case Notes (Immutability)", "category": "case_notes"},
+    {"key": Permissions.CASE_NOTE_UNLOCK, "name": "Unlock Locked Case Notes (Supervisor Override)", "category": "case_notes"},
+    {"key": Permissions.CASE_NOTE_ADDENDUM, "name": "Add Addendum to Case Notes", "category": "case_notes"},
+    {"key": Permissions.CASE_NOTE_EXPORT, "name": "Export Case Notes to File", "category": "case_notes"},
+
     # Documents
     {"key": Permissions.DOCUMENT_READ, "name": "Read Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_UPLOAD, "name": "Upload Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_DELETE, "name": "Delete Documents", "category": "documents"},
+    
     # Administration
     {"key": Permissions.ADMIN_USERS_MANAGE, "name": "Manage Users", "category": "admin"},
     {"key": Permissions.ADMIN_ROLES_MANAGE, "name": "Manage Roles", "category": "admin"},
     {"key": Permissions.ADMIN_TEAMS_MANAGE, "name": "Manage Teams", "category": "admin"},
     {"key": Permissions.ADMIN_CONFIGURATION_MANAGE, "name": "Manage Configuration", "category": "admin"},
+    
     # Audit & Timeline
     {"key": Permissions.AUDIT_READ, "name": "Read Audit Logs", "category": "audit"},
     {"key": Permissions.ACCESS_EVENT_READ, "name": "Read Access Events", "category": "audit"},
@@ -205,7 +236,17 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
         Permissions.SCHOOL_READ, Permissions.SCHOOL_WRITE,
         Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE, Permissions.CASE_ASSIGN,
-        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_LOCK,
+        Permissions.CASE_CLOSE, Permissions.CASE_REOPEN,
+        Permissions.CASE_PEOPLE_READ, Permissions.CASE_PEOPLE_WRITE,
+        Permissions.CASE_ASSIGNMENT_READ, Permissions.CASE_ASSIGNMENT_WRITE,
+        Permissions.CASE_EXTERNAL_WORKER_READ, Permissions.CASE_EXTERNAL_WORKER_WRITE,
+        Permissions.CASE_SOURCE_READ, Permissions.CASE_SOURCE_WRITE,
+        Permissions.CASE_LINK_READ, Permissions.CASE_LINK_WRITE,
+        Permissions.CASE_RESTRICTION_READ, Permissions.CASE_RESTRICTION_MANAGE,
+        Permissions.CASE_TRANSFER_READ, Permissions.CASE_TRANSFER_CREATE, Permissions.CASE_TRANSFER_APPROVE,
+        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
+        Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK, Permissions.CASE_NOTE_UNLOCK,
+        Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.ADMIN_TEAMS_MANAGE,
         Permissions.TIMELINE_READ,
@@ -228,7 +269,17 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
         Permissions.SCHOOL_READ, Permissions.SCHOOL_WRITE,
         Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE, Permissions.CASE_ASSIGN,
-        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE, Permissions.CASE_NOTE_LOCK,
+        Permissions.CASE_CLOSE, Permissions.CASE_REOPEN,
+        Permissions.CASE_PEOPLE_READ, Permissions.CASE_PEOPLE_WRITE,
+        Permissions.CASE_ASSIGNMENT_READ, Permissions.CASE_ASSIGNMENT_WRITE,
+        Permissions.CASE_EXTERNAL_WORKER_READ, Permissions.CASE_EXTERNAL_WORKER_WRITE,
+        Permissions.CASE_SOURCE_READ, Permissions.CASE_SOURCE_WRITE,
+        Permissions.CASE_LINK_READ, Permissions.CASE_LINK_WRITE,
+        Permissions.CASE_RESTRICTION_READ, Permissions.CASE_RESTRICTION_MANAGE,
+        Permissions.CASE_TRANSFER_READ, Permissions.CASE_TRANSFER_CREATE, Permissions.CASE_TRANSFER_APPROVE,
+        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
+        Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK, Permissions.CASE_NOTE_UNLOCK,
+        Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
@@ -250,33 +301,46 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
         Permissions.SCHOOL_READ, Permissions.SCHOOL_WRITE,
         Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE,
+        Permissions.CASE_PEOPLE_READ, Permissions.CASE_PEOPLE_WRITE,
+        Permissions.CASE_ASSIGNMENT_READ,
+        Permissions.CASE_EXTERNAL_WORKER_READ, Permissions.CASE_EXTERNAL_WORKER_WRITE,
+        Permissions.CASE_SOURCE_READ, Permissions.CASE_SOURCE_WRITE,
+        Permissions.CASE_LINK_READ, Permissions.CASE_LINK_WRITE,
+        Permissions.CASE_RESTRICTION_READ,
+        Permissions.CASE_TRANSFER_READ, Permissions.CASE_TRANSFER_CREATE,
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
+        Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK,
+        Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
     "case_aide": [
-        Permissions.INTAKE_READ, Permissions.INTAKE_HISTORY_READ,
         Permissions.CLIENT_READ,
-        Permissions.CLIENT_SCHOOL_READ, Permissions.CLIENT_CULTURAL_READ, Permissions.CLIENT_DOCUMENTS_READ,
+        Permissions.CLIENT_SCHOOL_READ,
+        Permissions.CLIENT_CULTURAL_READ,
+        Permissions.CLIENT_DOCUMENTS_READ,
         Permissions.FAMILY_READ,
-        Permissions.FAMILY_RELATIONSHIPS_READ,
         Permissions.HOUSEHOLD_READ,
-        Permissions.PROVIDER_READ, Permissions.SCHOOL_READ,
+        Permissions.PROVIDER_READ,
+        Permissions.SCHOOL_READ,
         Permissions.CASE_READ,
+        Permissions.CASE_PEOPLE_READ,
+        Permissions.CASE_SOURCE_READ,
+        Permissions.CASE_LINK_READ,
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
     "finance_staff": [
         Permissions.CLIENT_READ,
+        Permissions.CLIENT_IDENTIFIERS_READ,
         Permissions.PROVIDER_READ,
-        Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
+        Permissions.DOCUMENT_READ,
     ],
     "hr_staff": [
         Permissions.ADMIN_USERS_MANAGE,
         Permissions.ADMIN_TEAMS_MANAGE,
     ],
-    # IT Admin gets ONLY system admin & audit logs — strictly NO clinical or client access
     "it_admin": [
         Permissions.ADMIN_USERS_MANAGE,
         Permissions.ADMIN_ROLES_MANAGE,
@@ -289,19 +353,18 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CLIENT_READ,
         Permissions.CLIENT_CULTURAL_READ, Permissions.CLIENT_CULTURAL_WRITE,
         Permissions.FAMILY_READ,
-        Permissions.FAMILY_RELATIONSHIPS_READ,
         Permissions.CASE_READ,
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
-        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
     "clinical_staff": [
-        Permissions.CLIENT_READ, Permissions.CLIENT_UPDATE,
+        Permissions.CLIENT_READ,
         Permissions.CLIENT_MEDICAL_READ, Permissions.CLIENT_MEDICAL_WRITE,
         Permissions.FAMILY_READ,
         Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
         Permissions.CASE_READ,
-        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
+        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
@@ -342,11 +405,25 @@ TEAMS_DATA = [
 LOOKUPS_DATA = {
     "case_statuses": [
         {"key": "Open", "label": "Open", "sort_order": 1},
-        {"key": "In Progress", "label": "In Progress", "sort_order": 2},
-        {"key": "Under Review", "label": "Under Review", "sort_order": 3},
-        {"key": "Pending", "label": "Pending", "sort_order": 4},
-        {"key": "Escalated", "label": "Escalated", "sort_order": 5},
-        {"key": "Closed", "label": "Closed", "sort_order": 6},
+        {"key": "Active", "label": "Active", "sort_order": 2},
+        {"key": "On Hold", "label": "On Hold", "sort_order": 3},
+        {"key": "Closing", "label": "Closing", "sort_order": 4},
+        {"key": "Closed", "label": "Closed", "sort_order": 5},
+        {"key": "Reopened", "label": "Reopened", "sort_order": 6},
+    ],
+    "case_types": [
+        {"key": "PROTECTION", "label": "Child Safety / Protection", "sort_order": 1},
+        {"key": "PREVENTION", "label": "Family Prevention & Wellness", "sort_order": 2},
+        {"key": "POST_MAJORITY", "label": "Post-Majority Transition Support", "sort_order": 3},
+    ],
+    "case_stages": [
+        {"key": "REFERRAL", "label": "Referral & Screening", "sort_order": 1},
+        {"key": "INVESTIGATION", "label": "Child Safety Investigation", "sort_order": 2},
+        {"key": "ASSESSMENT", "label": "Comprehensive Family Assessment", "sort_order": 3},
+        {"key": "PLANNING", "label": "Family Safety & Wellness Planning", "sort_order": 4},
+        {"key": "SERVICE_DELIVERY", "label": "Active Service Delivery", "sort_order": 5},
+        {"key": "REVIEW", "label": "Periodic Case Review", "sort_order": 6},
+        {"key": "CLOSURE", "label": "Case Resolution & Closure", "sort_order": 7},
     ],
     "risk_levels": [
         {"key": "Low", "label": "Low", "sort_order": 1},
@@ -360,6 +437,69 @@ LOOKUPS_DATA = {
         {"key": "Pending Intake", "label": "Pending Intake", "sort_order": 3},
         {"key": "Closed", "label": "Closed", "sort_order": 4},
         {"key": "Referred", "label": "Referred", "sort_order": 5},
+    ],
+    "case_person_roles": [
+        {"key": "subject_child", "label": "Subject Child / Youth", "sort_order": 1},
+        {"key": "sibling", "label": "Sibling", "sort_order": 2},
+        {"key": "parent", "label": "Parent / Biological Parent", "sort_order": 3},
+        {"key": "guardian", "label": "Legal Guardian / Custodian", "sort_order": 4},
+        {"key": "caregiver", "label": "Caregiver / Foster Parent", "sort_order": 5},
+        {"key": "person_of_concern", "label": "Person of Concern", "sort_order": 6},
+        {"key": "other", "label": "Other Involved Person", "sort_order": 7},
+    ],
+    "case_assignment_roles": [
+        {"key": "primary_investigator", "label": "Primary Investigator", "sort_order": 1},
+        {"key": "secondary_investigator", "label": "Secondary Investigator", "sort_order": 2},
+        {"key": "backup_investigator", "label": "Backup Investigator", "sort_order": 3},
+        {"key": "caseworker", "label": "Primary Caseworker", "sort_order": 4},
+        {"key": "supervisor", "label": "Assigned Case Supervisor", "sort_order": 5},
+    ],
+    "case_link_types": [
+        {"key": "same_incident", "label": "Same Incident / Incident Group", "sort_order": 1},
+        {"key": "related_family", "label": "Related Family Network", "sort_order": 2},
+        {"key": "sibling_matter", "label": "Sibling Case Matter", "sort_order": 3},
+        {"key": "referral_history", "label": "Prior Referral History Connection", "sort_order": 4},
+        {"key": "other", "label": "Other Linked Matter", "sort_order": 5},
+    ],
+    "case_restriction_types": [
+        {"key": "conflict_of_interest", "label": "Conflict of Interest (Personal / Professional)", "sort_order": 1},
+        {"key": "family_member_involved", "label": "Direct or Extended Kinship Connection", "sort_order": 2},
+        {"key": "supervisor_restricted", "label": "Supervisor Administrative Restriction", "sort_order": 3},
+        {"key": "other", "label": "Other Approved Restriction", "sort_order": 4},
+    ],
+    "case_transfer_statuses": [
+        {"key": "DRAFT", "label": "Draft Request", "sort_order": 1},
+        {"key": "SUBMITTED", "label": "Submitted for Routing", "sort_order": 2},
+        {"key": "PENDING_APPROVAL", "label": "Pending Supervisor Approval", "sort_order": 3},
+        {"key": "APPROVED", "label": "Approved & Reassigned", "sort_order": 4},
+        {"key": "RETURNED", "label": "Returned for Additional Rationale", "sort_order": 5},
+        {"key": "DENIED", "label": "Transfer Denied", "sort_order": 6},
+        {"key": "CANCELLED", "label": "Cancelled by Requester", "sort_order": 7},
+    ],
+    "contact_types": [
+        {"key": "FACE_TO_FACE", "label": "Face to Face", "sort_order": 1},
+        {"key": "ONE_ON_ONE", "label": "One-on-One Client Visit", "sort_order": 2},
+        {"key": "PHONE", "label": "Telephone Call", "sort_order": 3},
+        {"key": "TEXT", "label": "SMS / Text Message", "sort_order": 4},
+        {"key": "VIRTUAL", "label": "Virtual Video Call", "sort_order": 5},
+        {"key": "COLLATERAL_CONTACT", "label": "Collateral Contact / Professional", "sort_order": 6},
+        {"key": "HOME_VISIT", "label": "Home Visit", "sort_order": 7},
+        {"key": "OTHER", "label": "Other Contact", "sort_order": 8},
+    ],
+    "note_locations": [
+        {"key": "COURT", "label": "Provincial / Band Court", "sort_order": 1},
+        {"key": "OFFICE", "label": "CRBCL Lodge / Office", "sort_order": 2},
+        {"key": "COMMUNITY_HOME", "label": "Family / Community Home", "sort_order": 3},
+        {"key": "SCHOOL", "label": "School / Educational Facility", "sort_order": 4},
+        {"key": "HEALTH_FACILITY", "label": "Hospital / Clinic", "sort_order": 5},
+        {"key": "COMMUNITY_SPACE", "label": "Community Space / Cultural Grounds", "sort_order": 6},
+        {"key": "OTHER", "label": "Other Location", "sort_order": 7},
+    ],
+    "appointment_statuses": [
+        {"key": "ATTENDED", "label": "Attended as Scheduled", "sort_order": 1},
+        {"key": "NO_SHOW", "label": "No Show / Missed", "sort_order": 2},
+        {"key": "CANCELLED", "label": "Cancelled by Client/Worker", "sort_order": 3},
+        {"key": "RESCHEDULED", "label": "Rescheduled", "sort_order": 4},
     ],
     "indigenous_identities": [
         {"key": "First Nations", "label": "First Nations", "sort_order": 1},
@@ -384,7 +524,6 @@ LOOKUPS_DATA = {
         {"key": "mental_health_distress", "label": "Mental Health & Emotional Distress", "sort_order": 5},
         {"key": "housing_instability", "label": "Housing Instability / Overcrowding", "sort_order": 6},
     ],
-    # ── Phase 3: Intake & Referral Lookups ────────────────────
     "referral_methods": [
         {"key": "phone", "label": "Telephone Call", "sort_order": 1},
         {"key": "in_person", "label": "In Person / Walk-In", "sort_order": 2},
@@ -449,46 +588,63 @@ async def seed_database(db: AsyncSession) -> None:
         res = await db.execute(select(Permission).where(Permission.key == p_data["key"]))
         perm = res.scalar_one_or_none()
         if not perm:
-            perm = Permission(**p_data)
+            perm = Permission(
+                key=p_data["key"],
+                name=p_data["name"],
+                category=p_data["category"],
+                is_active=True,
+            )
             db.add(perm)
             await db.flush()
         perm_models[p_data["key"]] = perm
 
-    logger.info("Seeding Roles and Role-Permission Mappings...")
+    logger.info("Seeding Roles & Mappings...")
     role_models = {}
     for r_data in ROLES_DATA:
         res = await db.execute(select(Role).where(Role.key == r_data["key"]))
         role = res.scalar_one_or_none()
         if not role:
-            role = Role(**r_data)
+            role = Role(
+                key=r_data["key"],
+                name=r_data["name"],
+                description=r_data["description"],
+                is_system=r_data["is_system"],
+            )
             db.add(role)
             await db.flush()
         role_models[r_data["key"]] = role
 
-        target_perm_keys = ROLE_PERMISSIONS_MAP.get(r_data["key"], [])
-        for p_key in target_perm_keys:
-            perm = perm_models.get(p_key)
-            if perm:
+        # Map permissions
+        assigned_perm_keys = ROLE_PERMISSIONS_MAP.get(r_data["key"], [])
+        for p_key in assigned_perm_keys:
+            if p_key in perm_models:
+                p_model = perm_models[p_key]
                 rp_res = await db.execute(
                     select(RolePermission).where(
                         RolePermission.role_id == role.id,
-                        RolePermission.permission_id == perm.id,
+                        RolePermission.permission_id == p_model.id,
                     )
                 )
                 if not rp_res.scalar_one_or_none():
-                    rp = RolePermission(role_id=role.id, permission_id=perm.id)
-                    db.add(rp)
-        await db.flush()
+                    db.add(RolePermission(role_id=role.id, permission_id=p_model.id))
 
-    logger.info("Seeding 22 CRBCL Teams...")
+    logger.info("Seeding CRBCL Teams...")
     for t_data in TEAMS_DATA:
         res = await db.execute(select(Team).where(Team.code == t_data["code"]))
-        if not res.scalar_one_or_none():
-            team = Team(**t_data)
+        team = res.scalar_one_or_none()
+        if not team:
+            team = Team(
+                code=t_data["code"],
+                name=t_data["name"],
+                short_name=t_data["short_name"],
+                sort_order=t_data["sort_order"],
+                color=t_data["color"],
+                description=t_data["description"],
+                is_active=True,
+            )
             db.add(team)
-    await db.flush()
 
-    logger.info("Seeding Lookup Lists and Values...")
+    logger.info("Seeding Lookup Lists & Values...")
     for list_key, values in LOOKUPS_DATA.items():
         res = await db.execute(select(LookupList).where(LookupList.key == list_key))
         lookup_list = res.scalar_one_or_none()
@@ -496,58 +652,61 @@ async def seed_database(db: AsyncSession) -> None:
             lookup_list = LookupList(
                 key=list_key,
                 name=list_key.replace("_", " ").title(),
+                description=f"{list_key.replace('_', ' ').title()} lookup category",
                 is_system=True,
                 is_active=True,
             )
             db.add(lookup_list)
             await db.flush()
 
-        for v_data in values:
+        for val_data in values:
             v_res = await db.execute(
                 select(LookupValue).where(
                     LookupValue.list_id == lookup_list.id,
-                    LookupValue.key == v_data["key"],
+                    LookupValue.key == val_data["key"],
                 )
             )
             if not v_res.scalar_one_or_none():
-                val = LookupValue(list_id=lookup_list.id, is_active=True, **v_data)
-                db.add(val)
-    await db.flush()
+                db.add(
+                    LookupValue(
+                        list_id=lookup_list.id,
+                        key=val_data["key"],
+                        label=val_data["label"],
+                        sort_order=val_data["sort_order"],
+                        is_active=True,
+                    )
+                )
 
-    # Seeding dev administrator ONLY when APP_ENV=development
+    # Dev Administrator
     settings = get_settings()
-    if settings.is_development:
-        logger.info("Development mode detected: seeding default development admin user...")
+    if settings.app_env == "development":
         admin_email = "admin@crbcl.ca"
-        admin_normalized = admin_email.lower()
-        res = await db.execute(select(User).where(User.email_normalized == admin_normalized))
+        res = await db.execute(select(User).where(User.email == admin_email))
         admin_user = res.scalar_one_or_none()
         if not admin_user:
+            logger.info("Seeding Dev Administrator (admin@crbcl.ca)...")
             admin_user = User(
                 email=admin_email,
-                email_normalized=admin_normalized,
-                password_hash=hash_password("crbcl_admin_2026"),
-                full_name="System Administrator",
-                display_name="Admin",
+                username="admin",
+                first_name="CRBCL",
+                last_name="Administrator",
+                hashed_password=hash_password("admin123456"),
                 is_active=True,
-                is_verified=True,
+                is_system=True,
             )
             db.add(admin_user)
             await db.flush()
 
-            exec_role = role_models.get("executive_director")
-            if exec_role:
-                ur = UserRole(user_id=admin_user.id, role_id=exec_role.id)
-                db.add(ur)
-                await db.flush()
+            # Assign Executive Director role
+            ed_role = role_models.get("executive_director")
+            if ed_role:
+                db.add(UserRole(user_id=admin_user.id, role_id=ed_role.id))
 
     await db.commit()
-    logger.info("Database bootstrap completed successfully.")
+    logger.info("Database bootstrap & seed complete.")
 
 
 async def main():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     async with async_session_factory() as session:
         await seed_database(session)
 

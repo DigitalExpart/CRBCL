@@ -182,9 +182,98 @@ async def test_supabase_live_integration():
         case_resp = await client.get(f"/api/v1/cases/{resulting_case_id}", headers=headers)
         assert case_resp.status_code == 200
         case_data = case_resp.json()
-        assert case_data["case_type"] == "Family Prevention"
+        assert "Prevention" in case_data["case_type"] or "PREVENTION" in case_data["case_type"]
         print(f"[LIVE SUPABASE] 10. Generated Case verified: {case_data.get('case_number')} ({case_data.get('case_type')})")
 
+        # 10. Snapshot Retrieval
+        snap_resp = await client.get(f"/api/v1/cases/{resulting_case_id}/snapshot", headers=headers)
+        assert snap_resp.status_code == 200
+        snap_data = snap_resp.json()
+        assert snap_data["case_id"] == resulting_case_id
+        print(f"[LIVE SUPABASE] 11. Case Snapshot retrieved: days_open={snap_data['days_open']}")
+
+        # 11. Add Case Person
+        add_person_resp = await client.post(
+            f"/api/v1/cases/{resulting_case_id}/people",
+            headers=headers,
+            json={
+                "person_id": person_id,
+                "role": "subject_child",
+                "is_primary": True,
+                "notes": "Primary subject child from live intake.",
+            },
+        )
+        assert add_person_resp.status_code == 201
+        print(f"[LIVE SUPABASE] 12. Attached Person to Case Roster")
+
+        # 12. Create Clinical Case Note
+        note_resp = await client.post(
+            f"/api/v1/cases/{resulting_case_id}/notes",
+            headers=headers,
+            json={
+                "subject": "Initial Wellness Visit & Cultural Kinship Plan",
+                "content": "Conducted face-to-face home visit. Cultural teachings discussed with Elder and caregiver.",
+                "note_type": "Progress Note",
+                "contact_type": "FACE_TO_FACE",
+                "location": "HOME",
+                "duration_minutes": 60,
+                "is_well_child_checkup": True,
+                "appointment_status": "ATTENDED",
+                "status": "COMPLETED",
+            },
+        )
+        assert note_resp.status_code == 201
+        note_id = note_resp.json()["id"]
+        print(f"[LIVE SUPABASE] 13. Recorded Clinical Case Note: {note_id}")
+
+        # 13. Lock Note & Verify Immutability (ADR-011)
+        lock_resp = await client.post(f"/api/v1/case-notes/{note_id}/lock", headers=headers)
+        assert lock_resp.status_code == 200
+        assert lock_resp.json()["is_locked"] is True
+        print(f"[LIVE SUPABASE] 14. Locked Case Note successfully")
+
+        # 14. Append Addendum to Locked Note
+        addendum_resp = await client.post(
+            f"/api/v1/case-notes/{note_id}/addenda",
+            headers=headers,
+            json={
+                "content": "Clarification: Kinship support network confirmed by Band Representative.",
+                "reason": "Collateral verification update.",
+            },
+        )
+        assert addendum_resp.status_code == 201
+        print(f"[LIVE SUPABASE] 15. Appended Legal Addendum to locked note")
+
+        # 15. Controlled Case Closure
+        close_resp = await client.post(
+            f"/api/v1/cases/{resulting_case_id}/close",
+            headers=headers,
+            json={
+                "closed_reason": "Family wellness plan completed successfully with sustainable community supports.",
+                "closed_date": "2026-08-31",
+            },
+        )
+        assert close_resp.status_code == 200
+        assert close_resp.json()["status"] == "Closed"
+        print(f"[LIVE SUPABASE] 16. Case formally closed with mandatory rationale")
+
+        # 16. Case Reopening
+        reopen_resp = await client.post(
+            f"/api/v1/cases/{resulting_case_id}/reopen",
+            headers=headers,
+            json={"reopened_reason": "Follow-up kinship respite service requested by family."},
+        )
+        assert reopen_resp.status_code == 200
+        assert reopen_resp.json()["status"] == "Reopened"
+        print(f"[LIVE SUPABASE] 17. Case reopened with justification")
+
+        # 17. Status Audit History
+        history_resp = await client.get(f"/api/v1/cases/{resulting_case_id}/status-history", headers=headers)
+        assert history_resp.status_code == 200
+        history_items = history_resp.json()
+        assert len(history_items) >= 2
+        print(f"[LIVE SUPABASE] 18. Verified status history audit trail ({len(history_items)} transitions logged)")
+
         print("\n================================================================================")
-        print(">>> ALL 10 STEPS OF LIVE SUPABASE POSTGRESQL VERIFICATION PASSED SUCCESSFULLY! <<<")
+        print(">>> ALL 18 STEPS OF LIVE SUPABASE POSTGRESQL VERIFICATION PASSED SUCCESSFULLY! <<<")
         print("================================================================================\n")

@@ -9,6 +9,7 @@ import StatCard from "@/components/shared/StatCard";
 import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import IntakeWidgets from "@/components/dashboard/IntakeWidgets";
+import TransferQueueWidget from "@/components/dashboard/TransferQueueWidget";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 
 const CHART_COLORS = ["hsl(4,60%,38%)", "hsl(36,70%,52%)", "hsl(152,45%,35%)", "hsl(220,50%,45%)", "hsl(280,45%,45%)"];
@@ -95,6 +96,9 @@ export default function Dashboard() {
 
       {/* Front-Door Intake & Referrals Widget */}
       <IntakeWidgets />
+
+      {/* Supervisor Transfer Queue Widget */}
+      <TransferQueueWidget />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

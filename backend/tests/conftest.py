@@ -111,8 +111,20 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.HOUSEHOLD_READ, Permissions.HOUSEHOLD_WRITE,
         Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
         Permissions.SCHOOL_READ, Permissions.SCHOOL_WRITE,
-        Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE,
-        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
+        Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE, Permissions.CASE_DELETE, Permissions.CASE_ASSIGN,
+        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
+        # Phase 4 Case Management & Notes Permissions
+        Permissions.CASE_CLOSE, Permissions.CASE_REOPEN,
+        Permissions.CASE_PEOPLE_READ, Permissions.CASE_PEOPLE_WRITE,
+        Permissions.CASE_ASSIGNMENT_READ, Permissions.CASE_ASSIGNMENT_WRITE,
+        Permissions.CASE_EXTERNAL_WORKER_READ, Permissions.CASE_EXTERNAL_WORKER_WRITE,
+        Permissions.CASE_SOURCE_READ, Permissions.CASE_SOURCE_WRITE,
+        Permissions.CASE_LINK_READ, Permissions.CASE_LINK_WRITE,
+        Permissions.CASE_RESTRICTION_READ, Permissions.CASE_RESTRICTION_MANAGE,
+        Permissions.CASE_TRANSFER_READ, Permissions.CASE_TRANSFER_CREATE, Permissions.CASE_TRANSFER_APPROVE,
+        Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK, Permissions.CASE_NOTE_UNLOCK,
+        Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
+        # Admin & System
         Permissions.ADMIN_USERS_MANAGE, Permissions.ADMIN_ROLES_MANAGE,
         Permissions.ADMIN_TEAMS_MANAGE, Permissions.ADMIN_CONFIGURATION_MANAGE,
         Permissions.AUDIT_READ,
@@ -154,13 +166,22 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
         Permissions.SCHOOL_READ, Permissions.SCHOOL_WRITE,
         Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE,
-        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
+        Permissions.CASE_PEOPLE_READ, Permissions.CASE_PEOPLE_WRITE,
+        Permissions.CASE_ASSIGNMENT_READ,
+        Permissions.CASE_EXTERNAL_WORKER_READ, Permissions.CASE_EXTERNAL_WORKER_WRITE,
+        Permissions.CASE_SOURCE_READ, Permissions.CASE_SOURCE_WRITE,
+        Permissions.CASE_LINK_READ, Permissions.CASE_LINK_WRITE,
+        Permissions.CASE_RESTRICTION_READ,
+        Permissions.CASE_TRANSFER_READ, Permissions.CASE_TRANSFER_CREATE,
+        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
+        Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK,
+        Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
         Permissions.TIMELINE_READ,
     ]:
         rp = RolePermission(role_id=caseworker_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
 
-    # Grant Supervisor permissions (including intake approval & return)
+    # Grant Supervisor permissions
     for p_key in [
         Permissions.INTAKE_READ, Permissions.INTAKE_CREATE, Permissions.INTAKE_UPDATE,
         Permissions.INTAKE_ASSIGN, Permissions.INTAKE_SUBMIT, Permissions.INTAKE_APPROVE, Permissions.INTAKE_RETURN,
@@ -177,8 +198,18 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.HOUSEHOLD_READ, Permissions.HOUSEHOLD_WRITE,
         Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
         Permissions.SCHOOL_READ, Permissions.SCHOOL_WRITE,
-        Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE,
-        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
+        Permissions.CASE_READ, Permissions.CASE_CREATE, Permissions.CASE_UPDATE, Permissions.CASE_ASSIGN,
+        Permissions.CASE_CLOSE, Permissions.CASE_REOPEN,
+        Permissions.CASE_PEOPLE_READ, Permissions.CASE_PEOPLE_WRITE,
+        Permissions.CASE_ASSIGNMENT_READ, Permissions.CASE_ASSIGNMENT_WRITE,
+        Permissions.CASE_EXTERNAL_WORKER_READ, Permissions.CASE_EXTERNAL_WORKER_WRITE,
+        Permissions.CASE_SOURCE_READ, Permissions.CASE_SOURCE_WRITE,
+        Permissions.CASE_LINK_READ, Permissions.CASE_LINK_WRITE,
+        Permissions.CASE_RESTRICTION_READ, Permissions.CASE_RESTRICTION_MANAGE,
+        Permissions.CASE_TRANSFER_READ, Permissions.CASE_TRANSFER_CREATE, Permissions.CASE_TRANSFER_APPROVE,
+        Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
+        Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK, Permissions.CASE_NOTE_UNLOCK,
+        Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
         Permissions.TIMELINE_READ,
     ]:
         rp = RolePermission(role_id=supervisor_role.id, permission_id=perms[p_key].id)

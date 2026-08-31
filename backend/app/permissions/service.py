@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.case_management import CaseRestriction
 from app.models.role import UserRole
 from app.models.team import TeamMembership, UserTeamAccess
 from app.models.user import User
@@ -43,10 +44,6 @@ class PermissionService:
             - set of team UUIDs otherwise
         """
         perms = await self.get_user_permissions(user_id)
-        # Note: IT Admin does NOT get unrestricted team access to client data!
-        # Only roles with specific global scoping or admin.teams.manage get all teams if configured.
-        # But for clinical/case data, team scope is strictly enforced.
-
         # Fetch active team memberships
         memberships_res = await self.db.execute(
             select(TeamMembership.team_id).where(
@@ -75,7 +72,6 @@ class PermissionService:
     async def user_can_access_team(self, user_id: uuid.UUID, team_id: uuid.UUID | None) -> bool:
         """Check if user is authorized to access records scoped to a team."""
         if team_id is None:
-            # Unassigned records can be viewed by anyone with the base permission
             return True
 
         accessible_teams = await self.get_user_accessible_team_ids(user_id)
@@ -83,11 +79,22 @@ class PermissionService:
             return True
         return team_id in accessible_teams
 
+    async def is_user_restricted_from_case(self, user_id: uuid.UUID, case_id: uuid.UUID) -> bool:
+        """Check if user has an active conflict-of-interest / administrative case restriction."""
+        stmt = select(CaseRestriction).where(
+            CaseRestriction.case_id == case_id,
+            CaseRestriction.user_id == user_id,
+            CaseRestriction.is_active == True,  # noqa: E712
+        )
+        res = await self.db.execute(stmt)
+        return res.scalar_one_or_none() is not None
+
     async def check_access(
         self,
         user: User,
         permission_key: str,
         resource_team_id: uuid.UUID | None = None,
+        case_id: uuid.UUID | None = None,
     ) -> bool:
         """Full 5-stage authorization evaluation foundation."""
         # 1. Authentication check
@@ -103,5 +110,10 @@ class PermissionService:
             if not await self.user_can_access_team(user.id, resource_team_id):
                 return False
 
-        # 4 & 5: Record Restriction & Field Policy (Allow/Deny)
+        # 4. Case Restriction Check (ADR-010)
+        if case_id is not None:
+            if await self.is_user_restricted_from_case(user.id, case_id):
+                return False
+
+        # 5. Field Policy / Allow
         return True

@@ -1,76 +1,57 @@
-# CRBCL Database Schema Documentation
+# CRBCL Database Schema Reference
 
-## Foundation Extensions
-- `uuid-ossp`: UUID v4 primary keys
-- `postgis`: Geospatial capabilities for lodge/territory mapping
-- `pg_trgm`: Trigram GIN indexing for high-speed client & person fuzzy matching
+## Hosted Database Infrastructure
+- **Engine**: Supabase PostgreSQL / PostGIS 15+
+- **Current Revision**: `004_case_management`
 
-## Table Catalog
+---
 
-### 1. People & Canonical Identity (Phase 2)
-- `persons`: Master demographic entity for all human beings.
-- `person_addresses`: Historical address ledger with latitude/longitude and `on_reserve` flags.
-- `person_contacts`: Normalized phone, email, and social contact channels.
-- `person_physical_descriptions`: Distinguishing marks, scars, corrective lenses, and attributes.
-- `person_cultural_profiles`: Ceremonies, Elders connected, land-based traditions, and language goals.
-- `person_strengths`: Relational strength attributes linked to configurable lookups.
-- `person_challenges`: Relational behavioral challenges and support flags.
-- `person_merges`: Immutable audit history of controlled duplicate identity merges.
+## Entity-Relationship Catalog
 
-### 2. Clinical & Medical Foundation (Phase 2)
-- `client_medical_profiles`: Overview medical, dental, and mental health notes.
-- `client_allergies`: Allergy records with severity and reaction descriptions.
-- `client_medical_conditions`: Diagnosed chronic and acute conditions.
-- `client_medications`: Prescription ledger with dosage, frequency, prescriber, and start/end dates.
+### Platform Foundation (001)
+- `users`: Staff user accounts with password hashes, verification, and active state.
+- `roles`: Role definitions (`caseworker`, `supervisor`, `director`, `it_admin`, etc.).
+- `permissions`: Fine-grained permission keys (`case.read`, `case_note.lock`, `case.transfer.approve`, etc.).
+- `user_roles`: User-to-Role assignments.
+- `role_permissions`: Role-to-Permission assignments.
+- `teams`: Organizational departments and units.
+- `team_memberships`: User team memberships with primary flags.
+- `lookup_lists` & `lookup_values`: Configurable reference lookup values.
+- `audit_events`: Tamper-evident audit trail for data modifications.
+- `timeline_events`: Sacred timeline storytelling stream.
+- `outbox_events`: Transactional outbox event bus for reliable notifications.
 
-### 3. Provider Pool & School Directory (Phase 2)
-- `providers`: Reusable pool of healthcare, counselling, dental, and cultural providers.
-- `provider_locations`: Clinic/office locations for providers.
-- `provider_specialties`: Specialty taxonomy tags.
-- `client_providers`: Linkage connecting clients to assigned care providers.
-- `schools`: School and daycare directory.
-- `client_school_enrolments`: Enrollment history with Individualized Education Plan (IEP) tracking.
+### People & Families (002)
+- `persons`: Master person directory with Indigenous cultural affiliations and demographics.
+- `person_identifications`: Legal IDs (Status Card, Treaty #, Health Card).
+- `person_contacts`: Addresses, phone numbers, emergency contacts.
+- `person_relationships`: Kinship networks, family relationships.
+- `person_cultural_profiles`: Band affiliations, clan, language, elder connections.
+- `clients`: Program enrollment wrappers over canonical `persons`.
+- `families`: Family wellness files.
+- `family_members`: Links linking persons to families with roles and caregiving status.
 
-### 4. Family & Residential Households (Phase 2)
-- `families`: Relational/biological family units.
-- `family_members`: Person memberships in families with roles.
-- `family_relationships`: Directional kinship connections (e.g. `mother_of`, `guardian_of`).
-- `households`: Physical residential dwelling units.
-- `household_memberships`: Resident living arrangements during specified date ranges.
+### Intake & Referrals (003)
+- `referral_sequences`: Atomic integer sequence per year (`INT-YYYY-NNNNNN`).
+- `intake_referrals`: Front-door referral records.
+- `referral_people`: Subjects and collaterals identified during intake.
+- `referral_concerns`: Safety concerns and protective factors.
+- `referral_incidents`: Specific reported incident details.
+- `intake_decisions`: Screening decisions and supervisor approval.
+- `child_dispositions`: Multi-child disposition routing records.
 
-### 5. Identity & Access Control (Phase 1)
-- `users`: User profiles with normalized emails, bcrypt hashes, lockout tracking, and soft-delete.
-- `sessions`: Revocable user sessions and refresh token hashes.
-- `user_preferences`: Interface and notification preferences.
-- `permissions`: Capability keys.
-- `roles`: System roles.
-- `role_permissions`: Join table mapping permissions to roles.
-- `user_roles`: Join table mapping roles to users.
-- `teams`: The 22 CRBCL teams.
-- `team_memberships`: Primary and secondary team memberships.
-- `user_team_access`: Direct team data-scoping grants.
-
-### 6. Compliance & Event Infrastructure (Phase 1)
-- `audit_events`: Append-only compliance change log with before/after state.
-- `access_events`: Sensitive read-access logging (e.g. `CLIENT_PROFILE_VIEWED`).
-- `timeline_events`: Sacred Timeline business history milestones.
-- `outbox_events`: Transactional outbox with exponential backoff status tracking.
-- `idempotency_keys`: Prevents duplicate executions of critical operations.
-
-### 7. Configuration & Terminology (Phase 1)
-- `system_config`: Typed key-value system settings.
-- `lookup_lists`: Categorized lookup lists with active/inactive flags.
-- `lookup_values`: Configurable items with display labels and sort orders.
-- `terminology_keys`: Governance keys for bilingual cultural terms.
-- `terminology_translations`: Approved translations in English and Cree.
-
-### 8. Document Storage (Phase 1)
-- `documents`: Metadata, private storage paths, validation status.
-- `document_versions`: Document history and size records.
-- `document_links`: Polymorphic entity linkage.
-- `document_access_events`: Download and view audits.
-
-### 9. Core Domain Entities (Phase 1)
-- `clients`: Individual case profiles linked to canonical `person_id`.
-- `cases`: Service files with human-readable case numbers (`CRB-YYYYMM-XXXX`).
-- `case_notes`: Timestamped observations with confidentiality flags.
+### Core Case Management (004)
+- `cases`: Master case file entity.
+- `case_sequences`: Year-month counters (`CRB-YYYYMM-NNNN`).
+- `case_people`: Case roster linking canonical `persons`.
+- `case_assignments`: Caseworker and investigator staff assignments.
+- `case_external_workers`: External contacts (Band Representatives, Legal Counsel).
+- `case_sources`: Collateral & Other sources.
+- `case_links`: Sibling and concurrent case linkages.
+- `case_restrictions`: Conflict-of-interest access control blocks.
+- `case_transfers`: Inter-team transfers with approval queues.
+- `case_status_history`: Formal status lifecycle audit log.
+- `case_notes`: Clinical case documentation.
+- `case_note_people`: Individuals present during note contact.
+- `case_note_attachments`: Documents attached to case notes.
+- `case_note_addenda`: Append-only addenda for locked notes.

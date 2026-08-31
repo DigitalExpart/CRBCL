@@ -59,19 +59,41 @@ class Permissions(StrEnum):
     SCHOOL_READ = "school.read"
     SCHOOL_WRITE = "school.write"
 
-    # Case permissions
+    # Core Case permissions (Phase 4)
     CASE_READ = "case.read"
     CASE_CREATE = "case.create"
     CASE_UPDATE = "case.update"
     CASE_DELETE = "case.delete"
     CASE_ASSIGN = "case.assign"
+    CASE_CLOSE = "case.close"
+    CASE_REOPEN = "case.reopen"
 
-    # Case note permissions
+    # Case Sub-domain permissions (Phase 4)
+    CASE_PEOPLE_READ = "case.people.read"
+    CASE_PEOPLE_WRITE = "case.people.write"
+    CASE_ASSIGNMENT_READ = "case.assignment.read"
+    CASE_ASSIGNMENT_WRITE = "case.assignment.write"
+    CASE_EXTERNAL_WORKER_READ = "case.external_worker.read"
+    CASE_EXTERNAL_WORKER_WRITE = "case.external_worker.write"
+    CASE_SOURCE_READ = "case.source.read"
+    CASE_SOURCE_WRITE = "case.source.write"
+    CASE_LINK_READ = "case.link.read"
+    CASE_LINK_WRITE = "case.link.write"
+    CASE_RESTRICTION_READ = "case.restriction.read"
+    CASE_RESTRICTION_MANAGE = "case.restriction.manage"
+    CASE_TRANSFER_READ = "case.transfer.read"
+    CASE_TRANSFER_CREATE = "case.transfer.create"
+    CASE_TRANSFER_APPROVE = "case.transfer.approve"
+
+    # Case note permissions (Phase 4)
     CASE_NOTE_READ = "case_note.read"
     CASE_NOTE_CREATE = "case_note.create"
     CASE_NOTE_UPDATE = "case_note.update"
+    CASE_NOTE_COMPLETE = "case_note.complete"
     CASE_NOTE_LOCK = "case_note.lock"
     CASE_NOTE_UNLOCK = "case_note.unlock"
+    CASE_NOTE_ADDENDUM = "case_note.addendum"
+    CASE_NOTE_EXPORT = "case_note.export"
 
     # Document permissions
     DOCUMENT_READ = "document.read"

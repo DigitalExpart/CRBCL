@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
 from app.models.case import Case
+from app.models.case_management import CaseAssignment, CasePerson, CaseStatusHistory
 from app.models.client import Client
 from app.models.person import Person
 from app.models.referral import ChildDisposition, Referral
@@ -66,6 +67,7 @@ class ReferralRoutingService:
                         title=f"Child Safety Investigation: {child_name}",
                         case_type="Child Safety (Protection)",
                         status="Open",
+                        stage="INVESTIGATION",
                         priority="High",
                         risk_level=referral.risk_level or "High",
                         description=f"Initiated from Referral {referral.referral_number}. Primary Reason: {disp.reason}",
@@ -77,6 +79,43 @@ class ReferralRoutingService:
                         intake_date=referral.received_date,
                         origin_referral_id=referral.id,
                         origin_disposition_id=disp.id,
+                        created_by=supervisor_id,
+                    )
+
+                    # Relational subject child attachment
+                    if person:
+                        self.db.add(
+                            CasePerson(
+                                case_id=case.id,
+                                person_id=person.id,
+                                role="subject_child",
+                                is_primary=True,
+                                start_date=referral.received_date,
+                                created_by=supervisor_id,
+                            )
+                        )
+
+                    # Baseline assignment
+                    if referral.assigned_worker_id:
+                        self.db.add(
+                            CaseAssignment(
+                                case_id=case.id,
+                                user_id=referral.assigned_worker_id,
+                                role="primary_investigator",
+                                is_active=True,
+                                assigned_by=supervisor_id,
+                            )
+                        )
+
+                    # Status History
+                    self.db.add(
+                        CaseStatusHistory(
+                            case_id=case.id,
+                            previous_status=None,
+                            new_status="Open",
+                            reason=f"Created on approval of Referral {referral.referral_number}",
+                            changed_by=supervisor_id,
+                        )
                     )
 
                     disp.resulting_case_id = case.id
@@ -107,6 +146,7 @@ class ReferralRoutingService:
                         title=f"{case_type}: {child_name}",
                         case_type=case_type,
                         status="Open",
+                        stage="SERVICE_DELIVERY",
                         priority="Medium",
                         risk_level=referral.risk_level or "Medium",
                         description=f"Initiated from Referral {referral.referral_number}. Services Goal: {disp.reason}",
@@ -118,6 +158,43 @@ class ReferralRoutingService:
                         intake_date=referral.received_date,
                         origin_referral_id=referral.id,
                         origin_disposition_id=disp.id,
+                        created_by=supervisor_id,
+                    )
+
+                    # Relational subject child attachment
+                    if person:
+                        self.db.add(
+                            CasePerson(
+                                case_id=case.id,
+                                person_id=person.id,
+                                role="subject_child",
+                                is_primary=True,
+                                start_date=referral.received_date,
+                                created_by=supervisor_id,
+                            )
+                        )
+
+                    # Baseline assignment
+                    if referral.assigned_worker_id:
+                        self.db.add(
+                            CaseAssignment(
+                                case_id=case.id,
+                                user_id=referral.assigned_worker_id,
+                                role="caseworker",
+                                is_active=True,
+                                assigned_by=supervisor_id,
+                            )
+                        )
+
+                    # Status History
+                    self.db.add(
+                        CaseStatusHistory(
+                            case_id=case.id,
+                            previous_status=None,
+                            new_status="Open",
+                            reason=f"Created on approval of Referral {referral.referral_number}",
+                            changed_by=supervisor_id,
+                        )
                     )
 
                     disp.resulting_case_id = case.id

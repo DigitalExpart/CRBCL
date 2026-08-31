@@ -1,31 +1,13 @@
-# CRBCL Server-Side Authorization Model
+# CRBCL Security & Authorization Architecture
 
-## The 5-Stage Evaluation Pipeline
-
-```
-1. Authentication (JWT / Session Cookie + CSRF Defense)
-      ↓
-2. Role Permission Check (Capability: e.g. client.read, client.medical.read)
-      ↓
-3. Team Scope Validation (Is resource in user's assigned/accessible teams?)
-      ↓
-4. Record Restriction (Confidentiality, sealed records, worker assignment)
-      ↓
-5. Field Policy (Field-level masking / redaction on sensitive identifiers)
-      ↓
-ALLOW or DENY (HTTP 403)
-```
-
-## Phase 2 Field-Level Permissions
-- `client.identifiers.read` / `client.identifiers.write`: Protects Treaty Numbers and Provincial Health Card Numbers.
-- `client.medical.read` / `client.medical.write`: Governs clinical medical profiles, allergies, conditions, and medications.
-- `client.school.read` / `client.school.write`: Governs school enrollments and Individualized Education Plan (IEP) details.
-- `client.cultural.read` / `client.cultural.write`: Governs cultural teachings, ceremonies, and Elder connections.
-- `family.relationships.read` / `family.relationships.write`: Governs family kinship relationships and Genogram structures.
-- `household.read` / `household.write`: Governs physical residential addresses, households, and mapping.
-- `provider.read` / `provider.write`: Governs healthcare and cultural provider directory entries.
-
-## Technical vs Clinical Separation
-- **IT Administrator**: Possesses `admin.*` and `audit.read` capabilities. Explicitly **denied** `client.*`, `case.*`, `case_note.*`, and `client.medical.*` permissions to prevent unauthorized access to sensitive family welfare records.
-- **Caseworker**: Read/write access strictly scoped to assigned teams and caseload.
-- **Clinical Staff / LPN**: Granted `client.medical.*` and `client.read/update` for healthcare management.
+## Access Control Model
+CRBCL enforces strict multi-layered authorization:
+1. **JWT Bearer Authentication**: FastAPI validates signed JWT tokens issued at login.
+2. **Role-Based Access Control (RBAC)**: Fine-grained permissions catalog (`Permissions` enum) mapped to Roles.
+3. **Team-Scoped Access**: Caseworkers are bounded to their assigned team(s) unless holding cross-team executive roles.
+4. **Conflict-of-Interest Case Restrictions (ADR-010)**:
+   - Evaluated centrally at `PermissionService.check_case_access`.
+   - When a worker has an active restriction on a case, any API request for that case returns `HTTP 403 Forbidden` immediately, overriding general `case.read` or `case.update` permissions.
+5. **Data Protection**:
+   - Zero database credentials exposed to browser.
+   - Frontend communicates exclusively via authenticated REST API endpoints on `/api/v1/*`.
