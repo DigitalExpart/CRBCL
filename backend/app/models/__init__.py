@@ -101,4 +101,4 @@ from app.models.school import (  # noqa: F401
 from app.models.team import Team, TeamMembership, UserTeamAccess  # noqa: F401
 from app.models.terminology import TerminologyKey, TerminologyTranslation  # noqa: F401
 from app.models.timeline import TimelineEvent  # noqa: F401
-from app.models.user import Session, User, UserPreference  # noqa: F401
+from app.models.user import EmailVerificationCode, Session, User, UserPreference  # noqa: F401

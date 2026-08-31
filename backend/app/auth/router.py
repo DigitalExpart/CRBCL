@@ -14,14 +14,18 @@ from app.auth.schemas import (
     RefreshResponse,
     RegisterRequest,
     RegisterResponse,
+    ResendOtpRequest,
     ResetPasswordRequest,
     UserInfo,
+    VerifyOtpRequest,
+    VerifyOtpResponse,
 )
 from app.auth.security import generate_csrf_token, get_cookie_settings
 from app.auth.service import AuthService
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.models.user import User
+from app.services.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -180,8 +184,68 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
             detail={"error": {"code": "EMAIL_EXISTS", "message": "An account with this email already exists"}},
         )
     user = await auth.register_user(body.email, body.password, body.full_name)
+    
+    # Generate and dispatch 6-digit verification code
+    email_service = EmailService(db)
+    await email_service.create_and_send_verification_code(body.email)
+    
     await db.commit()
-    return RegisterResponse(user_id=user.id)
+    return RegisterResponse(user_id=user.id, email=body.email)
+
+
+@router.post("/verify-otp", response_model=VerifyOtpResponse)
+async def verify_otp(
+    request: Request,
+    response: Response,
+    body: VerifyOtpRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    email_service = EmailService(db)
+    is_valid = await email_service.verify_otp(body.email, body.otp_code)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": {"code": "INVALID_OTP", "message": "Invalid or expired verification code"}},
+        )
+
+    auth = AuthService(db)
+    user = await auth.get_user_by_email(body.email)
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": {"code": "USER_NOT_FOUND", "message": "User account not found or disabled"}},
+        )
+
+    access_token, refresh_token = await auth.create_session(
+        user,
+        user_agent=request.headers.get("user-agent"),
+        ip_address=request.client.host if request.client else None,
+    )
+    csrf_token = generate_csrf_token()
+    _set_auth_cookies(response, access_token, refresh_token, csrf_token)
+    await db.commit()
+
+    # Refresh user with roles/permissions loaded
+    user = await auth.get_user_by_id(user.id)
+    settings = get_settings()
+    return VerifyOtpResponse(
+        access_token=access_token,
+        expires_in=settings.access_token_ttl,
+        user=_build_user_info(user),
+    )
+
+
+@router.post("/resend-otp", response_model=MessageResponse)
+async def resend_otp(body: ResendOtpRequest, db: AsyncSession = Depends(get_db)):
+    auth = AuthService(db)
+    user = await auth.get_user_by_email(body.email)
+    if not user:
+        return MessageResponse(message="If the account exists, a new verification code has been dispatched.")
+
+    email_service = EmailService(db)
+    await email_service.create_and_send_verification_code(body.email)
+    await db.commit()
+    return MessageResponse(message="Verification code sent to your email address")
 
 
 @router.post("/forgot-password", response_model=MessageResponse)

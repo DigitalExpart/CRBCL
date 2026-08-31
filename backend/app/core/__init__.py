@@ -60,6 +60,17 @@ class Settings(BaseSettings):
     # ── Demo Mode ────────────────────────────────────────────
     demo_mode: bool = False
 
+    # ── Email Delivery (SMTP / Resend / Console) ─────────────
+    email_provider: Literal["console", "smtp", "resend", "none"] = "console"
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = True
+    smtp_from_email: str = "noreply@crbcl.ca"
+    smtp_from_name: str = "Chief Red Bear Children's Lodge"
+    resend_api_key: str = ""
+
     # ── Derived helpers ──────────────────────────────────────
     @property
     def is_development(self) -> bool:

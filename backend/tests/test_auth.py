@@ -94,3 +94,60 @@ async def test_logout_clears_cookies(client: AsyncClient, caseworker_user):
     response = await client.post("/api/v1/auth/logout", headers=caseworker_user["headers"])
     assert response.status_code == 200
     assert response.json()["message"] == "Logged out successfully"
+
+
+@pytest.mark.asyncio
+async def test_register_and_verify_otp_flow(client: AsyncClient, db_session: AsyncSession):
+    # 1. Register new account
+    reg_res = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "newuser@crbcl.ca", "password": "Password123!", "full_name": "New User"},
+    )
+    assert reg_res.status_code == 200
+    reg_data = reg_res.json()
+    assert reg_data["success"] is True
+
+    # 2. Duplicate registration rejected
+    dup_res = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "newuser@crbcl.ca", "password": "Password123!", "full_name": "New User"},
+    )
+    assert dup_res.status_code == 409
+
+    # 3. Retrieve generated verification code from DB
+    from app.models.user import EmailVerificationCode
+    from sqlalchemy import select
+    res = await db_session.execute(
+        select(EmailVerificationCode).where(EmailVerificationCode.email == "newuser@crbcl.ca")
+    )
+    code_record = res.scalar_one_or_none()
+    assert code_record is not None
+
+    # 4. Invalid OTP rejected
+    invalid_res = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"email": "newuser@crbcl.ca", "otp_code": "000000"},
+    )
+    assert invalid_res.status_code == 400
+
+    # 5. Resend OTP creates fresh code
+    resend_res = await client.post(
+        "/api/v1/auth/resend-otp",
+        json={"email": "newuser@crbcl.ca"},
+    )
+    assert resend_res.status_code == 200
+
+    # 6. Verify with helper that generates valid match
+    from app.services.email_service import EmailService
+    svc = EmailService(db_session)
+    valid_code = await svc.create_and_send_verification_code("newuser@crbcl.ca")
+    await db_session.commit()
+
+    verify_res = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"email": "newuser@crbcl.ca", "otp_code": valid_code},
+    )
+    assert verify_res.status_code == 200
+    verify_data = verify_res.json()
+    assert "access_token" in verify_data
+    assert verify_data["user"]["email"] == "newuser@crbcl.ca"

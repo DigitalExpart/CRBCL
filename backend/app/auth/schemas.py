@@ -28,8 +28,29 @@ class RegisterRequest(BaseModel):
 
 class RegisterResponse(BaseModel):
     success: bool = True
-    message: str = "Registration successful"
+    message: str = "Registration successful. Verification code sent."
     user_id: uuid.UUID
+    email: str | None = None
+
+
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    otp_code: str = Field(default="", min_length=4, max_length=10, alias="otpCode")
+
+    model_config = {"populate_by_name": True}
+
+
+class VerifyOtpResponse(BaseModel):
+    success: bool = True
+    message: str = "Email verified successfully"
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user: UserInfo
+
+
+class ResendOtpRequest(BaseModel):
+    email: EmailStr
 
 
 class RefreshResponse(BaseModel):
