@@ -47,6 +47,10 @@ const getAppParams = () => {
   };
 };
 
+export const appParams = {
+  ...getAppParams()
+};
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
 const enableDemoData = import.meta.env.VITE_ENABLE_DEMO_DATA
   ? import.meta.env.VITE_ENABLE_DEMO_DATA === 'true'
