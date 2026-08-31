@@ -168,6 +168,12 @@ class EmailService:
 
     async def _send_via_resend(self, to_email: str, subject: str, html: str, text: str) -> bool:
         """Dispatch email via Resend REST API."""
+        from_addr = self.settings.smtp_from_email
+        if not from_addr or "crbcl.ca" in from_addr:
+            from_addr = "onboarding@resend.dev"
+
+        from_header = f"{self.settings.smtp_from_name} <{from_addr}>"
+
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 res = await client.post(
@@ -177,7 +183,7 @@ class EmailService:
                         "Content-Type": "application/json",
                     },
                     json={
-                        "from": f"{self.settings.smtp_from_name} <{self.settings.smtp_from_email}>",
+                        "from": from_header,
                         "to": [to_email],
                         "subject": subject,
                         "html": html,
@@ -185,7 +191,7 @@ class EmailService:
                     },
                 )
                 if res.status_code in (200, 201):
-                    logger.info("Verification email sent via Resend to %s", to_email)
+                    logger.info("Verification email successfully sent via Resend to %s", to_email)
                     return True
                 logger.error("Resend API failed [%s]: %s", res.status_code, res.text)
                 return False
