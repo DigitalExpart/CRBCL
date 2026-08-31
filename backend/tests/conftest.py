@@ -124,6 +124,14 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.CASE_TRANSFER_READ, Permissions.CASE_TRANSFER_CREATE, Permissions.CASE_TRANSFER_APPROVE,
         Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK, Permissions.CASE_NOTE_UNLOCK,
         Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
+        # Phase 5 Assessment Permissions
+        Permissions.ASSESSMENT_READ, Permissions.ASSESSMENT_CREATE, Permissions.ASSESSMENT_UPDATE,
+        Permissions.ASSESSMENT_COMPLETE, Permissions.ASSESSMENT_LOCK, Permissions.ASSESSMENT_UNLOCK,
+        Permissions.ASSESSMENT_REASSIGN, Permissions.ASSESSMENT_PRINT, Permissions.ASSESSMENT_COMPARE,
+        Permissions.ASSESSMENT_HOME_READ, Permissions.ASSESSMENT_HOME_WRITE,
+        Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
+        Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
+        Permissions.ASSESSMENT_TEMPLATE_READ, Permissions.ASSESSMENT_TEMPLATE_MANAGE,
         # Admin & System
         Permissions.ADMIN_USERS_MANAGE, Permissions.ADMIN_ROLES_MANAGE,
         Permissions.ADMIN_TEAMS_MANAGE, Permissions.ADMIN_CONFIGURATION_MANAGE,
@@ -134,6 +142,10 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         db_session.add(p)
         perms[p_key] = p
     await db_session.flush()
+
+    # Create Executive Director Role
+    ed_role = Role(key="executive_director", name="Executive Director", is_system=True)
+    db_session.add(ed_role)
 
     # Create Caseworker Role
     caseworker_role = Role(key="caseworker", name="Caseworker", is_system=True)
@@ -147,6 +159,11 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     it_admin_role = Role(key="it_admin", name="IT Admin", is_system=True)
     db_session.add(it_admin_role)
     await db_session.flush()
+
+    # Grant Executive Director ALL permissions
+    for p_key in perms:
+        rp = RolePermission(role_id=ed_role.id, permission_id=perms[p_key].id)
+        db_session.add(rp)
 
     # Grant Caseworker permissions
     for p_key in [
@@ -176,6 +193,13 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
         Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK,
         Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
+        Permissions.ASSESSMENT_READ, Permissions.ASSESSMENT_CREATE, Permissions.ASSESSMENT_UPDATE,
+        Permissions.ASSESSMENT_COMPLETE, Permissions.ASSESSMENT_LOCK,
+        Permissions.ASSESSMENT_PRINT, Permissions.ASSESSMENT_COMPARE,
+        Permissions.ASSESSMENT_HOME_READ, Permissions.ASSESSMENT_HOME_WRITE,
+        Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
+        Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
+        Permissions.ASSESSMENT_TEMPLATE_READ,
         Permissions.TIMELINE_READ,
     ]:
         rp = RolePermission(role_id=caseworker_role.id, permission_id=perms[p_key].id)
@@ -210,6 +234,13 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
         Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK, Permissions.CASE_NOTE_UNLOCK,
         Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
+        Permissions.ASSESSMENT_READ, Permissions.ASSESSMENT_CREATE, Permissions.ASSESSMENT_UPDATE,
+        Permissions.ASSESSMENT_COMPLETE, Permissions.ASSESSMENT_LOCK, Permissions.ASSESSMENT_UNLOCK,
+        Permissions.ASSESSMENT_PRINT, Permissions.ASSESSMENT_COMPARE,
+        Permissions.ASSESSMENT_HOME_READ, Permissions.ASSESSMENT_HOME_WRITE,
+        Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
+        Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
+        Permissions.ASSESSMENT_TEMPLATE_READ,
         Permissions.TIMELINE_READ,
     ]:
         rp = RolePermission(role_id=supervisor_role.id, permission_id=perms[p_key].id)
@@ -231,6 +262,7 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     await db_session.commit()
     return {
         "roles": {
+            "executive_director": ed_role,
             "caseworker": caseworker_role,
             "supervisor": supervisor_role,
             "it_admin": it_admin_role,
@@ -311,3 +343,37 @@ async def it_admin_user(db_session: AsyncSession, seed_roles_and_permissions):
 
     token = create_access_token(user.id)
     return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
+
+
+@pytest.fixture
+async def executive_director_user(db_session: AsyncSession, seed_roles_and_permissions):
+    """Create an active Executive Director user with all permissions."""
+    user = User(
+        email="director@crbcl.ca",
+        email_normalized="director@crbcl.ca",
+        password_hash=hash_password("password123"),
+        full_name="Chief Executive Director",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["executive_director"].id)
+    db_session.add(ur)
+
+    tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)
+    db_session.add(tm)
+
+    await db_session.commit()
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
+
+
+@pytest.fixture
+async def seed_templates(db_session: AsyncSession):
+    """Seed initial assessment templates and return them."""
+    from app.core.seed import seed_assessment_templates
+    await seed_assessment_templates(db_session)
+    await db_session.commit()

@@ -100,6 +100,25 @@ class Permissions(StrEnum):
     DOCUMENT_UPLOAD = "document.upload"
     DOCUMENT_DELETE = "document.delete"
 
+    # Assessment Engine permissions (Phase 5)
+    ASSESSMENT_READ = "assessment.read"
+    ASSESSMENT_CREATE = "assessment.create"
+    ASSESSMENT_UPDATE = "assessment.update"
+    ASSESSMENT_COMPLETE = "assessment.complete"
+    ASSESSMENT_LOCK = "assessment.lock"
+    ASSESSMENT_UNLOCK = "assessment.unlock"
+    ASSESSMENT_REASSIGN = "assessment.reassign"
+    ASSESSMENT_PRINT = "assessment.print"
+    ASSESSMENT_COMPARE = "assessment.compare"
+    ASSESSMENT_HOME_READ = "assessment.home.read"
+    ASSESSMENT_HOME_WRITE = "assessment.home.write"
+    ASSESSMENT_THREAT_READ = "assessment.threat.read"
+    ASSESSMENT_THREAT_WRITE = "assessment.threat.write"
+    ASSESSMENT_AIEI_READ = "assessment.aiei.read"
+    ASSESSMENT_AIEI_WRITE = "assessment.aiei.write"
+    ASSESSMENT_TEMPLATE_READ = "assessment.template.read"
+    ASSESSMENT_TEMPLATE_MANAGE = "assessment.template.manage"
+
     # Team & User Admin permissions
     ADMIN_USERS_MANAGE = "admin.users.manage"
     ADMIN_ROLES_MANAGE = "admin.roles.manage"

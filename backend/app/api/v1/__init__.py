@@ -2,6 +2,8 @@
 
 from fastapi import APIRouter
 
+from app.api.v1.assessment_templates import router as assessment_templates_router
+from app.api.v1.assessments import router as assessments_router
 from app.api.v1.case_notes import router as case_notes_router
 from app.api.v1.cases import router as cases_router
 from app.api.v1.clients import router as clients_router
@@ -29,6 +31,8 @@ api_v1_router.include_router(providers_router)
 api_v1_router.include_router(schools_router)
 api_v1_router.include_router(cases_router)
 api_v1_router.include_router(case_notes_router)
+api_v1_router.include_router(assessment_templates_router)
+api_v1_router.include_router(assessments_router)
 api_v1_router.include_router(users_router)
 api_v1_router.include_router(teams_router)
 api_v1_router.include_router(lookups_router)

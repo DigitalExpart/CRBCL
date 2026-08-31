@@ -276,6 +276,173 @@ async def test_supabase_live_integration():
         assert len(history_items) >= 2
         print(f"[LIVE SUPABASE] 18. Verified status history audit trail ({len(history_items)} transitions logged)")
 
+        # =====================================================================
+        # PHASE 5: CONFIGURABLE ASSESSMENT ENGINE (HOME, THREAT, AIEI)
+        # =====================================================================
+
+        # 18. List Published Assessment Templates
+        tmpl_list_resp = await client.get("/api/v1/assessment-templates", headers=headers)
+        assert tmpl_list_resp.status_code == 200
+        templates = tmpl_list_resp.json()
+        template_keys = [t["key"] for t in templates]
+        assert "HOME_ASSESSMENT" in template_keys
+        assert "THREAT_ASSESSMENT" in template_keys
+        assert "AIEI_ASSESSMENT" in template_keys
+        print(f"[LIVE SUPABASE] 19. Assessment Templates verified: {template_keys}")
+
+        # 19. Initiate Home Assessment
+        home_init_resp = await client.post(
+            f"/api/v1/cases/{resulting_case_id}/assessments",
+            headers=headers,
+            json={
+                "case_id": resulting_case_id,
+                "template_key": "HOME_ASSESSMENT",
+                "person_id": person_id,
+                "title": "Live Supabase E2E Home Safety Assessment",
+            },
+        )
+        assert home_init_resp.status_code == 201
+        home_asm = home_init_resp.json()
+        home_asm_id = home_asm["id"]
+        assert home_asm["assessment_number"].startswith("ASM-")
+        print(f"[LIVE SUPABASE] 20. Initiated Home Assessment: {home_asm['assessment_number']}")
+
+        # 20. Save Home Assessment Answers
+        home_answers_payload = {
+            "answers": [
+                {"question_key": "substance_use_detected", "boolean_value": False},
+                {"question_key": "hazardous_chemicals", "boolean_value": False},
+                {"question_key": "sanitation_concerns", "boolean_value": False},
+                {"question_key": "broken_windows", "boolean_value": False},
+                {"question_key": "running_water", "boolean_value": True},
+                {"question_key": "adequate_heat", "boolean_value": True},
+                {"question_key": "overcrowding", "boolean_value": False},
+                {"question_key": "structural_concerns", "boolean_value": False},
+                {"question_key": "recognizes_hazards", "boolean_value": True},
+                {"question_key": "willing_to_remedy", "boolean_value": True},
+                {"question_key": "support_network_present", "boolean_value": True},
+                {"question_key": "home_safety_outcome", "selected_option_keys": ["CHILD_SAFE_AT_HOME"]},
+                {"question_key": "physical_condition_notes", "text_value": "Clean and well-maintained family home."},
+            ]
+        }
+        save_home_resp = await client.put(
+            f"/api/v1/assessments/{home_asm_id}/answers",
+            headers=headers,
+            json=home_answers_payload,
+        )
+        assert save_home_resp.status_code == 200, f"Failed saving home answers: {save_home_resp.text}"
+        print("[LIVE SUPABASE] 21. Saved Home Assessment structured answers")
+
+        # 21. Complete Home Assessment
+        comp_home_resp = await client.post(
+            f"/api/v1/assessments/{home_asm_id}/complete",
+            headers=headers,
+            json={
+                "determination": "SAFE_WITH_SERVICES",
+                "clinical_summary": "Residence is safe and suitable with active family support.",
+                "action_recommendations": "Provide standard community wellness drop-in support.",
+            },
+        )
+        assert comp_home_resp.status_code == 200, f"Failed completing home assessment: {comp_home_resp.text}"
+        assert comp_home_resp.json()["status"] == "COMPLETED"
+        print("[LIVE SUPABASE] 22. Completed Home Assessment with SAFE_WITH_SERVICES determination")
+
+        # 22. Initiate Threat Assessment
+        threat_init_resp = await client.post(
+            f"/api/v1/cases/{resulting_case_id}/assessments",
+            headers=headers,
+            json={
+                "case_id": resulting_case_id,
+                "template_key": "THREAT_ASSESSMENT",
+                "person_id": person_id,
+                "title": "Live Supabase E2E Threat & Danger Screening",
+            },
+        )
+        assert threat_init_resp.status_code == 201, f"Failed creating threat assessment: {threat_init_resp.text}"
+        threat_asm = threat_init_resp.json()
+        threat_asm_id = threat_asm["id"]
+        print(f"[LIVE SUPABASE] 23. Initiated Threat Assessment: {threat_asm['assessment_number']}")
+
+        # 23. Save Threat Assessment Answers & Check Deterministic Indicators
+        threat_answers_payload = {
+            "answers": [
+                {"question_key": "immediate_physical_harm", "boolean_value": False},
+                {"question_key": "caregiver_incapacitated", "boolean_value": False},
+                {"question_key": "child_in_acute_peril", "boolean_value": False},
+                {"question_key": "present_danger_notes", "text_value": "No present danger threats observed."},
+                {"question_key": "uncontrolled_escalating_threat", "boolean_value": False},
+                {"question_key": "vulnerable_child", "boolean_value": False},
+                {"question_key": "impending_danger_notes", "text_value": "No impending danger identified."},
+                {"question_key": "kinship_safety_placement", "boolean_value": True},
+                {"question_key": "community_supports_active", "boolean_value": True},
+                {"question_key": "intervention_details", "text_value": "Elder kinship circle actively engaged and monitoring."},
+                {"question_key": "threat_determination_outcome", "selected_option_keys": ["SAFE"]},
+                {"question_key": "clinical_safety_rationale", "text_value": "No active threats. Elder kinship circle providing protective support."},
+            ]
+        }
+        save_threat_resp = await client.put(
+            f"/api/v1/assessments/{threat_asm_id}/answers",
+            headers=headers,
+            json=threat_answers_payload,
+        )
+        assert save_threat_resp.status_code == 200, f"Failed saving threat answers: {save_threat_resp.text}"
+        threat_detail = save_threat_resp.json()
+        ind_summary = threat_detail.get("indicator_summary", {})
+        assert ind_summary.get("protective_capacities_count", 0) >= 1
+        print(f"[LIVE SUPABASE] 24. Saved Threat Assessment answers. Deterministic indicator summary: {ind_summary}")
+
+        # 24. Lock Assessment (Governance & Immutability)
+        lock_asm_resp = await client.post(
+            f"/api/v1/assessments/{home_asm_id}/lock",
+            headers=headers,
+            json={"reason": "Formal clinical sign-off complete."},
+        )
+        assert lock_asm_resp.status_code == 200
+        assert lock_asm_resp.json()["status"] == "LOCKED"
+        print("[LIVE SUPABASE] 25. Locked Home Assessment for immutability")
+
+        # Verify mutation fails on locked assessment
+        mut_fail_resp = await client.put(
+            f"/api/v1/assessments/{home_asm_id}/answers",
+            headers=headers,
+            json={"answers": [{"question_key": "broken_windows", "boolean_value": True}]},
+        )
+        assert mut_fail_resp.status_code == 400
+        print("[LIVE SUPABASE] 26. Verified locked assessment prohibits mutations (400 Bad Request)")
+
+        # 25. Time-Series Delta Comparison (Follow-up Assessment)
+        home_init_2_resp = await client.post(
+            f"/api/v1/cases/{resulting_case_id}/assessments",
+            headers=headers,
+            json={
+                "case_id": resulting_case_id,
+                "template_key": "HOME_ASSESSMENT",
+                "person_id": person_id,
+                "title": "Live Supabase E2E Follow-up Home Inspection",
+            },
+        )
+        assert home_init_2_resp.status_code == 201
+        home_asm_2_id = home_init_2_resp.json()["id"]
+
+        compare_resp = await client.get(
+            f"/api/v1/assessments/compare?ids={home_asm_id},{home_asm_2_id}",
+            headers=headers,
+        )
+        assert compare_resp.status_code == 200
+        compare_data = compare_resp.json()
+        assert len(compare_data["assessments"]) == 2
+        print(f"[LIVE SUPABASE] 27. Cross-assessment time-series comparison verified ({len(compare_data['assessments'])} assessments compared)")
+
+        # 26. Director Unlock with Mandatory Justification
+        unlock_resp = await client.post(
+            f"/api/v1/assessments/{home_asm_id}/unlock",
+            headers=headers,
+            json={"justification": "Director authorized correction of electrical hazard clarification."},
+        )
+        assert unlock_resp.status_code == 200
+        assert unlock_resp.json()["status"] in ("COMPLETED", "IN_PROGRESS")
+        print("[LIVE SUPABASE] 28. Director unlocked assessment with mandatory justification")
+
         print("\n================================================================================")
-        print(">>> ALL 18 STEPS OF LIVE SUPABASE POSTGRESQL VERIFICATION PASSED SUCCESSFULLY! <<<")
+        print(">>> ALL 28 STEPS OF LIVE SUPABASE POSTGRESQL VERIFICATION PASSED SUCCESSFULLY! <<<")
         print("================================================================================\n")

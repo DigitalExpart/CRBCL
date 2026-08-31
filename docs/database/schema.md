@@ -2,7 +2,7 @@
 
 ## Hosted Database Infrastructure
 - **Engine**: Supabase PostgreSQL / PostGIS 15+
-- **Current Revision**: `004_case_management`
+- **Current Revision**: `005_assessment_engine`
 
 ---
 
@@ -55,3 +55,16 @@
 - `case_note_people`: Individuals present during note contact.
 - `case_note_attachments`: Documents attached to case notes.
 - `case_note_addenda`: Append-only addenda for locked notes.
+
+### Configurable Assessment Engine (005)
+- `assessment_templates`: Logical template definitions (`HOME_ASSESSMENT`, `THREAT_ASSESSMENT`, `AIEI_ASSESSMENT`).
+- `assessment_template_versions`: Version-controlled immutable template snapshots with draft/publish workflows.
+- `assessment_sections`: Sections within a template version with order, requirement flags, and visibility rules.
+- `assessment_questions`: Questions with data types (`BOOLEAN`, `NUMBER`, `TEXT`, `LONG_TEXT`, `SINGLE_SELECT`, `MULTI_SELECT`, `DATE`, `DATETIME`, `JSON`), validation, and conditional dependencies.
+- `assessment_question_options`: Available choices and score values for single and multi-select questions.
+- `assessments`: Conducted assessment instances bound to cases, persons, and specific template versions (`ASM-YYYYMM-NNNN`).
+- `assessment_answers`: Relational, normalized typed answer columns (`boolean_value`, `number_value`, `text_value`, `date_value`, `datetime_value`, `json_value`, `notes`).
+- `assessment_answer_options`: Join table for multi-select option selections.
+- `assessment_unlock_events`: Append-only Director unlock audit log with mandatory reasons.
+- `assessment_status_history`: Full state lifecycle audit log (`DRAFT`, `IN_PROGRESS`, `COMPLETED`, `LOCKED`, `VOID`).
+- `assessment_sequences`: Year-month atomic sequential numbering (`ASM-YYYYMM-NNNN`).

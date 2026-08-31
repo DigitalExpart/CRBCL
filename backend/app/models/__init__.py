@@ -3,6 +3,19 @@
 All models are imported here so Alembic can discover them.
 """
 
+from app.models.assessment import (  # noqa: F401
+    Assessment,
+    AssessmentAnswer,
+    AssessmentAnswerOption,
+    AssessmentQuestion,
+    AssessmentQuestionOption,
+    AssessmentSection,
+    AssessmentSequence,
+    AssessmentStatusHistory,
+    AssessmentTemplate,
+    AssessmentTemplateVersion,
+    AssessmentUnlockEvent,
+)
 from app.models.audit import AccessEvent, AuditEvent  # noqa: F401
 from app.models.case import Case  # noqa: F401
 from app.models.case_management import (  # noqa: F401

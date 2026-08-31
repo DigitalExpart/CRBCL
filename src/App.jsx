@@ -23,6 +23,9 @@ import IntakeDetail from '@/pages/IntakeDetail';
 import IntakeDecision from '@/pages/IntakeDecision';
 import SupervisorApprovalQueue from '@/pages/SupervisorApprovalQueue';
 
+// Phase 5 Configurable Assessment Engine
+import AssessmentDetail from '@/pages/AssessmentDetail';
+
 // Pages
 import Dashboard from '@/pages/Dashboard';
 import Cases from '@/pages/Cases';
@@ -83,6 +86,7 @@ const AuthenticatedApp = () => {
           <Route path="/intake/:id/decision" element={<IntakeDecision />} />
           <Route path="/cases" element={<Cases />} />
           <Route path="/cases/:id" element={<CaseDetail />} />
+          <Route path="/assessments/:id" element={<AssessmentDetail />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/clients/:id" element={<ClientDetail />} />
           <Route path="/families" element={<Families />} />

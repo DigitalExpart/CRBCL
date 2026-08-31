@@ -33,6 +33,13 @@ def compile_jsonb_sqlite(type_, compiler, **kw):
 def compile_uuid_sqlite(type_, compiler, **kw):
     return "VARCHAR(36)"
 
+from app.models.assessment import (
+    AssessmentQuestion,
+    AssessmentQuestionOption,
+    AssessmentSection,
+    AssessmentTemplate,
+    AssessmentTemplateVersion,
+)
 from app.models.config import LookupList, LookupValue
 from app.models.role import Permission, Role, RolePermission, UserRole
 from app.models.team import Team
@@ -201,6 +208,25 @@ PERMISSIONS_DATA = [
     {"key": Permissions.CASE_NOTE_ADDENDUM, "name": "Add Addendum to Case Notes", "category": "case_notes"},
     {"key": Permissions.CASE_NOTE_EXPORT, "name": "Export Case Notes to File", "category": "case_notes"},
 
+    # Assessment Engine (Phase 5)
+    {"key": Permissions.ASSESSMENT_READ, "name": "Read Case Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_CREATE, "name": "Start & Author Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_UPDATE, "name": "Update Assessment Answers", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_COMPLETE, "name": "Complete Assessment with Determination", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_LOCK, "name": "Lock Assessment (Immutability)", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_UNLOCK, "name": "Unlock Finalized Assessment (Director Override)", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_REASSIGN, "name": "Reassign Assessment to Another Case/Family", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_PRINT, "name": "Print & Export Assessment Form", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_COMPARE, "name": "Compare Multi-Instance Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_HOME_READ, "name": "Read Home Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_HOME_WRITE, "name": "Author Home Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_THREAT_READ, "name": "Read Threat Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_THREAT_WRITE, "name": "Author Threat Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_AIEI_READ, "name": "Read AIEI Prevention Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_AIEI_WRITE, "name": "Author AIEI Prevention Assessments", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_TEMPLATE_READ, "name": "Read Assessment Templates", "category": "assessments"},
+    {"key": Permissions.ASSESSMENT_TEMPLATE_MANAGE, "name": "Author & Publish Assessment Templates", "category": "assessments"},
+
     # Documents
     {"key": Permissions.DOCUMENT_READ, "name": "Read Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_UPLOAD, "name": "Upload Documents", "category": "documents"},
@@ -248,6 +274,13 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
         Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK, Permissions.CASE_NOTE_UNLOCK,
         Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
+        Permissions.ASSESSMENT_READ, Permissions.ASSESSMENT_CREATE, Permissions.ASSESSMENT_UPDATE,
+        Permissions.ASSESSMENT_COMPLETE, Permissions.ASSESSMENT_LOCK, Permissions.ASSESSMENT_UNLOCK,
+        Permissions.ASSESSMENT_REASSIGN, Permissions.ASSESSMENT_PRINT, Permissions.ASSESSMENT_COMPARE,
+        Permissions.ASSESSMENT_HOME_READ, Permissions.ASSESSMENT_HOME_WRITE,
+        Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
+        Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
+        Permissions.ASSESSMENT_TEMPLATE_READ, Permissions.ASSESSMENT_TEMPLATE_MANAGE,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.ADMIN_TEAMS_MANAGE,
         Permissions.TIMELINE_READ,
@@ -281,6 +314,13 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
         Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK, Permissions.CASE_NOTE_UNLOCK,
         Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
+        Permissions.ASSESSMENT_READ, Permissions.ASSESSMENT_CREATE, Permissions.ASSESSMENT_UPDATE,
+        Permissions.ASSESSMENT_COMPLETE, Permissions.ASSESSMENT_LOCK, Permissions.ASSESSMENT_UNLOCK,
+        Permissions.ASSESSMENT_PRINT, Permissions.ASSESSMENT_COMPARE,
+        Permissions.ASSESSMENT_HOME_READ, Permissions.ASSESSMENT_HOME_WRITE,
+        Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
+        Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
+        Permissions.ASSESSMENT_TEMPLATE_READ,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
@@ -312,6 +352,13 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_UPDATE,
         Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK,
         Permissions.CASE_NOTE_ADDENDUM, Permissions.CASE_NOTE_EXPORT,
+        Permissions.ASSESSMENT_READ, Permissions.ASSESSMENT_CREATE, Permissions.ASSESSMENT_UPDATE,
+        Permissions.ASSESSMENT_COMPLETE, Permissions.ASSESSMENT_LOCK,
+        Permissions.ASSESSMENT_PRINT, Permissions.ASSESSMENT_COMPARE,
+        Permissions.ASSESSMENT_HOME_READ, Permissions.ASSESSMENT_HOME_WRITE,
+        Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
+        Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
+        Permissions.ASSESSMENT_TEMPLATE_READ,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
@@ -329,6 +376,7 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CASE_SOURCE_READ,
         Permissions.CASE_LINK_READ,
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
+        Permissions.ASSESSMENT_READ, Permissions.ASSESSMENT_PRINT,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
@@ -356,6 +404,9 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.FAMILY_READ,
         Permissions.CASE_READ,
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE,
+        Permissions.ASSESSMENT_READ,
+        Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
+        Permissions.ASSESSMENT_PRINT,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
@@ -366,6 +417,10 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.PROVIDER_READ, Permissions.PROVIDER_WRITE,
         Permissions.CASE_READ,
         Permissions.CASE_NOTE_READ, Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_COMPLETE, Permissions.CASE_NOTE_LOCK,
+        Permissions.ASSESSMENT_READ, Permissions.ASSESSMENT_CREATE, Permissions.ASSESSMENT_UPDATE,
+        Permissions.ASSESSMENT_COMPLETE, Permissions.ASSESSMENT_LOCK,
+        Permissions.ASSESSMENT_PRINT, Permissions.ASSESSMENT_COMPARE,
+        Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
         Permissions.DOCUMENT_READ, Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
@@ -373,6 +428,7 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CLIENT_READ,
         Permissions.CASE_READ,
         Permissions.CASE_NOTE_READ,
+        Permissions.ASSESSMENT_READ,
     ],
 }
 
@@ -581,6 +637,566 @@ LOOKUPS_DATA = {
 }
 
 
+async def seed_assessment_templates(db: AsyncSession) -> None:
+    """Idempotently seed standard published templates: HOME_ASSESSMENT v1, THREAT_ASSESSMENT v1, AIEI_ASSESSMENT v1."""
+    logger.info("Seeding Assessment Templates & Published Versions...")
+
+    templates_spec = [
+        {
+            "key": "HOME_ASSESSMENT",
+            "name": "Home Assessment",
+            "description": "Comprehensive assessment of home safety, living environment, physical hazards, and caregiver protective capacities.",
+            "category": "home",
+            "sections": [
+                {
+                    "key": "HOME_CONCERNS",
+                    "title": "Home Concerns & Substances",
+                    "description": "Evaluation of environmental, substance, and sanitation concerns in the residence.",
+                    "sort_order": 1,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "substance_use_detected",
+                            "label": "Is there evidence or concern of active substance use impacting home safety?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 1,
+                        },
+                        {
+                            "key": "substance_use_details",
+                            "label": "Describe substance concerns, frequency, and impact on children:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 2,
+                            "visibility_condition": {"depends_on_question_key": "substance_use_detected", "operator": "equals", "value": True},
+                        },
+                        {
+                            "key": "hazardous_chemicals",
+                            "label": "Are hazardous chemicals, medications, or dangerous substances accessible to children?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 3,
+                        },
+                        {
+                            "key": "hazardous_chemicals_details",
+                            "label": "Specify location and nature of hazardous substances:",
+                            "question_type": "TEXT",
+                            "is_required": False,
+                            "sort_order": 4,
+                            "visibility_condition": {"depends_on_question_key": "hazardous_chemicals", "operator": "equals", "value": True},
+                        },
+                        {
+                            "key": "sanitation_concerns",
+                            "label": "Are there significant sanitation, food spoilage, or pest infestation concerns?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 5,
+                        },
+                        {
+                            "key": "sanitation_details",
+                            "label": "Describe sanitation, waste, or pest concerns:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 6,
+                            "visibility_condition": {"depends_on_question_key": "sanitation_concerns", "operator": "equals", "value": True},
+                        },
+                    ],
+                },
+                {
+                    "key": "PHYSICAL_STATUS",
+                    "title": "Physical Living Conditions",
+                    "description": "Evaluation of housing infrastructure, utilities, structural integrity, and overcrowding.",
+                    "sort_order": 2,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "broken_windows",
+                            "label": "Are there broken windows, exposed wiring, or immediate physical hazards?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 1,
+                        },
+                        {
+                            "key": "running_water",
+                            "label": "Is there working running water and safe drinking supply?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 2,
+                        },
+                        {
+                            "key": "adequate_heat",
+                            "label": "Is there adequate heating and winter weather protection?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 3,
+                        },
+                        {
+                            "key": "overcrowding",
+                            "label": "Is there severe overcrowding impacting sleeping arrangements and safety?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 4,
+                        },
+                        {
+                            "key": "structural_concerns",
+                            "label": "Are there structural defects, fire hazards, or egress problems?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 5,
+                        },
+                        {
+                            "key": "physical_condition_notes",
+                            "label": "Additional notes regarding physical environment and living conditions:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 6,
+                        },
+                    ],
+                },
+                {
+                    "key": "CAREGIVER_CAPACITIES",
+                    "title": "Caregiver Protective Capacities",
+                    "description": "Strength-based assessment of caregiver awareness, readiness, and protective kin network.",
+                    "sort_order": 3,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "recognizes_hazards",
+                            "label": "Caregiver demonstrates clear awareness of safety hazards and protective needs",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 1,
+                        },
+                        {
+                            "key": "willing_to_remedy",
+                            "label": "Caregiver expresses willingness and actionable plan to remediate identified concerns",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 2,
+                        },
+                        {
+                            "key": "support_network_present",
+                            "label": "Active kinship or community support network available to assist family",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 3,
+                        },
+                        {
+                            "key": "protective_capacity_notes",
+                            "label": "Describe caregiver strengths, protective actions, and kinship supports:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 4,
+                        },
+                    ],
+                },
+                {
+                    "key": "HOME_DETERMINATION",
+                    "title": "Home Safety Determination",
+                    "description": "Formal caseworker determination regarding child safety in the home.",
+                    "sort_order": 4,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "home_safety_outcome",
+                            "label": "Overall Home Safety Determination",
+                            "question_type": "SINGLE_SELECT",
+                            "is_required": True,
+                            "sort_order": 1,
+                            "options": [
+                                {"key": "CHILD_SAFE_AT_HOME", "label": "Child Safe at Home / Low Risk", "sort_order": 1},
+                                {"key": "SAFETY_PLAN_CREATED", "label": "Child Safe with Safety Plan / Remediation", "sort_order": 2},
+                                {"key": "CUSTODY_NEEDED", "label": "Unsafe Environment / Alternative Care Required", "sort_order": 3},
+                            ],
+                        },
+                        {
+                            "key": "action_plan_summary",
+                            "label": "Summary of immediate remedial actions and support commitments:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 2,
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            "key": "THREAT_ASSESSMENT",
+            "name": "Threat & Safety Assessment",
+            "description": "Comprehensive child welfare evaluation of present danger threats, impending danger indicators, and safety interventions.",
+            "category": "threat",
+            "sections": [
+                {
+                    "key": "PRESENT_DANGER",
+                    "title": "Present Danger Assessment",
+                    "description": "Immediate, significant, and clearly observable threats actively occurring in the family.",
+                    "sort_order": 1,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "immediate_physical_harm",
+                            "label": "Immediate threat of severe physical harm or severe neglect actively occurring",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 1,
+                        },
+                        {
+                            "key": "caregiver_incapacitated",
+                            "label": "Caregiver unable to perform essential caregiving functions due to intoxication, crisis, or absence",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 2,
+                        },
+                        {
+                            "key": "child_in_acute_peril",
+                            "label": "Child is fearful of returning home or in immediate acute peril",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 3,
+                        },
+                        {
+                            "key": "present_danger_notes",
+                            "label": "Details of observed present danger threats:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 4,
+                        },
+                    ],
+                },
+                {
+                    "key": "IMPENDING_DANGER",
+                    "title": "Impending Danger Assessment",
+                    "description": "State of danger that is not actively occurring but is likely to cause severe harm in the near future.",
+                    "sort_order": 2,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "uncontrolled_escalating_threat",
+                            "label": "Threat is severe, escalating, out-of-control, and likely to cause harm soon",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 1,
+                        },
+                        {
+                            "key": "vulnerable_child",
+                            "label": "Child is young, non-verbal, disabled, or uniquely vulnerable to threat",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 2,
+                        },
+                        {
+                            "key": "impending_danger_notes",
+                            "label": "Details of impending danger threats and child vulnerability:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 3,
+                        },
+                    ],
+                },
+                {
+                    "key": "ALTERNATIVE_INTERVENTIONS",
+                    "title": "Alternative Safety Interventions",
+                    "description": "Protective in-home or kinship actions to manage safety without removal.",
+                    "sort_order": 3,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "kinship_safety_placement",
+                            "label": "Safe kinship caregiver or family member available to provide protective supervision",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 1,
+                        },
+                        {
+                            "key": "community_supports_active",
+                            "label": "Community wellness or prevention workers providing active monitoring",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 2,
+                        },
+                        {
+                            "key": "intervention_details",
+                            "label": "Planned alternative safety interventions:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 3,
+                        },
+                    ],
+                },
+                {
+                    "key": "THREAT_DETERMINATION",
+                    "title": "Safety Decision & Determination",
+                    "description": "Final professional safety determination.",
+                    "sort_order": 4,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "threat_determination_outcome",
+                            "label": "Threat Assessment Outcome",
+                            "question_type": "SINGLE_SELECT",
+                            "is_required": True,
+                            "sort_order": 1,
+                            "options": [
+                                {"key": "SAFE", "label": "Safe — No Active Danger Threats Identified", "sort_order": 1},
+                                {"key": "CONDITIONALLY_SAFE", "label": "Conditionally Safe — Safety Interventions In Place", "sort_order": 2},
+                                {"key": "UNSAFE", "label": "Unsafe — Present or Impending Danger Uncontrolled", "sort_order": 3},
+                            ],
+                        },
+                        {
+                            "key": "clinical_safety_rationale",
+                            "label": "Clinical safety rationale supporting determination:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": True,
+                            "sort_order": 2,
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            "key": "AIEI_ASSESSMENT",
+            "name": "AIEI — Indigenous Early Intervention & Prevention",
+            "description": "Assessment of cultural connection, housing stability, socioeconomic needs, and prevention service recommendations.",
+            "category": "prevention",
+            "sections": [
+                {
+                    "key": "CULTURAL_INVOLVEMENT",
+                    "title": "Cultural & Kinship Connections",
+                    "description": "Engagement with First Nations culture, ceremony, elders, language, and community.",
+                    "sort_order": 1,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "cultural_engagement_level",
+                            "label": "Current level of cultural & ceremonial engagement:",
+                            "question_type": "SINGLE_SELECT",
+                            "is_required": True,
+                            "sort_order": 1,
+                            "options": [
+                                {"key": "HIGHLY_CONNECTED", "label": "Actively engaged in ceremonies, language, and cultural events", "sort_order": 1},
+                                {"key": "MODERATELY_CONNECTED", "label": "Occasional participation in community gatherings and traditions", "sort_order": 2},
+                                {"key": "DESIRES_CONNECTION", "label": "Currently disconnected but eager to learn and reconnect", "sort_order": 3},
+                                {"key": "NOT_CONNECTED", "label": "Minimal current interest or connection", "sort_order": 4},
+                            ],
+                        },
+                        {
+                            "key": "interested_in_learning_more",
+                            "label": "Family expresses desire for Elder teachings, language, and traditional parenting",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 2,
+                        },
+                        {
+                            "key": "elders_clan_connection",
+                            "label": "Connected Elders, Clan, or Traditional Knowledge Keepers:",
+                            "question_type": "TEXT",
+                            "is_required": False,
+                            "sort_order": 3,
+                        },
+                        {
+                            "key": "cultural_activities_desired",
+                            "label": "Cultural activities and land-based programs of interest:",
+                            "question_type": "MULTI_SELECT",
+                            "is_required": False,
+                            "sort_order": 4,
+                            "options": [
+                                {"key": "LAND_BASED", "label": "Land-based hunting, trapping, medicine harvesting", "sort_order": 1},
+                                {"key": "CEREMONY_FEASTS", "label": "Round dances, feasts, ceremonies, sweat lodges", "sort_order": 2},
+                                {"key": "LANGUAGE_CIRCLES", "label": "Cree language and storytelling circles", "sort_order": 3},
+                                {"key": "TRADITIONAL_PARENTING", "label": "Traditional parenting & grandmother circles", "sort_order": 4},
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "key": "SOCIOECONOMIC_WELLNESS",
+                    "title": "Housing, Employment & Basic Needs",
+                    "description": "Evaluation of housing security, family income sources, chemical dependency, and daily stressors.",
+                    "sort_order": 2,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "housing_stability",
+                            "label": "Housing Stability Status:",
+                            "question_type": "SINGLE_SELECT",
+                            "is_required": True,
+                            "sort_order": 1,
+                            "options": [
+                                {"key": "STABLE", "label": "Stable secure housing", "sort_order": 1},
+                                {"key": "OVERCROWDED_AT_RISK", "label": "Overcrowded / at risk of displacement", "sort_order": 2},
+                                {"key": "UNSTABLE_HOMELESS", "label": "Unstable / Couch surfing / Emergency shelter", "sort_order": 3},
+                            ],
+                        },
+                        {
+                            "key": "employment_income_sources",
+                            "label": "Sources of Family Income & Employment:",
+                            "question_type": "MULTI_SELECT",
+                            "is_required": False,
+                            "sort_order": 2,
+                            "options": [
+                                {"key": "FULL_TIME_EMPLOYED", "label": "Full-time employment", "sort_order": 1},
+                                {"key": "PART_TIME_CASUAL", "label": "Part-time / Seasonal / Casual", "sort_order": 2},
+                                {"key": "INCOME_ASSISTANCE", "label": "Income Assistance / SA", "sort_order": 3},
+                                {"key": "CHILD_BENEFIT", "label": "Canada Child Benefit", "sort_order": 4},
+                                {"key": "BAND_SUPPORT", "label": "First Nation / Band Support", "sort_order": 5},
+                            ],
+                        },
+                        {
+                            "key": "chemical_dependency_concerns",
+                            "label": "Active chemical dependency, addiction, or recovery support needed?",
+                            "question_type": "BOOLEAN",
+                            "is_required": True,
+                            "sort_order": 3,
+                        },
+                        {
+                            "key": "other_stressors",
+                            "label": "Other family stressors (food security, transportation, mental health, legal):",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 4,
+                        },
+                    ],
+                },
+                {
+                    "key": "SERVICE_RECOMMENDATIONS",
+                    "title": "Recommended Prevention Services",
+                    "description": "Prevention and wellness service needs identified with the family.",
+                    "sort_order": 3,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "recommended_services",
+                            "label": "Recommended Early Intervention & Family Wellness Supports:",
+                            "question_type": "MULTI_SELECT",
+                            "is_required": False,
+                            "sort_order": 1,
+                            "options": [
+                                {"key": "HOUSING_SUPPORT", "label": "Housing assistance & advocacy", "sort_order": 1},
+                                {"key": "CULTURAL_MENTORSHIP", "label": "Elder cultural mentorship & teachings", "sort_order": 2},
+                                {"key": "ADDICTION_COUNSELLING", "label": "Addiction & recovery counselling", "sort_order": 3},
+                                {"key": "FOOD_SECURITY", "label": "Emergency food security & pantry hampers", "sort_order": 4},
+                                {"key": "FAMILY_WELLNESS_CIRCLES", "label": "Family Wellness Circles & Mediation", "sort_order": 5},
+                                {"key": "YOUTH_LAND_PROGRAMS", "label": "Youth land-based wellness programs", "sort_order": 6},
+                            ],
+                        },
+                        {
+                            "key": "prevention_plan_notes",
+                            "label": "Summary notes and agreed next steps with family:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 2,
+                        },
+                    ],
+                },
+                {
+                    "key": "AIEI_DETERMINATION",
+                    "title": "AIEI Prevention Recommendation",
+                    "description": "Recommended family wellness pathway.",
+                    "sort_order": 4,
+                    "is_required": True,
+                    "questions": [
+                        {
+                            "key": "aiei_determination_outcome",
+                            "label": "Prevention Recommendation Outcome",
+                            "question_type": "SINGLE_SELECT",
+                            "is_required": True,
+                            "sort_order": 1,
+                            "options": [
+                                {"key": "COMMUNITY_PREVENTION_OPEN", "label": "Open Voluntary Family Wellness File", "sort_order": 1},
+                                {"key": "REFERRED_TO_COMMUNITY_PARTNER", "label": "Warm Handover to Community Partner", "sort_order": 2},
+                                {"key": "NO_FURTHER_ACTION", "label": "Immediate Needs Met / No Ongoing Service Required", "sort_order": 3},
+                            ],
+                        },
+                        {
+                            "key": "worker_signoff_notes",
+                            "label": "Caseworker sign-off & confirmation notes:",
+                            "question_type": "LONG_TEXT",
+                            "is_required": False,
+                            "sort_order": 2,
+                        },
+                    ],
+                },
+            ],
+        },
+    ]
+
+    for t_spec in templates_spec:
+        res = await db.execute(select(AssessmentTemplate).where(AssessmentTemplate.key == t_spec["key"]))
+        template = res.scalar_one_or_none()
+
+        if not template:
+            template = AssessmentTemplate(
+                key=t_spec["key"],
+                name=t_spec["name"],
+                description=t_spec["description"],
+                category=t_spec["category"],
+                is_active=True,
+            )
+            db.add(template)
+            await db.flush()
+
+        v_res = await db.execute(
+            select(AssessmentTemplateVersion).where(
+                AssessmentTemplateVersion.template_id == template.id,
+                AssessmentTemplateVersion.version_number == 1,
+            )
+        )
+        version = v_res.scalar_one_or_none()
+
+        if not version:
+            version = AssessmentTemplateVersion(
+                template_id=template.id,
+                version_number=1,
+                status="PUBLISHED",
+                change_notes="Initial v1 standard release.",
+            )
+            db.add(version)
+            await db.flush()
+
+            for s_spec in t_spec["sections"]:
+                section = AssessmentSection(
+                    template_version_id=version.id,
+                    key=s_spec["key"],
+                    title=s_spec["title"],
+                    description=s_spec.get("description"),
+                    sort_order=s_spec.get("sort_order", 0),
+                    is_required=s_spec.get("is_required", False),
+                    visibility_condition=s_spec.get("visibility_condition"),
+                )
+                db.add(section)
+                await db.flush()
+
+                for q_spec in s_spec["questions"]:
+                    question = AssessmentQuestion(
+                        section_id=section.id,
+                        key=q_spec["key"],
+                        label=q_spec["label"],
+                        help_text=q_spec.get("help_text"),
+                        question_type=q_spec["question_type"],
+                        is_required=q_spec.get("is_required", False),
+                        sort_order=q_spec.get("sort_order", 0),
+                        is_reportable=q_spec.get("is_reportable", True),
+                        validation_rules=q_spec.get("validation_rules"),
+                        visibility_condition=q_spec.get("visibility_condition"),
+                        lookup_list_key=q_spec.get("lookup_list_key"),
+                    )
+                    db.add(question)
+                    await db.flush()
+
+                    for opt_spec in q_spec.get("options", []):
+                        option = AssessmentQuestionOption(
+                            question_id=question.id,
+                            key=opt_spec["key"],
+                            label=opt_spec["label"],
+                            description=opt_spec.get("description"),
+                            score_value=opt_spec.get("score_value"),
+                            sort_order=opt_spec.get("sort_order", 0),
+                            is_active=True,
+                        )
+                        db.add(option)
+            await db.flush()
+
+
 async def seed_database(db: AsyncSession) -> None:
     """Seed initial data into a clean or existing database."""
     logger.info("Seeding Permissions...")
@@ -677,6 +1293,8 @@ async def seed_database(db: AsyncSession) -> None:
                         is_active=True,
                     )
                 )
+
+    await seed_assessment_templates(db)
 
     # Dev Administrator
     settings = get_settings()

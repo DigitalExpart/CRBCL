@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { casesApi } from "@/api/cases";
 import { caseNotesApi } from "@/api/caseNotes";
+import { assessmentsApi } from "@/api/assessments";
+import { assessmentTemplatesApi } from "@/api/assessmentTemplates";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Edit2, CheckCircle2, AlertTriangle, User, Users, ShieldAlert,
   FileText, Clock, ArrowRightLeft, Link as LinkIcon, Download, Plus, Lock,
   Calendar, MapPin, Phone, Mail, Building, History, Check, X, RotateCcw,
-  Sparkles, Stethoscope, AlertCircle, Share2, FolderCheck
+  Sparkles, Stethoscope, AlertCircle, Share2, FolderCheck, ClipboardList, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +41,8 @@ export default function CaseDetail() {
   const [statusHistory, setStatusHistory] = useState([]);
   const [notes, setNotes] = useState([]);
   const [noteMetrics, setNoteMetrics] = useState(null);
+  const [assessments, setAssessments] = useState([]);
+  const [availableTemplates, setAvailableTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modals & Actions
@@ -54,6 +58,12 @@ export default function CaseDetail() {
   const [showAddRestrictionModal, setShowAddRestrictionModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showAddendumModal, setShowAddendumModal] = useState(null); // note_id when open
+  const [showLaunchAssessmentModal, setShowLaunchAssessmentModal] = useState(false);
+  const [launchAssessmentForm, setLaunchAssessmentForm] = useState({
+    template_key: "HOME_ASSESSMENT",
+    person_id: "",
+    title: "",
+  });
 
   // Form states
   const [closeForm, setCloseForm] = useState({ closed_reason: "", closed_date: "" });
@@ -96,6 +106,8 @@ export default function CaseDetail() {
         historyRes,
         notesRes,
         metricsRes,
+        assessmentsRes,
+        templatesRes,
       ] = await Promise.all([
         casesApi.get(id),
         casesApi.getSnapshot(id).catch(() => null),
@@ -109,6 +121,8 @@ export default function CaseDetail() {
         casesApi.getStatusHistory(id).catch(() => []),
         caseNotesApi.listForCase(id, { limit: 100 }).catch(() => ({ items: [] })),
         caseNotesApi.getMetrics(id).catch(() => null),
+        assessmentsApi.listByCase(id, { limit: 100 }).catch(() => ({ items: [] })),
+        assessmentTemplatesApi.list({ is_active: true }).catch(() => []),
       ]);
 
       setCaseData(caseRes);
@@ -123,10 +137,28 @@ export default function CaseDetail() {
       setStatusHistory(historyRes || []);
       setNotes(notesRes?.items || []);
       setNoteMetrics(metricsRes);
+      setAssessments(assessmentsRes?.items || []);
+      setAvailableTemplates(templatesRes || []);
     } catch (e) {
       console.error("Error loading case detail:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLaunchAssessment = async () => {
+    try {
+      const payload = {
+        case_id: id,
+        template_key: launchAssessmentForm.template_key,
+        person_id: launchAssessmentForm.person_id || undefined,
+        title: launchAssessmentForm.title.trim() || undefined,
+      };
+      const created = await assessmentsApi.create(id, payload);
+      setShowLaunchAssessmentModal(false);
+      navigate(`/assessments/${created.id}`);
+    } catch (err) {
+      alert(err.message || "Failed to initiate assessment");
     }
   };
 
@@ -271,11 +303,12 @@ export default function CaseDetail() {
 
       {/* 360° Navigation Tabs */}
       <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val })}>
-        <TabsList className="grid grid-cols-4 md:grid-cols-8 h-auto p-1 bg-muted/60">
+        <TabsList className="grid grid-cols-3 md:grid-cols-9 h-auto p-1 bg-muted/60">
           <TabsTrigger value="snapshot" className="text-xs py-2">Snapshot</TabsTrigger>
           <TabsTrigger value="people" className="text-xs py-2">People ({people.length})</TabsTrigger>
           <TabsTrigger value="workers" className="text-xs py-2">Workers ({assignments.length})</TabsTrigger>
           <TabsTrigger value="notes" className="text-xs py-2">Clinical Notes ({notes.length})</TabsTrigger>
+          <TabsTrigger value="assessments" className="text-xs py-2 font-medium text-emerald-600 dark:text-emerald-400">Assessments ({assessments.length})</TabsTrigger>
           <TabsTrigger value="sources" className="text-xs py-2">Sources ({sources.length})</TabsTrigger>
           <TabsTrigger value="links" className="text-xs py-2">Linked ({links.length})</TabsTrigger>
           <TabsTrigger value="transfers" className="text-xs py-2">Transfers ({transfers.length})</TabsTrigger>
@@ -941,6 +974,134 @@ export default function CaseDetail() {
             </table>
           </div>
         </TabsContent>
+
+        {/* ── TAB: ASSESSMENTS ─────────────────────────── */}
+        <TabsContent value="assessments" className="space-y-4 mt-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-base font-semibold text-foreground">Clinical & Safety Assessments</h3>
+              <p className="text-xs text-muted-foreground">Standardized, versioned questionnaires with deterministic indicator calculation and lifecycle governance.</p>
+            </div>
+            <Button size="sm" onClick={() => setShowLaunchAssessmentModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
+              <Plus className="w-4 h-4" /> Launch Assessment
+            </Button>
+          </div>
+
+          <div className="border rounded-lg overflow-hidden bg-card">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/50 border-b text-muted-foreground uppercase text-[10px]">
+                <tr>
+                  <th className="py-3 px-4 font-semibold">Assessment #</th>
+                  <th className="py-3 px-4 font-semibold">Template & Version</th>
+                  <th className="py-3 px-4 font-semibold">Subject Individual</th>
+                  <th className="py-3 px-4 font-semibold">Status</th>
+                  <th className="py-3 px-4 font-semibold">Determination</th>
+                  <th className="py-3 px-4 font-semibold">Indicators</th>
+                  <th className="py-3 px-4 font-semibold">Conductor & Date</th>
+                  <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {assessments.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-muted-foreground space-y-2">
+                      <ClipboardList className="w-8 h-8 text-muted-foreground/50 mx-auto" />
+                      <div className="font-medium text-foreground text-sm">No assessments initiated yet.</div>
+                      <p className="text-xs">Conduct a Home Assessment, Threat Assessment, or AIEI screening for this family.</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowLaunchAssessmentModal(true)}
+                        className="mt-2 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Start Assessment
+                      </Button>
+                    </td>
+                  </tr>
+                ) : (
+                  assessments.map((asm) => {
+                    const ind = asm.indicator_summary || {};
+                    const isLocked = asm.status === 'LOCKED';
+                    const isCompleted = asm.status === 'COMPLETED';
+
+                    return (
+                      <tr key={asm.id} className="hover:bg-muted/30">
+                        <td className="py-3 px-4 font-mono font-bold text-primary">
+                          <Link to={`/assessments/${asm.id}`} className="hover:underline flex items-center gap-1.5">
+                            {asm.assessment_number}
+                            {isLocked && <Lock className="w-3 h-3 text-rose-500" />}
+                          </Link>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-foreground">{asm.template?.name || asm.template_key}</div>
+                          <div className="text-[10px] text-muted-foreground">Version {asm.template_version?.version_number || '1'}</div>
+                        </td>
+                        <td className="py-3 px-4 text-foreground">
+                          {asm.person ? `${asm.person.first_name} ${asm.person.last_name}` : 'Family Unit'}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge
+                            variant="outline"
+                            className={
+                              isLocked
+                                ? 'bg-rose-500/10 text-rose-600 border-rose-500/30 text-[10px]'
+                                : isCompleted
+                                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]'
+                                : 'bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]'
+                            }
+                          >
+                            {asm.status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-medium text-foreground">
+                            {asm.determination ? asm.determination.replace(/_/g, ' ') : <span className="text-muted-foreground italic">Pending</span>}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {ind.present_danger_count > 0 && (
+                              <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/30 text-[10px] py-0">
+                                {ind.present_danger_count} Danger
+                              </Badge>
+                            )}
+                            {ind.impending_danger_count > 0 && (
+                              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px] py-0">
+                                {ind.impending_danger_count} Impending
+                              </Badge>
+                            )}
+                            {ind.protective_capacities_count > 0 && (
+                              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px] py-0">
+                                {ind.protective_capacities_count} Strengths
+                              </Badge>
+                            )}
+                            {!ind.present_danger_count && !ind.impending_danger_count && !ind.protective_capacities_count && (
+                              <span className="text-[10px] text-muted-foreground">—</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-xs text-muted-foreground">
+                          <div>{asm.conductor?.full_name || asm.conductor?.email || 'Worker'}</div>
+                          <div className="text-[10px]">{asm.conducted_at ? new Date(asm.conducted_at).toLocaleDateString() : 'Draft'}</div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/assessments/${asm.id}`)}
+                            className="h-7 text-xs"
+                          >
+                            Open
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* ── Modals ────────────────────────────────────────── */}
@@ -1148,6 +1309,108 @@ export default function CaseDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddendumModal(null)}>Cancel</Button>
             <Button onClick={handleAddAddendum}>Append Addendum</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Launch Assessment Modal */}
+      <Dialog open={showLaunchAssessmentModal} onOpenChange={setShowLaunchAssessmentModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
+              <ClipboardList className="w-5 h-5" />
+              <DialogTitle className="text-lg font-semibold">
+                Launch Clinical / Safety Assessment
+              </DialogTitle>
+            </div>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Select an approved, versioned assessment template to initiate a structured questionnaire for this case.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Assessment Template <span className="text-rose-500">*</span>
+              </label>
+              <Select
+                value={launchAssessmentForm.template_key}
+                onValueChange={(val) => setLaunchAssessmentForm({ ...launchAssessmentForm, template_key: val })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select template..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HOME_ASSESSMENT">
+                    Home Assessment (Residence Safety & Environment)
+                  </SelectItem>
+                  <SelectItem value="THREAT_ASSESSMENT">
+                    Threat Assessment (Present & Impending Danger Screening)
+                  </SelectItem>
+                  <SelectItem value="AIEI_ASSESSMENT">
+                    AIEI Assessment (Prevention, Intervention & Aftercare)
+                  </SelectItem>
+                  {availableTemplates
+                    .filter((t) => !['HOME_ASSESSMENT', 'THREAT_ASSESSMENT', 'AIEI_ASSESSMENT'].includes(t.key))
+                    .map((t) => (
+                      <SelectItem key={t.key} value={t.key}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Subject Person (Optional)
+              </label>
+              <Select
+                value={launchAssessmentForm.person_id}
+                onValueChange={(val) => setLaunchAssessmentForm({ ...launchAssessmentForm, person_id: val })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Whole Family / Case Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Whole Family / Case Unit</SelectItem>
+                  {people.map((p) => (
+                    <SelectItem key={p.person_id} value={p.person_id}>
+                      {p.first_name} {p.last_name} ({p.role?.replace(/_/g, ' ')})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Assessment Title / Focus (Optional)
+              </label>
+              <Input
+                placeholder="e.g. Initial Living Condition Inspection"
+                value={launchAssessmentForm.title}
+                onChange={(e) => setLaunchAssessmentForm({ ...launchAssessmentForm, title: e.target.value })}
+                className="mt-1 text-sm"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowLaunchAssessmentModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleLaunchAssessment}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> Start Questionnaire
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
