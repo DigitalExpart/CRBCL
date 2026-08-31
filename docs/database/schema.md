@@ -68,3 +68,16 @@
 - `assessment_unlock_events`: Append-only Director unlock audit log with mandatory reasons.
 - `assessment_status_history`: Full state lifecycle audit log (`DRAFT`, `IN_PROGRESS`, `COMPLETED`, `LOCKED`, `VOID`).
 - `assessment_sequences`: Year-month atomic sequential numbering (`ASM-YYYYMM-NNNN`).
+
+### Safety Plans • Case Plans • Goals • Signatures (006)
+- `plan_sequences`: Year-month atomic counter sequence (`PLN-YYYYMM-NNNN`).
+- `plans`: Master Safety Plan and Case Plan container entity.
+- `plan_versions`: Immutable, versioned plan snapshots (`DRAFT`, `IN_REVIEW`, `FINALIZED`, `LOCKED`).
+- `plan_participants`: Circle members, caregivers, workers, and signers with attendance status.
+- `plan_concerns`: Relational harm statements and danger concerns with severities (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
+- `plan_strengths`: Protective capacities and cultural grounding strengths.
+- `plan_goals`: SMART goals with target dates, completion timestamps, and status tracking.
+- `plan_activities`: Concrete action steps linked to goals with responsible parties and due dates.
+- `goal_progress_updates`: Longitudinal progress logs tracking goal milestone advancement.
+- `plan_assessments`: Cross-entity relational links connecting clinical assessments to plans.
+- `plan_signatures`: Cryptographic e-signatures (`CANVAS_DRAW`, `TYPED_ATTESTATION`, `PHYSICAL_UPLOAD`) bound to canonical SHA-256 document digests.

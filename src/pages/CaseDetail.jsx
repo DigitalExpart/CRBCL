@@ -3,12 +3,13 @@ import { casesApi } from "@/api/cases";
 import { caseNotesApi } from "@/api/caseNotes";
 import { assessmentsApi } from "@/api/assessments";
 import { assessmentTemplatesApi } from "@/api/assessmentTemplates";
+import { plansApi } from "@/api/plans";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Edit2, CheckCircle2, AlertTriangle, User, Users, ShieldAlert,
   FileText, Clock, ArrowRightLeft, Link as LinkIcon, Download, Plus, Lock,
   Calendar, MapPin, Phone, Mail, Building, History, Check, X, RotateCcw,
-  Sparkles, Stethoscope, AlertCircle, Share2, FolderCheck, ClipboardList, ShieldCheck
+  Sparkles, Stethoscope, AlertCircle, Share2, FolderCheck, ClipboardList, ShieldCheck, Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CaseFormDialog from "@/components/cases/CaseFormDialog";
+import PlansTab from "@/components/plans/PlansTab";
 
 export default function CaseDetail() {
   const { id } = useParams();
@@ -43,6 +45,8 @@ export default function CaseDetail() {
   const [noteMetrics, setNoteMetrics] = useState(null);
   const [assessments, setAssessments] = useState([]);
   const [availableTemplates, setAvailableTemplates] = useState([]);
+  const [plans, setPlans] = useState([]);
+  const [activeGoals, setActiveGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modals & Actions
@@ -108,6 +112,7 @@ export default function CaseDetail() {
         metricsRes,
         assessmentsRes,
         templatesRes,
+        plansRes,
       ] = await Promise.all([
         casesApi.get(id),
         casesApi.getSnapshot(id).catch(() => null),
@@ -123,6 +128,8 @@ export default function CaseDetail() {
         caseNotesApi.getMetrics(id).catch(() => null),
         assessmentsApi.listByCase(id, { limit: 100 }).catch(() => ({ items: [] })),
         assessmentTemplatesApi.list({ is_active: true }).catch(() => []),
+        plansApi.listByCase(id).catch(() => []),
+        plansApi.getActiveGoals(id).catch(() => []),
       ]);
 
       setCaseData(caseRes);
@@ -139,6 +146,8 @@ export default function CaseDetail() {
       setNoteMetrics(metricsRes);
       setAssessments(assessmentsRes?.items || []);
       setAvailableTemplates(templatesRes || []);
+      setPlans(plansRes || []);
+      setActiveGoals(activeGoalsRes || []);
     } catch (e) {
       console.error("Error loading case detail:", e);
     } finally {
@@ -303,11 +312,12 @@ export default function CaseDetail() {
 
       {/* 360° Navigation Tabs */}
       <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val })}>
-        <TabsList className="grid grid-cols-3 md:grid-cols-9 h-auto p-1 bg-muted/60">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 h-auto p-1 bg-muted/60">
           <TabsTrigger value="snapshot" className="text-xs py-2">Snapshot</TabsTrigger>
           <TabsTrigger value="people" className="text-xs py-2">People ({people.length})</TabsTrigger>
           <TabsTrigger value="workers" className="text-xs py-2">Workers ({assignments.length})</TabsTrigger>
           <TabsTrigger value="notes" className="text-xs py-2">Clinical Notes ({notes.length})</TabsTrigger>
+          <TabsTrigger value="plans" className="text-xs py-2 font-medium text-purple-600 dark:text-purple-400">Plans ({plans.length})</TabsTrigger>
           <TabsTrigger value="assessments" className="text-xs py-2 font-medium text-emerald-600 dark:text-emerald-400">Assessments ({assessments.length})</TabsTrigger>
           <TabsTrigger value="sources" className="text-xs py-2">Sources ({sources.length})</TabsTrigger>
           <TabsTrigger value="links" className="text-xs py-2">Linked ({links.length})</TabsTrigger>
@@ -1102,6 +1112,11 @@ export default function CaseDetail() {
             </table>
           </div>
         </TabsContent>
+
+        {/* ── TAB: PLANS & SIGNATURES ─────────────────────── */}
+        <TabsContent value="plans" className="mt-6">
+          <PlansTab caseId={id} caseData={caseData} people={people} />
+        </TabsContent>
       </Tabs>
 
       {/* ── Modals ────────────────────────────────────────── */}
@@ -1205,6 +1220,29 @@ export default function CaseDetail() {
                 </Select>
               </div>
             </div>
+
+            {/* Active Plan Goal Linkage */}
+            {activeGoals.length > 0 && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1">
+                  <Target className="w-3.5 h-3.5 text-blue-500" /> Link to Active Plan Goal (Optional)
+                </label>
+                <Select
+                  value={noteForm.goal_id || "none"}
+                  onValueChange={(val) => setNoteForm({ ...noteForm, goal_id: val === "none" ? undefined : val })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Advance specific active goal..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">General Clinical Note (No Plan Goal Linked)</SelectItem>
+                    {activeGoals.map((g) => (
+                      <SelectItem key={g.id} value={g.id}>
+                        {g.plan_number} ({g.category}): {g.goal_text.slice(0, 55)}...
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="grid grid-cols-3 gap-3">
               <div>

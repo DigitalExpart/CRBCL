@@ -132,6 +132,16 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
         Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
         Permissions.ASSESSMENT_TEMPLATE_READ, Permissions.ASSESSMENT_TEMPLATE_MANAGE,
+        # Phase 6 Plan Permissions
+        Permissions.PLAN_READ, Permissions.PLAN_CREATE, Permissions.PLAN_UPDATE,
+        Permissions.PLAN_DELETE, Permissions.PLAN_SUBMIT, Permissions.PLAN_APPROVE,
+        Permissions.PLAN_RETURN, Permissions.PLAN_FINALIZE, Permissions.PLAN_LOCK,
+        Permissions.PLAN_UNLOCK, Permissions.PLAN_CLONE, Permissions.PLAN_PRINT,
+        Permissions.PLAN_SAFETY_READ, Permissions.PLAN_SAFETY_WRITE,
+        Permissions.PLAN_CASE_READ, Permissions.PLAN_CASE_WRITE,
+        Permissions.PLAN_GOAL_CREATE, Permissions.PLAN_GOAL_UPDATE, Permissions.PLAN_GOAL_COMPLETE,
+        Permissions.PLAN_ACTIVITY_CREATE, Permissions.PLAN_ACTIVITY_UPDATE, Permissions.PLAN_ACTIVITY_COMPLETE,
+        Permissions.PLAN_SIGNATURE_READ, Permissions.PLAN_SIGNATURE_CAPTURE,
         # Admin & System
         Permissions.ADMIN_USERS_MANAGE, Permissions.ADMIN_ROLES_MANAGE,
         Permissions.ADMIN_TEAMS_MANAGE, Permissions.ADMIN_CONFIGURATION_MANAGE,
@@ -200,6 +210,13 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
         Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
         Permissions.ASSESSMENT_TEMPLATE_READ,
+        Permissions.PLAN_READ, Permissions.PLAN_CREATE, Permissions.PLAN_UPDATE,
+        Permissions.PLAN_SUBMIT, Permissions.PLAN_FINALIZE, Permissions.PLAN_CLONE, Permissions.PLAN_PRINT,
+        Permissions.PLAN_SAFETY_READ, Permissions.PLAN_SAFETY_WRITE,
+        Permissions.PLAN_CASE_READ, Permissions.PLAN_CASE_WRITE,
+        Permissions.PLAN_GOAL_CREATE, Permissions.PLAN_GOAL_UPDATE, Permissions.PLAN_GOAL_COMPLETE,
+        Permissions.PLAN_ACTIVITY_CREATE, Permissions.PLAN_ACTIVITY_UPDATE, Permissions.PLAN_ACTIVITY_COMPLETE,
+        Permissions.PLAN_SIGNATURE_READ, Permissions.PLAN_SIGNATURE_CAPTURE,
         Permissions.TIMELINE_READ,
     ]:
         rp = RolePermission(role_id=caseworker_role.id, permission_id=perms[p_key].id)
@@ -241,6 +258,15 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.ASSESSMENT_THREAT_READ, Permissions.ASSESSMENT_THREAT_WRITE,
         Permissions.ASSESSMENT_AIEI_READ, Permissions.ASSESSMENT_AIEI_WRITE,
         Permissions.ASSESSMENT_TEMPLATE_READ,
+        Permissions.PLAN_READ, Permissions.PLAN_CREATE, Permissions.PLAN_UPDATE,
+        Permissions.PLAN_DELETE, Permissions.PLAN_SUBMIT, Permissions.PLAN_APPROVE,
+        Permissions.PLAN_RETURN, Permissions.PLAN_FINALIZE, Permissions.PLAN_LOCK,
+        Permissions.PLAN_UNLOCK, Permissions.PLAN_CLONE, Permissions.PLAN_PRINT,
+        Permissions.PLAN_SAFETY_READ, Permissions.PLAN_SAFETY_WRITE,
+        Permissions.PLAN_CASE_READ, Permissions.PLAN_CASE_WRITE,
+        Permissions.PLAN_GOAL_CREATE, Permissions.PLAN_GOAL_UPDATE, Permissions.PLAN_GOAL_COMPLETE,
+        Permissions.PLAN_ACTIVITY_CREATE, Permissions.PLAN_ACTIVITY_UPDATE, Permissions.PLAN_ACTIVITY_COMPLETE,
+        Permissions.PLAN_SIGNATURE_READ, Permissions.PLAN_SIGNATURE_CAPTURE,
         Permissions.TIMELINE_READ,
     ]:
         rp = RolePermission(role_id=supervisor_role.id, permission_id=perms[p_key].id)
@@ -377,3 +403,9 @@ async def seed_templates(db_session: AsyncSession):
     from app.core.seed import seed_assessment_templates
     await seed_assessment_templates(db_session)
     await db_session.commit()
+
+
+@pytest.fixture
+async def admin_token(executive_director_user):
+    """Convenience fixture returning the token string for Executive Director."""
+    return executive_director_user["token"]

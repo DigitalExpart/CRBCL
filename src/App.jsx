@@ -26,6 +26,10 @@ import SupervisorApprovalQueue from '@/pages/SupervisorApprovalQueue';
 // Phase 5 Configurable Assessment Engine
 import AssessmentDetail from '@/pages/AssessmentDetail';
 
+// Phase 6 Safety Plans & Case Plans
+import PlanDetail from '@/pages/PlanDetail';
+import PlanEditor from '@/pages/PlanEditor';
+
 // Pages
 import Dashboard from '@/pages/Dashboard';
 import Cases from '@/pages/Cases';
@@ -87,6 +91,8 @@ const AuthenticatedApp = () => {
           <Route path="/cases" element={<Cases />} />
           <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/assessments/:id" element={<AssessmentDetail />} />
+          <Route path="/plans/:id" element={<PlanDetail />} />
+          <Route path="/plans/:id/edit" element={<PlanEditor />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/clients/:id" element={<ClientDetail />} />
           <Route path="/families" element={<Families />} />

@@ -22,7 +22,28 @@ CRBCL enforces strict multi-layered authorization:
    - `assessment.export` / `assessment.print`: Export or print assessment documents.
    - `assessment.delete`: Soft-delete draft assessments.
 
-6. **Data Protection**:
+6. **Safety & Case Planning Permissions (Phase 6)**:
+   - `plan.create`: Create a new Master Plan and initial Version 1.
+   - `plan.read`: View plans, versions, goals, and signatures.
+   - `plan.update`: Update plan metadata and draft content.
+   - `plan.delete`: Soft-delete draft plans.
+   - `plan.submit`: Submit draft plan for supervisor clinical review.
+   - `plan.approve`: Supervisor approval of plan and finalization sealing.
+   - `plan.return`: Supervisor return of plan for revisions.
+   - `plan.finalize`: Seal plan and compute canonical SHA-256 document hash.
+   - `plan.lock`: Lock finalized plan to enforce complete immutability.
+   - `plan.unlock`: Director-only unlock with mandatory written justification.
+   - `plan.clone`: Clone plan blueprint into a brand new master plan instance.
+   - `plan.print` / `plan.export`: Generate printable legal plan document.
+   - `plan.safety.read` / `plan.safety.write`: Safety Plan-specific authorization.
+   - `plan.case.read` / `plan.case.write`: Case Plan-specific authorization.
+   - `plan.goal.create` / `plan.goal.update` / `plan.goal.delete` / `plan.goal.complete`: SMART goal lifecycle management.
+   - `plan.activity.create` / `plan.activity.update` / `plan.activity.delete` / `plan.activity.complete`: Concrete activity management.
+   - `plan.signature.capture` / `plan.signature.read`: Electronic signature binding and verification.
+
+7. **Data Protection & Cryptographic Integrity**:
    - Zero database credentials exposed to browser.
    - Frontend communicates exclusively via authenticated REST API endpoints on `/api/v1/*`.
-   - Published template versions are strictly immutable in the database.
+   - Finalized plan versions are cryptographically hashed using SHA-256 deterministic JSON digest.
+   - Electronic signatures legally bind to `(plan_version_id, document_hash)`.
+   - Published template and plan versions are strictly immutable in PostgreSQL.

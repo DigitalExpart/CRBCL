@@ -10,3 +10,6 @@ export { teamsApi } from './teams';
 export { providersApi } from './providers';
 export { schoolsApi } from './schools';
 export { householdsApi } from './households';
+export { assessmentsApi } from './assessments';
+export { assessmentTemplatesApi } from './assessmentTemplates';
+export { plansApi } from './plans';

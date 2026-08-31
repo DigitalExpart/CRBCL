@@ -57,6 +57,19 @@ from app.models.person import (  # noqa: F401
     PersonPhysicalDescription,
     PersonStrength,
 )
+from app.models.plan import (  # noqa: F401
+    GoalProgressUpdate,
+    Plan,
+    PlanActivity,
+    PlanAssessment,
+    PlanConcern,
+    PlanGoal,
+    PlanParticipant,
+    PlanSequence,
+    PlanSignature,
+    PlanStrength,
+    PlanVersion,
+)
 from app.models.provider import (  # noqa: F401
     ClientProvider,
     Provider,

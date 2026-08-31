@@ -69,6 +69,22 @@ class CaseNoteService:
         if current_user and await self.perm_service.is_user_restricted_from_case(current_user.id, case.id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Case restriction active.")
 
+        if goal_id:
+            from sqlalchemy import select
+            from app.models.plan import Plan, PlanGoal, PlanVersion
+            goal_stmt = (
+                select(PlanGoal)
+                .join(PlanVersion, PlanGoal.plan_version_id == PlanVersion.id)
+                .join(Plan, PlanVersion.plan_id == Plan.id)
+                .where(PlanGoal.id == goal_id, Plan.case_id == case.id, Plan.deleted_at.is_(None))
+            )
+            goal_res = await self.db.execute(goal_stmt)
+            if not goal_res.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Goal does not belong to this case or does not exist.",
+                )
+
         author_name = (current_user.full_name or current_user.email) if current_user else "Caseworker"
 
         note = await self.note_repo.create(
@@ -154,6 +170,22 @@ class CaseNoteService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Case note is legally locked and immutable. Add a supervisor-authorized addendum instead.",
             )
+
+        if "goal_id" in update_data and update_data["goal_id"]:
+            from sqlalchemy import select
+            from app.models.plan import Plan, PlanGoal, PlanVersion
+            goal_stmt = (
+                select(PlanGoal)
+                .join(PlanVersion, PlanGoal.plan_version_id == PlanVersion.id)
+                .join(Plan, PlanVersion.plan_id == Plan.id)
+                .where(PlanGoal.id == update_data["goal_id"], Plan.case_id == note.case_id, Plan.deleted_at.is_(None))
+            )
+            goal_res = await self.db.execute(goal_stmt)
+            if not goal_res.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Goal does not belong to this case or does not exist.",
+                )
 
         for key, val in update_data.items():
             if hasattr(note, key) and key not in ("id", "case_id", "created_at", "created_by", "is_locked", "locked_at"):
