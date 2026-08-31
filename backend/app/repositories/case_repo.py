@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
+
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +19,7 @@ class CaseRepository(BaseRepository[Case]):
 
     async def generate_case_number(self) -> str:
         """Generate a concurrency-safe, server-side atomic case number: CRB-YYYYMM-XXXX."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         period = now.strftime("%Y%m")  # e.g., '202608'
 
         # Row lock sequence record for the current period (with fallback if dialect doesn't support with_for_update)

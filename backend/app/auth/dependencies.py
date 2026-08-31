@@ -46,7 +46,7 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": {"code": "INVALID_TOKEN", "message": "Invalid token payload"}},
-        )
+        ) from None
 
     auth_service = AuthService(db)
     user = await auth_service.get_user_by_id(user_id)

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,7 +32,7 @@ class OutboxService:
             status="pending",
             attempt_count=0,
             max_attempts=max_attempts,
-            available_at=datetime.now(timezone.utc),
+            available_at=datetime.now(UTC),
         )
         self.db.add(event)
         await self.db.flush()
@@ -39,7 +40,7 @@ class OutboxService:
 
     async def get_pending_events(self, limit: int = 10) -> list[OutboxEvent]:
         """Fetch pending outbox events that are available for processing."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         query = (
             select(OutboxEvent)
             .where(
@@ -59,7 +60,7 @@ class OutboxService:
         event = result.scalar_one_or_none()
         if event:
             event.status = "processed"
-            event.processed_at = datetime.now(timezone.utc)
+            event.processed_at = datetime.now(UTC)
             await self.db.flush()
 
     async def record_failure(self, event_id: uuid.UUID, error_message: str) -> None:
@@ -77,5 +78,5 @@ class OutboxService:
         else:
             # Exponential backoff (2^attempt seconds)
             backoff_sec = 2 ** event.attempt_count
-            event.available_at = datetime.now(timezone.utc) + timedelta(seconds=backoff_sec)
+            event.available_at = datetime.now(UTC) + timedelta(seconds=backoff_sec)
         await self.db.flush()

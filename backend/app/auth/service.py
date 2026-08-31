@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,7 +53,7 @@ class AuthService:
             return None
 
         # Check temporary lockout backoff
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if user.locked_until and user.locked_until > now:
             return None
 
@@ -103,7 +103,7 @@ class AuthService:
             refresh_token_hash=hash_refresh_token(refresh_token),
             user_agent=user_agent,
             ip_address=ip_address,
-            expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.refresh_token_ttl),
+            expires_at=datetime.now(UTC) + timedelta(seconds=settings.refresh_token_ttl),
         )
         self.db.add(session)
         await self.db.flush()
@@ -116,7 +116,7 @@ class AuthService:
             select(Session).where(
                 Session.refresh_token_hash == token_hash,
                 Session.is_revoked == False,  # noqa: E712
-                Session.expires_at > datetime.now(timezone.utc),
+                Session.expires_at > datetime.now(UTC),
             )
         )
         session = result.scalar_one_or_none()
@@ -131,7 +131,7 @@ class AuthService:
 
         # Revoke old session
         session.is_revoked = True
-        session.revoked_at = datetime.now(timezone.utc)
+        session.revoked_at = datetime.now(UTC)
 
         # Create new session
         return await self.create_session(user, session.user_agent, session.ip_address)
@@ -145,7 +145,7 @@ class AuthService:
         session = result.scalar_one_or_none()
         if session:
             session.is_revoked = True
-            session.revoked_at = datetime.now(timezone.utc)
+            session.revoked_at = datetime.now(UTC)
             await self.db.flush()
             return True
         return False
@@ -156,7 +156,7 @@ class AuthService:
             select(Session).where(Session.user_id == user_id, Session.is_revoked == False)  # noqa: E712
         )
         sessions = result.scalars().all()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for s in sessions:
             s.is_revoked = True
             s.revoked_at = now

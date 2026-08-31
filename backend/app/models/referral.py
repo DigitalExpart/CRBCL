@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import AuditMixin, Base, SoftDeleteMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.person import Person
 
 
 class ReferralSequence(Base):
@@ -27,7 +31,7 @@ class Referral(Base, AuditMixin, SoftDeleteMixin):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     referral_number: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
     status: Mapped[str] = mapped_column(String(50), default="DRAFT", nullable=False, index=True)
-    
+
     received_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     received_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     received_method: Mapped[str] = mapped_column(String(50), default="phone", nullable=False)
@@ -52,25 +56,25 @@ class Referral(Base, AuditMixin, SoftDeleteMixin):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    people: Mapped[list["ReferralPerson"]] = relationship(
+    people: Mapped[list[ReferralPerson]] = relationship(
         "ReferralPerson", back_populates="referral", cascade="all, delete-orphan", lazy="selectin"
     )
-    reporter: Mapped["ReferralReporter | None"] = relationship(
+    reporter: Mapped[ReferralReporter | None] = relationship(
         "ReferralReporter", back_populates="referral", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
-    incidents: Mapped[list["ReferralIncident"]] = relationship(
+    incidents: Mapped[list[ReferralIncident]] = relationship(
         "ReferralIncident", back_populates="referral", cascade="all, delete-orphan", lazy="selectin"
     )
-    concerns: Mapped[list["ReferralConcern"]] = relationship(
+    concerns: Mapped[list[ReferralConcern]] = relationship(
         "ReferralConcern", back_populates="referral", cascade="all, delete-orphan", lazy="selectin"
     )
-    dispositions: Mapped[list["ChildDisposition"]] = relationship(
+    dispositions: Mapped[list[ChildDisposition]] = relationship(
         "ChildDisposition", back_populates="referral", cascade="all, delete-orphan", lazy="selectin"
     )
-    decision: Mapped["IntakeDecision | None"] = relationship(
+    decision: Mapped[IntakeDecision | None] = relationship(
         "IntakeDecision", back_populates="referral", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
-    outgoing_links: Mapped[list["ReferralLink"]] = relationship(
+    outgoing_links: Mapped[list[ReferralLink]] = relationship(
         "ReferralLink", foreign_keys="ReferralLink.source_referral_id", back_populates="source_referral", lazy="selectin"
     )
 
@@ -92,8 +96,8 @@ class ReferralPerson(Base, TimestampMixin):
     is_subject_of_concern: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    referral: Mapped["Referral"] = relationship("Referral", back_populates="people")
-    person: Mapped["Person"] = relationship("Person", lazy="joined")
+    referral: Mapped[Referral] = relationship("Referral", back_populates="people")
+    person: Mapped[Person] = relationship("Person", lazy="joined")
 
     __table_args__ = (
         Index("ix_referral_people_referral_person", "referral_id", "person_id"),
@@ -112,7 +116,7 @@ class ReferralReporter(Base, TimestampMixin):
     is_anonymous: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_mandated_reporter: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     wants_notification: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    
+
     reporter_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     organization: Mapped[str | None] = mapped_column(String(255), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -121,7 +125,7 @@ class ReferralReporter(Base, TimestampMixin):
     relationship_to_family: Mapped[str | None] = mapped_column(String(100), nullable=True)
     reporter_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    referral: Mapped["Referral"] = relationship("Referral", back_populates="reporter")
+    referral: Mapped[Referral] = relationship("Referral", back_populates="reporter")
 
 
 class ReferralIncident(Base, TimestampMixin):
@@ -142,7 +146,7 @@ class ReferralIncident(Base, TimestampMixin):
     officer_info: Mapped[str | None] = mapped_column(String(300), nullable=True)
     immediate_danger: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    referral: Mapped["Referral"] = relationship("Referral", back_populates="incidents")
+    referral: Mapped[Referral] = relationship("Referral", back_populates="incidents")
 
 
 class ReferralConcern(Base, TimestampMixin):
@@ -158,7 +162,7 @@ class ReferralConcern(Base, TimestampMixin):
     severity: Mapped[str] = mapped_column(String(20), default="Moderate", nullable=False)  # Low, Moderate, High, Critical
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    referral: Mapped["Referral"] = relationship("Referral", back_populates="concerns")
+    referral: Mapped[Referral] = relationship("Referral", back_populates="concerns")
 
     __table_args__ = (
         Index("ix_referral_concerns_type", "concern_type"),
@@ -178,14 +182,14 @@ class ChildDisposition(Base, TimestampMixin):
     )
     decision: Mapped[str] = mapped_column(String(50), nullable=False)  # PROTECTION, PREVENTION, SCREEN_OUT, EXTERNAL_REFERRAL, POST_MAJORITY
     reason: Mapped[str] = mapped_column(Text, default="", nullable=False)
-    
+
     destination_team_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("teams.id", ondelete="SET NULL"), nullable=True
     )
     destination_program: Mapped[str | None] = mapped_column(String(200), nullable=True)
     external_agency_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     external_referral_contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    
+
     resulting_case_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("cases.id", ondelete="SET NULL", use_alter=True), nullable=True, index=True
     )
@@ -195,8 +199,8 @@ class ChildDisposition(Base, TimestampMixin):
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     approval_state: Mapped[str] = mapped_column(String(50), default="DRAFT", nullable=False)
 
-    referral: Mapped["Referral"] = relationship("Referral", back_populates="dispositions")
-    person: Mapped["Person"] = relationship("Person", lazy="joined")
+    referral: Mapped[Referral] = relationship("Referral", back_populates="dispositions")
+    person: Mapped[Person] = relationship("Person", lazy="joined")
 
 
 class IntakeDecision(Base, TimestampMixin):
@@ -215,7 +219,7 @@ class IntakeDecision(Base, TimestampMixin):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    
+
     approved_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -227,7 +231,7 @@ class IntakeDecision(Base, TimestampMixin):
     returned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     return_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    referral: Mapped["Referral"] = relationship("Referral", back_populates="decision")
+    referral: Mapped[Referral] = relationship("Referral", back_populates="decision")
 
 
 class ReferralLink(Base, TimestampMixin):
@@ -247,10 +251,10 @@ class ReferralLink(Base, TimestampMixin):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    source_referral: Mapped["Referral"] = relationship(
+    source_referral: Mapped[Referral] = relationship(
         "Referral", foreign_keys=[source_referral_id], back_populates="outgoing_links"
     )
-    target_referral: Mapped["Referral"] = relationship("Referral", foreign_keys=[target_referral_id])
+    target_referral: Mapped[Referral] = relationship("Referral", foreign_keys=[target_referral_id])
 
     __table_args__ = (
         UniqueConstraint("source_referral_id", "target_referral_id", "link_type", name="uq_referral_links_source_target_type"),

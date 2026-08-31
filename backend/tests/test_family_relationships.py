@@ -2,9 +2,9 @@
 
 import pytest
 from httpx import AsyncClient
-from app.models.person import Person
-from app.models.family import Family
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.person import Person
 
 
 @pytest.mark.asyncio

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import uuid
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.provider import ClientProvider, Provider, ProviderLocation, ProviderSpecialty
+from app.models.provider import ClientProvider, Provider
 from app.repositories.base import BaseRepository
 
 

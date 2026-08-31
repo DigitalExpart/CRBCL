@@ -4,11 +4,22 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.database import AuditMixin, Base, SoftDeleteMixin
+from app.core.database import Base, SoftDeleteMixin
 
 
 class CaseSequence(Base):

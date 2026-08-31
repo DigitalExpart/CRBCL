@@ -3,30 +3,25 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
+
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.audit.service import AuditService
 from app.models.case import Case
 from app.models.case_management import (
     CaseAssignment,
-    CaseExternalWorker,
     CaseLink,
     CasePerson,
     CaseRestriction,
-    CaseSource,
-    CaseStatusHistory,
 )
 from app.models.case_note import CaseNote
 from app.models.client import Client
 from app.models.family import Family
 from app.models.person import Person
-from app.models.provider import Provider
 from app.models.referral import Referral
-from app.models.team import Team
 from app.models.user import User
 from app.permissions.service import PermissionService
 from app.repositories.case_management_repo import (
@@ -99,7 +94,7 @@ class CaseService:
     ) -> Case:
         """Create a new Case with atomic sequence number and baseline assignment."""
         case_number = await self.case_repo.generate_case_number()
-        
+
         assigned_worker_name = None
         if assigned_worker_id:
             user_stmt = select(User).where(User.id == assigned_worker_id)
@@ -209,7 +204,7 @@ class CaseService:
             if hasattr(case, key) and key not in ("id", "case_number", "created_at", "created_by"):
                 setattr(case, key, val)
 
-        case.updated_at = datetime.now(timezone.utc)
+        case.updated_at = datetime.now(UTC)
         case.updated_by = current_user.id
 
         await self.audit.log_event(
@@ -241,7 +236,7 @@ class CaseService:
         case.stage = "CLOSURE"
         case.closed_date = closed_date or date.today()
         case.closed_reason = closed_reason
-        case.updated_at = datetime.now(timezone.utc)
+        case.updated_at = datetime.now(UTC)
         case.updated_by = current_user.id if current_user else None
 
         await self.status_history_repo.create(
@@ -288,10 +283,10 @@ class CaseService:
         prev_status = case.status
         case.status = "Reopened"
         case.stage = "INVESTIGATION"
-        case.reopened_at = datetime.now(timezone.utc)
+        case.reopened_at = datetime.now(UTC)
         case.reopened_by = current_user.id if current_user else None
         case.reopened_reason = reopen_reason
-        case.updated_at = datetime.now(timezone.utc)
+        case.updated_at = datetime.now(UTC)
         case.updated_by = current_user.id if current_user else None
 
         await self.status_history_repo.create(
@@ -540,7 +535,7 @@ class CaseService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Active assignment not found")
 
         assignment.is_active = False
-        assignment.unassigned_at = datetime.now(timezone.utc)
+        assignment.unassigned_at = datetime.now(UTC)
 
         await self.timeline.record_event(
             event_type="WORKER_UNASSIGNED",
@@ -618,7 +613,7 @@ class CaseService:
         res = await self.db.execute(stmt)
         for a in res.scalars().all():
             a.is_active = False
-            a.unassigned_at = datetime.now(timezone.utc)
+            a.unassigned_at = datetime.now(UTC)
 
         restriction = await self.restriction_repo.create(
             case_id=case.id,
@@ -651,7 +646,7 @@ class CaseService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Active restriction not found")
 
         restriction.is_active = False
-        restriction.removed_at = datetime.now(timezone.utc)
+        restriction.removed_at = datetime.now(UTC)
         restriction.removed_by = current_user.id if current_user else None
         restriction.removal_reason = removal_reason
 

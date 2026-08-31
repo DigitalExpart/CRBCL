@@ -4,16 +4,15 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.models.user import User
 from app.permissions.constants import Permissions
 from app.permissions.dependencies import require_permission
-from app.permissions.service import PermissionService
 from app.repositories.case_note_repo import CaseNoteRepository
-from app.repositories.case_repo import CaseRepository
 from app.schemas.case_management import (
     CaseMetricsResponse,
     CaseNoteAddendumCreate,

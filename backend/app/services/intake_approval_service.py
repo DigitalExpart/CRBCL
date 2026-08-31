@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
@@ -46,12 +47,12 @@ class IntakeApprovalService:
         before_status = referral.status
         referral.status = "PENDING_SUPERVISOR"
         referral.updated_by = user_id
-        referral.updated_at = datetime.now(timezone.utc)
+        referral.updated_at = datetime.now(UTC)
         referral.version += 1
 
         if referral.decision:
             referral.decision.submitted_by = user_id
-            referral.decision.submitted_at = datetime.now(timezone.utc)
+            referral.decision.submitted_at = datetime.now(UTC)
 
         await self.db.flush()
 
@@ -108,12 +109,12 @@ class IntakeApprovalService:
         before_status = referral.status
         referral.status = "RETURNED"
         referral.updated_by = supervisor_id
-        referral.updated_at = datetime.now(timezone.utc)
+        referral.updated_at = datetime.now(UTC)
         referral.version += 1
 
         if referral.decision:
             referral.decision.returned_by = supervisor_id
-            referral.decision.returned_at = datetime.now(timezone.utc)
+            referral.decision.returned_at = datetime.now(UTC)
             referral.decision.return_reason = return_reason.strip()
 
         await self.db.flush()
@@ -174,12 +175,12 @@ class IntakeApprovalService:
         before_status = referral.status
         referral.status = "APPROVED"
         referral.updated_by = supervisor_id
-        referral.updated_at = datetime.now(timezone.utc)
+        referral.updated_at = datetime.now(UTC)
         referral.version += 1
 
         if referral.decision:
             referral.decision.approved_by = supervisor_id
-            referral.decision.approved_at = datetime.now(timezone.utc)
+            referral.decision.approved_at = datetime.now(UTC)
             referral.decision.supervisor_notes = supervisor_notes
 
         await self.db.flush()

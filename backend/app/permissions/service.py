@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -43,7 +44,6 @@ class PermissionService:
             - None if user has unrestricted team access (e.g. Executive Director role / Super-scoped)
             - set of team UUIDs otherwise
         """
-        perms = await self.get_user_permissions(user_id)
         # Fetch active team memberships
         memberships_res = await self.db.execute(
             select(TeamMembership.team_id).where(
@@ -106,14 +106,8 @@ class PermissionService:
             return False
 
         # 3. Team Scope check
-        if resource_team_id is not None:
-            if not await self.user_can_access_team(user.id, resource_team_id):
-                return False
+        if resource_team_id is not None and not await self.user_can_access_team(user.id, resource_team_id):
+            return False
 
         # 4. Case Restriction Check (ADR-010)
-        if case_id is not None:
-            if await self.is_user_restricted_from_case(user.id, case_id):
-                return False
-
-        # 5. Field Policy / Allow
-        return True
+        return not (case_id is not None and await self.is_user_restricted_from_case(user.id, case_id))

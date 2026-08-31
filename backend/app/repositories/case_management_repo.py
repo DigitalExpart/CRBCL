@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -70,7 +71,7 @@ class CaseAssignmentRepository(BaseRepository[CaseAssignment]):
         res = await self.db.execute(stmt)
         for assignment in res.scalars().all():
             assignment.is_active = False
-            assignment.unassigned_at = datetime.now(timezone.utc)
+            assignment.unassigned_at = datetime.now(UTC)
         await self.db.flush()
 
 

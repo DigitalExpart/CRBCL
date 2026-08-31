@@ -14,11 +14,13 @@ Executes full lifecycle against live Supabase PostgreSQL instance:
 """
 
 import os
-import pytest
 import uuid
-from httpx import AsyncClient, ASGITransport
-from app.main import app
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+
 from app.core.config import get_settings
+from app.main import app
 
 
 @pytest.mark.skipif(
@@ -162,7 +164,7 @@ async def test_supabase_live_integration():
             },
         )
         assert submit_disp_resp.status_code == 200, f"Submit failed: {submit_disp_resp.text}"
-        print(f"[LIVE SUPABASE] 8. Recommendation submitted -> Status is PENDING_SUPERVISOR")
+        print("[LIVE SUPABASE] 8. Recommendation submitted -> Status is PENDING_SUPERVISOR")
 
         # 8. Supervisor Approval & Automated Case Routing
         approve_resp = await client.post(
@@ -204,7 +206,7 @@ async def test_supabase_live_integration():
             },
         )
         assert add_person_resp.status_code == 201
-        print(f"[LIVE SUPABASE] 12. Attached Person to Case Roster")
+        print("[LIVE SUPABASE] 12. Attached Person to Case Roster")
 
         # 12. Create Clinical Case Note
         note_resp = await client.post(
@@ -230,7 +232,7 @@ async def test_supabase_live_integration():
         lock_resp = await client.post(f"/api/v1/case-notes/{note_id}/lock", headers=headers)
         assert lock_resp.status_code == 200
         assert lock_resp.json()["is_locked"] is True
-        print(f"[LIVE SUPABASE] 14. Locked Case Note successfully")
+        print("[LIVE SUPABASE] 14. Locked Case Note successfully")
 
         # 14. Append Addendum to Locked Note
         addendum_resp = await client.post(
@@ -242,7 +244,7 @@ async def test_supabase_live_integration():
             },
         )
         assert addendum_resp.status_code == 201
-        print(f"[LIVE SUPABASE] 15. Appended Legal Addendum to locked note")
+        print("[LIVE SUPABASE] 15. Appended Legal Addendum to locked note")
 
         # 15. Controlled Case Closure
         close_resp = await client.post(
@@ -255,7 +257,7 @@ async def test_supabase_live_integration():
         )
         assert close_resp.status_code == 200
         assert close_resp.json()["status"] == "Closed"
-        print(f"[LIVE SUPABASE] 16. Case formally closed with mandatory rationale")
+        print("[LIVE SUPABASE] 16. Case formally closed with mandatory rationale")
 
         # 16. Case Reopening
         reopen_resp = await client.post(
@@ -265,7 +267,7 @@ async def test_supabase_live_integration():
         )
         assert reopen_resp.status_code == 200
         assert reopen_resp.json()["status"] == "Reopened"
-        print(f"[LIVE SUPABASE] 17. Case reopened with justification")
+        print("[LIVE SUPABASE] 17. Case reopened with justification")
 
         # 17. Status Audit History
         history_resp = await client.get(f"/api/v1/cases/{resulting_case_id}/status-history", headers=headers)

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import date
+
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.case_note import CaseNote, CaseNoteAddendum, CaseNoteAttachment, CaseNotePerson
+from app.models.case_note import CaseNote, CaseNoteAddendum, CaseNotePerson
 from app.repositories.base import BaseRepository
 
 

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from typing import Any, Generic, TypeVar
-from datetime import datetime, timezone
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,14 +80,14 @@ class BaseRepository(Generic[ModelType]):
         if hasattr(instance, "version") and instance.version is not None:
             instance.version += 1
         if hasattr(instance, "updated_at"):
-            instance.updated_at = datetime.now(timezone.utc)
+            instance.updated_at = datetime.now(UTC)
         await self.db.flush()
         return instance
 
     async def soft_delete(self, instance: ModelType) -> ModelType:
         """Soft delete if model supports deleted_at, otherwise hard delete."""
         if hasattr(instance, "deleted_at"):
-            instance.deleted_at = datetime.now(timezone.utc)
+            instance.deleted_at = datetime.now(UTC)
             await self.db.flush()
             return instance
         else:

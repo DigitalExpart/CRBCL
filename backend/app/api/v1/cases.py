@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,7 +33,6 @@ from app.schemas.case_management import (
     CaseExternalWorkerResponse,
     CaseLinkCreate,
     CaseLinkResponse,
-    CaseListResponse,
     CasePersonCreate,
     CasePersonResponse,
     CaseReopenRequest,

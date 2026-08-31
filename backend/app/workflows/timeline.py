@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 
 from sqlalchemy import select
@@ -44,7 +44,7 @@ class TimelineService:
     ) -> TimelineEvent:
         """Create a new append-oriented Sacred Timeline business history event."""
         if occurred_at is None:
-            occurred_at = datetime.now(timezone.utc)
+            occurred_at = datetime.now(UTC)
 
         event = TimelineEvent(
             event_type=event_type,

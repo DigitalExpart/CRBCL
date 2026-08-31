@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +12,7 @@ from app.models.case import Case
 from app.models.case_management import CaseAssignment, CasePerson, CaseStatusHistory
 from app.models.client import Client
 from app.models.person import Person
-from app.models.referral import ChildDisposition, Referral
+from app.models.referral import Referral
 from app.repositories.case_repo import CaseRepository
 from app.workflows.outbox import OutboxService
 from app.workflows.timeline import TimelineService
@@ -36,7 +36,7 @@ class ReferralRoutingService:
 
         for disp in referral.dispositions:
             disp.approval_state = "APPROVED"
-            
+
             # Retrieve person/child details
             person_stmt = select(Person).where(Person.id == disp.person_id)
             person_res = await self.db.execute(person_stmt)

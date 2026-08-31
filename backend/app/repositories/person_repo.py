@@ -3,18 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from sqlalchemy import func, or_, select
+
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.person import (
     Person,
-    PersonAddress,
-    PersonChallenge,
-    PersonContact,
-    PersonCulturalProfile,
-    PersonPhysicalDescription,
-    PersonStrength,
 )
 from app.repositories.base import BaseRepository
 

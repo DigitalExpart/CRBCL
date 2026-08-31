@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.audit import AccessEvent, AuditEvent
@@ -21,10 +22,10 @@ def _sanitize_dict(data: dict[str, Any] | None) -> dict[str, Any] | None:
             sanitized[k] = "[REDACTED]"
         elif isinstance(v, dict):
             sanitized[k] = _sanitize_dict(v)
-        elif isinstance(v, (uuid.UUID, date, datetime)):
+        elif isinstance(v, uuid.UUID | date | datetime):
             sanitized[k] = str(v)
         elif isinstance(v, list):
-            sanitized[k] = [str(item) if isinstance(item, (uuid.UUID, date, datetime)) else item for item in v]
+            sanitized[k] = [str(item) if isinstance(item, uuid.UUID | date | datetime) else item for item in v]
         else:
             sanitized[k] = v
     return sanitized

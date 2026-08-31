@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -53,16 +53,16 @@ class Person(Base, AuditMixin, SoftDeleteMixin):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    addresses: Mapped[list["PersonAddress"]] = relationship("PersonAddress", back_populates="person", lazy="selectin")
-    contacts: Mapped[list["PersonContact"]] = relationship("PersonContact", back_populates="person", lazy="selectin")
-    physical_description: Mapped["PersonPhysicalDescription | None"] = relationship(
+    addresses: Mapped[list[PersonAddress]] = relationship("PersonAddress", back_populates="person", lazy="selectin")
+    contacts: Mapped[list[PersonContact]] = relationship("PersonContact", back_populates="person", lazy="selectin")
+    physical_description: Mapped[PersonPhysicalDescription | None] = relationship(
         "PersonPhysicalDescription", back_populates="person", uselist=False, lazy="selectin"
     )
-    cultural_profile: Mapped["PersonCulturalProfile | None"] = relationship(
+    cultural_profile: Mapped[PersonCulturalProfile | None] = relationship(
         "PersonCulturalProfile", back_populates="person", uselist=False, lazy="selectin"
     )
-    strengths: Mapped[list["PersonStrength"]] = relationship("PersonStrength", back_populates="person", lazy="selectin")
-    challenges: Mapped[list["PersonChallenge"]] = relationship("PersonChallenge", back_populates="person", lazy="selectin")
+    strengths: Mapped[list[PersonStrength]] = relationship("PersonStrength", back_populates="person", lazy="selectin")
+    challenges: Mapped[list[PersonChallenge]] = relationship("PersonChallenge", back_populates="person", lazy="selectin")
 
     __table_args__ = (
         Index("ix_persons_name_trgm", "first_name", "last_name"),
@@ -94,7 +94,7 @@ class PersonAddress(Base, TimestampMixin):
     valid_from: Mapped[date | None] = mapped_column(Date, nullable=True)
     valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    person: Mapped["Person"] = relationship("Person", back_populates="addresses")
+    person: Mapped[Person] = relationship("Person", back_populates="addresses")
 
 
 class PersonContact(Base, TimestampMixin):
@@ -110,7 +110,7 @@ class PersonContact(Base, TimestampMixin):
     label: Mapped[str] = mapped_column(String(100), default="Primary", nullable=False)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    person: Mapped["Person"] = relationship("Person", back_populates="contacts")
+    person: Mapped[Person] = relationship("Person", back_populates="contacts")
 
 
 class PersonPhysicalDescription(Base, TimestampMixin):
@@ -134,7 +134,7 @@ class PersonPhysicalDescription(Base, TimestampMixin):
     contact_lenses: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    person: Mapped["Person"] = relationship("Person", back_populates="physical_description")
+    person: Mapped[Person] = relationship("Person", back_populates="physical_description")
 
 
 class PersonCulturalProfile(Base, TimestampMixin):
@@ -154,7 +154,7 @@ class PersonCulturalProfile(Base, TimestampMixin):
     extracurricular_activities: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    person: Mapped["Person"] = relationship("Person", back_populates="cultural_profile")
+    person: Mapped[Person] = relationship("Person", back_populates="cultural_profile")
 
 
 class PersonStrength(Base, TimestampMixin):
@@ -169,7 +169,7 @@ class PersonStrength(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    person: Mapped["Person"] = relationship("Person", back_populates="strengths")
+    person: Mapped[Person] = relationship("Person", back_populates="strengths")
 
 
 class PersonChallenge(Base, TimestampMixin):
@@ -186,7 +186,7 @@ class PersonChallenge(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    person: Mapped["Person"] = relationship("Person", back_populates="challenges")
+    person: Mapped[Person] = relationship("Person", back_populates="challenges")
 
 
 class PersonMerge(Base):
@@ -198,7 +198,7 @@ class PersonMerge(Base):
     target_person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     merged_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     merged_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now(), nullable=False
     )
     reason: Mapped[str] = mapped_column(String(500), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

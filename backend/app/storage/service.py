@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings

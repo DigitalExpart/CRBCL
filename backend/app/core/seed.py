@@ -14,14 +14,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
+
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.compiler import compiles
 
 from app.auth.security import hash_password
 from app.core.config import get_settings
-from app.core.database import Base, async_session_factory, engine
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from app.core.database import async_session_factory
+
 
 @compiles(JSONB, "sqlite")
 def compile_jsonb_sqlite(type_, compiler, **kw):
@@ -33,8 +35,7 @@ def compile_uuid_sqlite(type_, compiler, **kw):
 
 from app.models.config import LookupList, LookupValue
 from app.models.role import Permission, Role, RolePermission, UserRole
-from app.models.team import Team, TeamMembership
-from app.models.terminology import TerminologyKey, TerminologyTranslation
+from app.models.team import Team
 from app.models.user import User
 from app.permissions.constants import Permissions
 
@@ -129,13 +130,13 @@ PERMISSIONS_DATA = [
     {"key": Permissions.INTAKE_HISTORY_READ, "name": "Read Prior History across Cases & Referrals", "category": "intake"},
     {"key": Permissions.INTAKE_LINK_READ, "name": "Read Cross-Referral Links", "category": "intake"},
     {"key": Permissions.INTAKE_LINK_WRITE, "name": "Create / Manage Cross-Referral Links", "category": "intake"},
-    
+
     # Clients
     {"key": Permissions.CLIENT_READ, "name": "Read Clients", "category": "clients"},
     {"key": Permissions.CLIENT_CREATE, "name": "Create Clients", "category": "clients"},
     {"key": Permissions.CLIENT_UPDATE, "name": "Update Clients", "category": "clients"},
     {"key": Permissions.CLIENT_DELETE, "name": "Delete Clients", "category": "clients"},
-    
+
     # Field-level Client
     {"key": Permissions.CLIENT_IDENTIFIERS_READ, "name": "Read Sensitive Identifiers (Treaty, Health Card)", "category": "clients"},
     {"key": Permissions.CLIENT_IDENTIFIERS_WRITE, "name": "Write Sensitive Identifiers", "category": "clients"},
@@ -147,7 +148,7 @@ PERMISSIONS_DATA = [
     {"key": Permissions.CLIENT_CULTURAL_WRITE, "name": "Write Cultural Connections & Identity", "category": "clients"},
     {"key": Permissions.CLIENT_DOCUMENTS_READ, "name": "Read Client Documents", "category": "clients"},
     {"key": Permissions.CLIENT_DOCUMENTS_WRITE, "name": "Write Client Documents", "category": "clients"},
-    
+
     # Families & Households
     {"key": Permissions.FAMILY_READ, "name": "Read Families", "category": "families"},
     {"key": Permissions.FAMILY_CREATE, "name": "Create Families", "category": "families"},
@@ -157,13 +158,13 @@ PERMISSIONS_DATA = [
     {"key": Permissions.FAMILY_RELATIONSHIPS_WRITE, "name": "Write Family Relationships & Genograms", "category": "families"},
     {"key": Permissions.HOUSEHOLD_READ, "name": "Read Households & Locations", "category": "families"},
     {"key": Permissions.HOUSEHOLD_WRITE, "name": "Write Households & Locations", "category": "families"},
-    
+
     # Providers & Schools
     {"key": Permissions.PROVIDER_READ, "name": "Read Providers Pool", "category": "providers"},
     {"key": Permissions.PROVIDER_WRITE, "name": "Write Providers Pool", "category": "providers"},
     {"key": Permissions.SCHOOL_READ, "name": "Read Schools Directory", "category": "schools"},
     {"key": Permissions.SCHOOL_WRITE, "name": "Write Schools Directory", "category": "schools"},
-    
+
     # Core Cases & Lifecycle (Phase 4)
     {"key": Permissions.CASE_READ, "name": "Read Cases", "category": "cases"},
     {"key": Permissions.CASE_CREATE, "name": "Create Cases", "category": "cases"},
@@ -172,7 +173,7 @@ PERMISSIONS_DATA = [
     {"key": Permissions.CASE_ASSIGN, "name": "Assign Case Workers & Teams", "category": "cases"},
     {"key": Permissions.CASE_CLOSE, "name": "Close Cases with Reason & Audit", "category": "cases"},
     {"key": Permissions.CASE_REOPEN, "name": "Reopen Closed Cases with Reason", "category": "cases"},
-    
+
     # Case Sub-domains (Phase 4)
     {"key": Permissions.CASE_PEOPLE_READ, "name": "Read People Involved in Case", "category": "cases"},
     {"key": Permissions.CASE_PEOPLE_WRITE, "name": "Manage People Involved in Case", "category": "cases"},
@@ -204,13 +205,13 @@ PERMISSIONS_DATA = [
     {"key": Permissions.DOCUMENT_READ, "name": "Read Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_UPLOAD, "name": "Upload Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_DELETE, "name": "Delete Documents", "category": "documents"},
-    
+
     # Administration
     {"key": Permissions.ADMIN_USERS_MANAGE, "name": "Manage Users", "category": "admin"},
     {"key": Permissions.ADMIN_ROLES_MANAGE, "name": "Manage Roles", "category": "admin"},
     {"key": Permissions.ADMIN_TEAMS_MANAGE, "name": "Manage Teams", "category": "admin"},
     {"key": Permissions.ADMIN_CONFIGURATION_MANAGE, "name": "Manage Configuration", "category": "admin"},
-    
+
     # Audit & Timeline
     {"key": Permissions.AUDIT_READ, "name": "Read Audit Logs", "category": "audit"},
     {"key": Permissions.ACCESS_EVENT_READ, "name": "Read Access Events", "category": "audit"},

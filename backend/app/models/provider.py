@@ -26,8 +26,8 @@ class Provider(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    locations: Mapped[list["ProviderLocation"]] = relationship("ProviderLocation", back_populates="provider", lazy="selectin")
-    specialties: Mapped[list["ProviderSpecialty"]] = relationship("ProviderSpecialty", back_populates="provider", lazy="selectin")
+    locations: Mapped[list[ProviderLocation]] = relationship("ProviderLocation", back_populates="provider", lazy="selectin")
+    specialties: Mapped[list[ProviderSpecialty]] = relationship("ProviderSpecialty", back_populates="provider", lazy="selectin")
 
 
 class ProviderLocation(Base, TimestampMixin):
@@ -45,7 +45,7 @@ class ProviderLocation(Base, TimestampMixin):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    provider: Mapped["Provider"] = relationship("Provider", back_populates="locations")
+    provider: Mapped[Provider] = relationship("Provider", back_populates="locations")
 
 
 class ProviderSpecialty(Base, TimestampMixin):
@@ -58,7 +58,7 @@ class ProviderSpecialty(Base, TimestampMixin):
     )
     specialty: Mapped[str] = mapped_column(String(200), nullable=False)
 
-    provider: Mapped["Provider"] = relationship("Provider", back_populates="specialties")
+    provider: Mapped[Provider] = relationship("Provider", back_populates="specialties")
 
 
 class ClientProvider(Base, TimestampMixin):
@@ -78,4 +78,4 @@ class ClientProvider(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    provider: Mapped["Provider"] = relationship("Provider", lazy="selectin")
+    provider: Mapped[Provider] = relationship("Provider", lazy="selectin")

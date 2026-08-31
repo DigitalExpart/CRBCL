@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
+
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.case import Case
-from app.models.person import Person
 from app.models.referral import (
     ChildDisposition,
     IntakeDecision,
@@ -21,7 +20,6 @@ from app.models.referral import (
     ReferralReporter,
     ReferralSequence,
 )
-from app.models.user import User
 
 
 class ReferralRepository:
@@ -31,7 +29,7 @@ class ReferralRepository:
     async def generate_referral_number(self, target_date: date | None = None) -> str:
         """Concurrency-safe sequence generator for referral numbers (INT-YYYY-NNNNNN)."""
         current_year = (target_date or date.today()).year
-        
+
         # Query sequence with row lock where possible
         stmt = (
             select(ReferralSequence)
@@ -93,7 +91,7 @@ class ReferralRepository:
                 setattr(referral, k, v)
 
         referral.version += 1
-        referral.updated_at = datetime.now(timezone.utc)
+        referral.updated_at = datetime.now(UTC)
         await self.db.flush()
         return referral
 
@@ -297,13 +295,13 @@ class ReferralRepository:
                     setattr(disp, k, v)
             if decided_by:
                 disp.decided_by = decided_by
-                disp.decided_at = datetime.now(timezone.utc)
+                disp.decided_at = datetime.now(UTC)
         else:
             disp = ChildDisposition(
                 referral_id=referral_id,
                 person_id=person_id,
                 decided_by=decided_by,
-                decided_at=datetime.now(timezone.utc) if decided_by else None,
+                decided_at=datetime.now(UTC) if decided_by else None,
                 **disposition_data,
             )
             self.db.add(disp)
@@ -328,14 +326,14 @@ class ReferralRepository:
             decision.rationale = rationale
             if submitted_by:
                 decision.submitted_by = submitted_by
-                decision.submitted_at = datetime.now(timezone.utc)
+                decision.submitted_at = datetime.now(UTC)
         else:
             decision = IntakeDecision(
                 referral_id=referral_id,
                 overall_recommendation=overall_recommendation,
                 rationale=rationale,
                 submitted_by=submitted_by,
-                submitted_at=datetime.now(timezone.utc) if submitted_by else None,
+                submitted_at=datetime.now(UTC) if submitted_by else None,
             )
             self.db.add(decision)
 

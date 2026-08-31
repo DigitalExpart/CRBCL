@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import uuid
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.role import Role, UserRole
-from app.models.team import TeamMembership, UserTeamAccess
+from app.models.team import TeamMembership
 from app.models.user import User
 from app.repositories.base import BaseRepository
 

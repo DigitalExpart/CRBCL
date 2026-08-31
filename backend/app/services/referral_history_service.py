@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import uuid
-from sqlalchemy import or_, select
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.case import Case
 from app.models.client import Client
-from app.models.person import Person
-from app.models.referral import Referral, ReferralConcern, ReferralPerson
+from app.models.referral import Referral, ReferralPerson
 
 
 class ReferralHistoryService:
@@ -65,7 +65,7 @@ class ReferralHistoryService:
                 primary_concern = next((c.concern_type for c in ref.concerns if c.is_primary), None)
                 if not primary_concern and ref.concerns:
                     primary_concern = ref.concerns[0].concern_type
-                
+
                 prior_referrals_map[ref.id] = {
                     "referral_id": str(ref.id),
                     "referral_number": ref.referral_number,

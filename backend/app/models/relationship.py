@@ -29,7 +29,7 @@ class FamilyMember(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    person: Mapped["Person"] = relationship("Person", lazy="selectin")  # noqa: F821
+    person: Mapped[Person] = relationship("Person", lazy="selectin")  # noqa: F821
 
     __table_args__ = (
         Index("ix_family_members_family_person", "family_id", "person_id"),
@@ -57,8 +57,8 @@ class FamilyRelationship(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    person_a: Mapped["Person"] = relationship("Person", foreign_keys=[person_a_id], lazy="selectin")  # noqa: F821
-    person_b: Mapped["Person"] = relationship("Person", foreign_keys=[person_b_id], lazy="selectin")  # noqa: F821
+    person_a: Mapped[Person] = relationship("Person", foreign_keys=[person_a_id], lazy="selectin")  # noqa: F821
+    person_b: Mapped[Person] = relationship("Person", foreign_keys=[person_b_id], lazy="selectin")  # noqa: F821
 
     __table_args__ = (
         Index("ix_family_relationships_pair", "person_a_id", "person_b_id"),
@@ -83,7 +83,7 @@ class Household(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    memberships: Mapped[list["HouseholdMembership"]] = relationship(
+    memberships: Mapped[list[HouseholdMembership]] = relationship(
         "HouseholdMembership", back_populates="household", lazy="selectin"
     )
 
@@ -105,8 +105,8 @@ class HouseholdMembership(Base, TimestampMixin):
     is_current: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    household: Mapped["Household"] = relationship("Household", back_populates="memberships")
-    person: Mapped["Person"] = relationship("Person", lazy="selectin")  # noqa: F821
+    household: Mapped[Household] = relationship("Household", back_populates="memberships")
+    person: Mapped[Person] = relationship("Person", lazy="selectin")  # noqa: F821
 
     __table_args__ = (
         Index("ix_household_memberships_h_p", "household_id", "person_id"),

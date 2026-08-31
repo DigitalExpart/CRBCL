@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
-from app.models.referral import Referral, ReferralReporter
+from app.models.referral import Referral
 from app.repositories.referral_repo import ReferralRepository
 from app.schemas.referral import (
     ChildDispositionResponse,
@@ -18,7 +18,6 @@ from app.schemas.referral import (
     ReferralLinkResponse,
     ReferralPersonResponse,
     ReferralReporterResponse,
-    ReferralResponse,
 )
 from app.workflows.outbox import OutboxService
 from app.workflows.timeline import TimelineService
@@ -164,7 +163,7 @@ class ReferralService:
         # Build incidents, concerns, dispositions
         incidents = [ReferralIncidentResponse.model_validate(inc) for inc in referral.incidents]
         concerns = [ReferralConcernResponse.model_validate(c) for c in referral.concerns]
-        
+
         primary_concern = next((c.concern_type for c in referral.concerns if c.is_primary), None)
         if not primary_concern and referral.concerns:
             primary_concern = referral.concerns[0].concern_type

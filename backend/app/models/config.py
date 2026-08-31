@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,7 +33,7 @@ class LookupList(Base, TimestampMixin):
     is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    values: Mapped[list["LookupValue"]] = relationship(
+    values: Mapped[list[LookupValue]] = relationship(
         "LookupValue", back_populates="lookup_list", lazy="selectin", order_by="LookupValue.sort_order"
     )
 
@@ -53,4 +52,4 @@ class LookupValue(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
 
-    lookup_list: Mapped["LookupList"] = relationship("LookupList", back_populates="values")
+    lookup_list: Mapped[LookupList] = relationship("LookupList", back_populates="values")

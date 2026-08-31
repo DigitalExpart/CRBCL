@@ -19,7 +19,7 @@ class TerminologyKey(Base, TimestampMixin):
     context: Mapped[str] = mapped_column(String(100), default="general", nullable=False)
     description: Mapped[str] = mapped_column(Text, default="", nullable=False)
 
-    translations: Mapped[list["TerminologyTranslation"]] = relationship(
+    translations: Mapped[list[TerminologyTranslation]] = relationship(
         "TerminologyTranslation", back_populates="terminology_key", lazy="selectin"
     )
 
@@ -36,4 +36,4 @@ class TerminologyTranslation(Base, TimestampMixin):
     is_approved: Mapped[bool] = mapped_column(default=False, nullable=False)
     approved_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
 
-    terminology_key: Mapped["TerminologyKey"] = relationship("TerminologyKey", back_populates="translations")
+    terminology_key: Mapped[TerminologyKey] = relationship("TerminologyKey", back_populates="translations")

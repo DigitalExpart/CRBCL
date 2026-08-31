@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import AuditMixin, Base, SoftDeleteMixin
+
+if TYPE_CHECKING:
+    from app.models.role import UserRole
 
 
 class User(Base, AuditMixin, SoftDeleteMixin):
@@ -31,9 +35,9 @@ class User(Base, AuditMixin, SoftDeleteMixin):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    roles: Mapped[list["UserRole"]] = relationship("UserRole", back_populates="user", lazy="selectin")
-    sessions: Mapped[list["Session"]] = relationship("Session", back_populates="user", lazy="noload")
-    preferences: Mapped[list["UserPreference"]] = relationship("UserPreference", back_populates="user", lazy="noload")
+    roles: Mapped[list[UserRole]] = relationship("UserRole", back_populates="user", lazy="selectin")
+    sessions: Mapped[list[Session]] = relationship("Session", back_populates="user", lazy="noload")
+    preferences: Mapped[list[UserPreference]] = relationship("UserPreference", back_populates="user", lazy="noload")
 
     __table_args__ = (
         Index("ix_users_email_normalized", "email_normalized"),
@@ -52,12 +56,12 @@ class Session(Base):
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now()
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now()
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    user: Mapped["User"] = relationship("User", back_populates="sessions", lazy="selectin")
+    user: Mapped[User] = relationship("User", back_populates="sessions", lazy="selectin")
 
     __table_args__ = (
         Index("ix_sessions_user_id_active", "user_id", "is_revoked"),
@@ -74,14 +78,14 @@ class UserPreference(Base):
     key: Mapped[str] = mapped_column(String(100), nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now()
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(),
-        onupdate=lambda: datetime.now(timezone.utc),
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now(),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="preferences")
+    user: Mapped[User] = relationship("User", back_populates="preferences")
 
     __table_args__ = (
         Index("ix_user_preferences_user_key", "user_id", "key", unique=True),

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.person import Person
-from app.models.relationship import FamilyMember, FamilyRelationship, Household, HouseholdMembership
+from app.models.relationship import FamilyMember, FamilyRelationship, HouseholdMembership
 
 
 class GenogramService:

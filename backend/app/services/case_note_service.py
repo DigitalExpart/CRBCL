@@ -5,14 +5,13 @@ from __future__ import annotations
 import csv
 import io
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from fastapi import HTTPException, status
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
-from app.models.case import Case
-from app.models.case_note import CaseNote, CaseNoteAddendum, CaseNoteAttachment, CaseNotePerson
+from app.models.case_note import CaseNote, CaseNoteAddendum, CaseNotePerson
 from app.models.user import User
 from app.permissions.service import PermissionService
 from app.repositories.case_note_repo import CaseNoteRepository
@@ -36,13 +35,11 @@ class CaseNoteService:
         if not note or note.deleted_at is not None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case note not found")
 
-        if current_user:
-            # Check Case Restrictions (ADR-010)
-            if await self.perm_service.is_user_restricted_from_case(current_user.id, note.case_id):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Access denied: Case restriction active.",
-                )
+        if current_user and await self.perm_service.is_user_restricted_from_case(current_user.id, note.case_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: Case restriction active.",
+            )
 
         return note
 
@@ -162,7 +159,7 @@ class CaseNoteService:
             if hasattr(note, key) and key not in ("id", "case_id", "created_at", "created_by", "is_locked", "locked_at"):
                 setattr(note, key, val)
 
-        note.updated_at = datetime.now(timezone.utc)
+        note.updated_at = datetime.now(UTC)
         note.updated_by = current_user.id
 
         await self.audit.log_event(
@@ -186,7 +183,7 @@ class CaseNoteService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Note is already locked.")
 
         note.status = "COMPLETED"
-        note.updated_at = datetime.now(timezone.utc)
+        note.updated_at = datetime.now(UTC)
         await self.db.commit()
         return await self.get_note_or_404(note.id)
 
@@ -202,7 +199,7 @@ class CaseNoteService:
 
         note.is_locked = True
         note.status = "LOCKED"
-        note.locked_at = datetime.now(timezone.utc)
+        note.locked_at = datetime.now(UTC)
         note.locked_by = current_user.id
 
         await self.timeline.record_event(
@@ -241,7 +238,7 @@ class CaseNoteService:
             content=content,
             reason=reason,
             created_by=current_user.id,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         self.db.add(addendum)
 

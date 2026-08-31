@@ -1,6 +1,7 @@
 """Audit integrity and outbox retry test suite."""
 
 import uuid
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

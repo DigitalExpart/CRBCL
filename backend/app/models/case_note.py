@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -21,7 +22,7 @@ class CaseNote(Base, AuditMixin, SoftDeleteMixin):
     subject: Mapped[str] = mapped_column(String(500), default="", nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     note_type: Mapped[str] = mapped_column(String(50), default="Progress Note", nullable=False)
-    
+
     # Phase 4 Metadata
     duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     contact_type: Mapped[str | None] = mapped_column(String(50), nullable=True)

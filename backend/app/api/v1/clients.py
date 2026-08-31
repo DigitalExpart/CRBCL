@@ -4,31 +4,16 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from pydantic import BaseModel, Field
-from sqlalchemy import select
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
-from app.auth.dependencies import get_current_user
 from app.core.database import get_db
-from app.models.client import Client
-from app.models.medical import (
-    ClientAllergy,
-    ClientMedicalCondition,
-    ClientMedicalProfile,
-    ClientMedication,
-)
 from app.models.person import (
-    Person,
     PersonAddress,
-    PersonChallenge,
-    PersonCulturalProfile,
-    PersonPhysicalDescription,
-    PersonStrength,
 )
-from app.models.provider import ClientProvider
-from app.models.school import ClientSchoolEnrolment
 from app.models.user import User
 from app.permissions.constants import Permissions
 from app.permissions.dependencies import require_permission

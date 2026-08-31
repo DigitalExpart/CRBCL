@@ -41,15 +41,15 @@ class Client(Base, AuditMixin, SoftDeleteMixin):
     assigned_team_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
 
     # Relationships
-    person: Mapped["Person | None"] = relationship("Person", lazy="selectin")  # noqa: F821
-    medical_profile: Mapped["ClientMedicalProfile | None"] = relationship(  # noqa: F821
+    person: Mapped[Person | None] = relationship("Person", lazy="selectin")  # noqa: F821
+    medical_profile: Mapped[ClientMedicalProfile | None] = relationship(  # noqa: F821
         "ClientMedicalProfile", back_populates=None, uselist=False, lazy="selectin"
     )
-    allergies: Mapped[list["ClientAllergy"]] = relationship("ClientAllergy", lazy="selectin")  # noqa: F821
-    conditions: Mapped[list["ClientMedicalCondition"]] = relationship("ClientMedicalCondition", lazy="selectin")  # noqa: F821
-    medications: Mapped[list["ClientMedication"]] = relationship("ClientMedication", lazy="selectin")  # noqa: F821
-    providers: Mapped[list["ClientProvider"]] = relationship("ClientProvider", lazy="selectin")  # noqa: F821
-    school_enrolments: Mapped[list["ClientSchoolEnrolment"]] = relationship("ClientSchoolEnrolment", lazy="selectin")  # noqa: F821
+    allergies: Mapped[list[ClientAllergy]] = relationship("ClientAllergy", lazy="selectin")  # noqa: F821
+    conditions: Mapped[list[ClientMedicalCondition]] = relationship("ClientMedicalCondition", lazy="selectin")  # noqa: F821
+    medications: Mapped[list[ClientMedication]] = relationship("ClientMedication", lazy="selectin")  # noqa: F821
+    providers: Mapped[list[ClientProvider]] = relationship("ClientProvider", lazy="selectin")  # noqa: F821
+    school_enrolments: Mapped[list[ClientSchoolEnrolment]] = relationship("ClientSchoolEnrolment", lazy="selectin")  # noqa: F821
 
     __table_args__ = (
         Index("ix_clients_name_trgm", "first_name", "last_name"),

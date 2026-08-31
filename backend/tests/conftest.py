@@ -1,12 +1,12 @@
 """Pytest configuration and fixtures for CRBCL backend tests."""
 
 import os
-import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 # Set test environment
 os.environ["APP_ENV"] = "development"

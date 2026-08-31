@@ -5,10 +5,10 @@ from __future__ import annotations
 import math
 import uuid
 from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.permissions.constants import Permissions
@@ -16,7 +16,6 @@ from app.permissions.dependencies import require_permission
 from app.permissions.service import PermissionService
 from app.repositories.referral_repo import ReferralRepository
 from app.schemas.referral import (
-    ChildDispositionCreate,
     IntakeDecisionApprove,
     IntakeDecisionReturn,
     IntakeDecisionSubmit,
@@ -218,12 +217,12 @@ async def update_referral_metadata(
     """Update referral metadata (status cannot be mutated arbitrarily via PATCH)."""
     service = ReferralService(db)
     try:
-        updated = await service.update_referral(
+        await service.update_referral(
             referral_id, payload.model_dump(exclude_unset=True), user_id=user.id
         )
         await db.commit()
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}}) from e
 
     perm_service = PermissionService(db)
     can_read_reporter = await perm_service.user_has_permission(user.id, Permissions.INTAKE_REPORTER_READ)
@@ -415,7 +414,7 @@ async def create_referral_link(
         )
         await db.commit()
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return ReferralLinkResponse(
         id=link.id,
@@ -463,7 +462,7 @@ async def submit_referral_for_approval(
         await approval_service.submit_for_approval(referral_id, user_id=user.id)
         await db.commit()
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}}) from e
 
     service = ReferralService(db)
     return await service.get_referral_detail(referral_id, can_read_reporter=True)
@@ -487,7 +486,7 @@ async def approve_referral(
         )
         await db.commit()
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}}) from e
 
     service = ReferralService(db)
     return await service.get_referral_detail(referral_id, can_read_reporter=True)
@@ -510,7 +509,7 @@ async def return_referral(
         )
         await db.commit()
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}}) from e
 
     service = ReferralService(db)
     return await service.get_referral_detail(referral_id, can_read_reporter=True)

@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
-from app.models.case import Case
 from app.models.case_management import CaseTransfer
-from app.models.person import Person
 from app.models.team import Team
 from app.models.user import User
 from app.repositories.case_management_repo import CaseAssignmentRepository, CaseTransferRepository
@@ -62,7 +61,7 @@ class CaseTransferService:
             reason=reason,
             status="PENDING_APPROVAL" if is_submitted else "DRAFT",
             requested_by=current_user.id if current_user else None,
-            requested_at=datetime.now(timezone.utc),
+            requested_at=datetime.now(UTC),
         )
 
         if is_submitted:
@@ -89,10 +88,9 @@ class CaseTransferService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only DRAFT or RETURNED transfer requests can be submitted.")
 
         transfer.status = "PENDING_APPROVAL"
-        transfer.requested_at = datetime.now(timezone.utc)
-        transfer.updated_at = datetime.now(timezone.utc)
+        transfer.requested_at = datetime.now(UTC)
+        transfer.updated_at = datetime.now(UTC)
 
-        case = await self.case_repo.get(transfer.case_id)
         dest_team_res = await self.db.execute(select(Team).where(Team.id == transfer.destination_team_id))
         dest_team = dest_team_res.scalar_one_or_none()
 
@@ -132,15 +130,15 @@ class CaseTransferService:
 
         transfer.status = "APPROVED"
         transfer.reviewed_by = current_user.id if current_user else None
-        transfer.reviewed_at = datetime.now(timezone.utc)
+        transfer.reviewed_at = datetime.now(UTC)
         transfer.review_notes = review_notes
-        transfer.updated_at = datetime.now(timezone.utc)
+        transfer.updated_at = datetime.now(UTC)
 
         # Atomic case team routing update
         case = await self.case_repo.get(transfer.case_id)
         if case:
             case.assigned_team_id = transfer.destination_team_id
-            case.updated_at = datetime.now(timezone.utc)
+            case.updated_at = datetime.now(UTC)
 
         # Outbox event
         await self.outbox.enqueue(
@@ -189,9 +187,9 @@ class CaseTransferService:
 
         transfer.status = "RETURNED"
         transfer.reviewed_by = current_user.id if current_user else None
-        transfer.reviewed_at = datetime.now(timezone.utc)
+        transfer.reviewed_at = datetime.now(UTC)
         transfer.review_notes = review_notes
-        transfer.updated_at = datetime.now(timezone.utc)
+        transfer.updated_at = datetime.now(UTC)
 
         await self.timeline.record_event(
             event_type="TRANSFER_RETURNED",
@@ -218,9 +216,9 @@ class CaseTransferService:
 
         transfer.status = "DENIED"
         transfer.reviewed_by = current_user.id if current_user else None
-        transfer.reviewed_at = datetime.now(timezone.utc)
+        transfer.reviewed_at = datetime.now(UTC)
         transfer.review_notes = review_notes
-        transfer.updated_at = datetime.now(timezone.utc)
+        transfer.updated_at = datetime.now(UTC)
 
         await self.timeline.record_event(
             event_type="TRANSFER_DENIED",

@@ -1,6 +1,7 @@
 """Case management test suite."""
 
 import uuid
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select

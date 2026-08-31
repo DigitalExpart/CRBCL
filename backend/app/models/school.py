@@ -52,4 +52,4 @@ class ClientSchoolEnrolment(Base, TimestampMixin):
     attendance_concerns: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    school: Mapped["School"] = relationship("School", lazy="selectin")
+    school: Mapped[School] = relationship("School", lazy="selectin")

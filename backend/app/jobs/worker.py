@@ -6,7 +6,6 @@ import asyncio
 import logging
 from typing import Any
 
-from app.core.config import get_settings
 from app.core.database import async_session_factory
 from app.workflows.outbox import OutboxService
 

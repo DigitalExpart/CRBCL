@@ -1,12 +1,12 @@
 """Person and Client integration test suite."""
 
 from datetime import date
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.client import Client
 from app.models.person import Person
 
 

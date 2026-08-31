@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +13,6 @@ from app.models.medical import (
     ClientMedicalProfile,
     ClientMedication,
 )
-from app.repositories.base import BaseRepository
 
 
 class MedicalRepository:

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from pydantic import BaseModel, Field
 
+from pydantic import BaseModel, Field
 
 # ── Referral Person Schemas ───────────────────────────────────
 
@@ -28,7 +28,7 @@ class ReferralPersonResponse(BaseModel):
     is_subject_of_concern: bool = False
     notes: str | None = None
     created_at: datetime
-    
+
     # Nested person basic summary
     first_name: str | None = None
     last_name: str | None = None
@@ -152,7 +152,7 @@ class ChildDispositionResponse(BaseModel):
     decided_by: uuid.UUID | None = None
     decided_at: datetime | None = None
     approval_state: str = "DRAFT"
-    
+
     # Child details
     child_first_name: str | None = None
     child_last_name: str | None = None
