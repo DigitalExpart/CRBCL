@@ -85,7 +85,10 @@ class CaseTransferService:
     ) -> CaseTransfer:
         transfer = await self.transfer_repo.get(transfer_id)
         if not transfer or transfer.status not in ("DRAFT", "RETURNED"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only DRAFT or RETURNED transfer requests can be submitted.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only DRAFT or RETURNED transfer requests can be submitted.",
+            )
 
         transfer.status = "PENDING_APPROVAL"
         transfer.requested_at = datetime.now(UTC)
@@ -183,7 +186,9 @@ class CaseTransferService:
     ) -> CaseTransfer:
         transfer = await self.transfer_repo.get(transfer_id)
         if not transfer or transfer.status != "PENDING_APPROVAL":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only pending transfers can be returned.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Only pending transfers can be returned."
+            )
 
         transfer.status = "RETURNED"
         transfer.reviewed_by = current_user.id if current_user else None

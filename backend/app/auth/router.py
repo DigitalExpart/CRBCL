@@ -184,11 +184,11 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
             detail={"error": {"code": "EMAIL_EXISTS", "message": "An account with this email already exists"}},
         )
     user = await auth.register_user(body.email, body.password, body.full_name)
-    
+
     # Generate and dispatch 6-digit verification code
     email_service = EmailService(db)
     await email_service.create_and_send_verification_code(body.email)
-    
+
     await db.commit()
     return RegisterResponse(user_id=user.id, email=body.email)
 

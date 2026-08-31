@@ -25,16 +25,12 @@ class HouseholdRepository(BaseRepository[Household]):
         query = (
             select(Household)
             .where(Household.is_active == True)  # noqa: E712
-            .options(
-                selectinload(Household.memberships).selectinload(HouseholdMembership.person)
-            )
+            .options(selectinload(Household.memberships).selectinload(HouseholdMembership.person))
         )
 
         if query_text:
             search_pattern = f"%{query_text}%"
-            query = query.where(
-                Household.name.ilike(search_pattern) | Household.address_line_1.ilike(search_pattern)
-            )
+            query = query.where(Household.name.ilike(search_pattern) | Household.address_line_1.ilike(search_pattern))
 
         count_query = select(func.count()).select_from(query.subquery())
         total = (await self.db.execute(count_query)).scalar_one()
@@ -47,9 +43,7 @@ class HouseholdRepository(BaseRepository[Household]):
         query = (
             select(Household)
             .where(Household.id == household_id)
-            .options(
-                selectinload(Household.memberships).selectinload(HouseholdMembership.person)
-            )
+            .options(selectinload(Household.memberships).selectinload(HouseholdMembership.person))
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()

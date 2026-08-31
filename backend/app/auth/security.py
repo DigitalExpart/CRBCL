@@ -72,6 +72,7 @@ def decode_access_token(token: str) -> dict | None:
 
 # ── CSRF Token helpers ──────────────────────────────────────
 
+
 def generate_csrf_token() -> str:
     """Generate cryptographically secure CSRF token."""
     return secrets.token_urlsafe(32)
@@ -85,6 +86,7 @@ def verify_csrf_token(token_from_header: str | None, token_from_cookie: str | No
 
 
 # ── Cookie configuration ────────────────────────────────────
+
 
 def get_cookie_settings(is_csrf: bool = False) -> dict:
     settings = get_settings()

@@ -30,7 +30,9 @@ from app.services.assessment_service import AssessmentService
 router = APIRouter(tags=["Assessments"])
 
 
-def _to_detail_response(assessment: Assessment, indicator_summary: dict[str, Any] | None = None) -> AssessmentDetailResponse:
+def _to_detail_response(
+    assessment: Assessment, indicator_summary: dict[str, Any] | None = None
+) -> AssessmentDetailResponse:
     answers_resp = []
     for ans in assessment.answers:
         opt_ids = [opt.option_id for opt in ans.selected_options]
@@ -77,7 +79,9 @@ def _to_detail_response(assessment: Assessment, indicator_summary: dict[str, Any
         determination=assessment.determination,
         determination_notes=assessment.determination_notes,
         conducted_by=assessment.conducted_by,
-        conducted_by_name=assessment.conductor.full_name or assessment.conductor.email if assessment.conductor else None,
+        conducted_by_name=assessment.conductor.full_name or assessment.conductor.email
+        if assessment.conductor
+        else None,
         conducted_at=assessment.conducted_at,
         completed_at=assessment.completed_at,
         completed_by=assessment.completed_by,
@@ -119,6 +123,7 @@ def _to_detail_response(assessment: Assessment, indicator_summary: dict[str, Any
 
 
 # ── Case-Scoped Assessment Endpoints ────────────────────────────────
+
 
 @router.get("/cases/{case_id}/assessments", response_model=dict[str, Any])
 async def list_case_assessments(
@@ -181,7 +186,9 @@ async def list_case_assessments(
     return {"items": data, "total": total, "limit": limit, "offset": offset}
 
 
-@router.post("/cases/{case_id}/assessments", response_model=AssessmentDetailResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/cases/{case_id}/assessments", response_model=AssessmentDetailResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_assessment(
     case_id: uuid.UUID,
     payload: AssessmentCreate,
@@ -201,10 +208,13 @@ async def create_assessment(
 
 # ── Assessment Instance Operations ──────────────────────────────────
 
+
 @router.get("/assessments/compare", response_model=AssessmentComparisonResponse)
 async def compare_assessments(
     ids: str | None = Query(None, description="Comma-separated assessment UUIDs (e.g. ?ids=uuid1,uuid2)"),
-    assessment_ids: list[str] | None = Query(None, description="List of assessment UUIDs (e.g. ?assessment_ids=uuid1&assessment_ids=uuid2)"),
+    assessment_ids: list[str] | None = Query(
+        None, description="List of assessment UUIDs (e.g. ?assessment_ids=uuid1&assessment_ids=uuid2)"
+    ),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_permission(Permissions.ASSESSMENT_COMPARE)),
 ):

@@ -14,6 +14,7 @@ from app.core.database import Base
 
 class AuditEvent(Base):
     """Append-only audit trail for compliance and security."""
+
     __tablename__ = "audit_events"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -42,6 +43,7 @@ class AuditEvent(Base):
 
 class AccessEvent(Base):
     """Tracks sensitive read access for accountability."""
+
     __tablename__ = "access_events"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

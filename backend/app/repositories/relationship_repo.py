@@ -39,7 +39,9 @@ class RelationshipRepository:
         await self.db.flush()
         return member
 
-    async def list_family_relationships(self, family_id: uuid.UUID | None = None, person_id: uuid.UUID | None = None) -> list[FamilyRelationship]:
+    async def list_family_relationships(
+        self, family_id: uuid.UUID | None = None, person_id: uuid.UUID | None = None
+    ) -> list[FamilyRelationship]:
         query = (
             select(FamilyRelationship)
             .where(FamilyRelationship.is_active == True)  # noqa: E712

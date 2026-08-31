@@ -23,9 +23,7 @@ class PermissionService:
         result = await self.db.execute(
             select(UserRole)
             .where(UserRole.user_id == user_id)
-            .options(
-                selectinload(UserRole.role).selectinload(UserRole.role.property.mapper.class_.permissions)
-            )
+            .options(selectinload(UserRole.role).selectinload(UserRole.role.property.mapper.class_.permissions))
         )
         user_roles = result.scalars().all()
 

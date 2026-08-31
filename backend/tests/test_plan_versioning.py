@@ -51,7 +51,10 @@ async def test_plan_versioning_and_immutability(client: AsyncClient, admin_token
     v2_res = await client.post(
         f"/api/v1/plans/{plan_id}/versions",
         headers=headers,
-        json={"narrative": "Version 2 updated agreement with extended kinship coverage.", "meeting_date": "2026-09-15T10:00:00Z"},
+        json={
+            "narrative": "Version 2 updated agreement with extended kinship coverage.",
+            "meeting_date": "2026-09-15T10:00:00Z",
+        },
     )
     assert v2_res.status_code == 201
     v2_plan = v2_res.json()

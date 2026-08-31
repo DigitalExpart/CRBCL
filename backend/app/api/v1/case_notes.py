@@ -154,7 +154,9 @@ async def lock_case_note(
     return CaseNoteResponse.model_validate(note)
 
 
-@router.post("/case-notes/{note_id}/addenda", response_model=CaseNoteAddendumResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/case-notes/{note_id}/addenda", response_model=CaseNoteAddendumResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_case_note_addendum(
     note_id: uuid.UUID,
     payload: CaseNoteAddendumCreate,

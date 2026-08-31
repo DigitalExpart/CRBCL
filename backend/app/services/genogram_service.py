@@ -35,9 +35,9 @@ class GenogramService:
         relationships_res = await self.db.execute(
             select(FamilyRelationship)
             .where(
-                (FamilyRelationship.family_id == family_id) |
-                (FamilyRelationship.person_a_id.in_(person_ids)) |
-                (FamilyRelationship.person_b_id.in_(person_ids)),
+                (FamilyRelationship.family_id == family_id)
+                | (FamilyRelationship.person_a_id.in_(person_ids))
+                | (FamilyRelationship.person_b_id.in_(person_ids)),
                 FamilyRelationship.is_active == True,  # noqa: E712
             )
             .options(
@@ -85,35 +85,39 @@ class GenogramService:
         nodes = []
         for p_id, p in persons.items():
             member_role = next((m.role for m in members if m.person_id == p_id), "Relative / Contact")
-            nodes.append({
-                "id": str(p.id),
-                "type": "personNode",
-                "data": {
-                    "personId": str(p.id),
-                    "fullName": f"{p.first_name} {p.last_name}",
-                    "preferredName": p.preferred_name,
-                    "gender": p.gender or "Unknown",
-                    "dateOfBirth": str(p.date_of_birth) if p.date_of_birth else None,
-                    "role": member_role,
-                    "householdId": person_households.get(str(p.id)),
-                    "photoUrl": p.photo_url,
-                },
-            })
+            nodes.append(
+                {
+                    "id": str(p.id),
+                    "type": "personNode",
+                    "data": {
+                        "personId": str(p.id),
+                        "fullName": f"{p.first_name} {p.last_name}",
+                        "preferredName": p.preferred_name,
+                        "gender": p.gender or "Unknown",
+                        "dateOfBirth": str(p.date_of_birth) if p.date_of_birth else None,
+                        "role": member_role,
+                        "householdId": person_households.get(str(p.id)),
+                        "photoUrl": p.photo_url,
+                    },
+                }
+            )
 
         # 6. Build Genogram Edges
         edges = []
         for r in relationships:
-            edges.append({
-                "id": f"rel-{r.id}",
-                "source": str(r.person_a_id),
-                "target": str(r.person_b_id),
-                "type": "smoothstep",
-                "label": r.relationship_type.replace("_", " ").title(),
-                "data": {
-                    "relationshipType": r.relationship_type,
-                    "notes": r.notes,
-                },
-            })
+            edges.append(
+                {
+                    "id": f"rel-{r.id}",
+                    "source": str(r.person_a_id),
+                    "target": str(r.person_b_id),
+                    "type": "smoothstep",
+                    "label": r.relationship_type.replace("_", " ").title(),
+                    "data": {
+                        "relationshipType": r.relationship_type,
+                        "notes": r.notes,
+                    },
+                }
+            )
 
         return {
             "familyId": str(family_id),

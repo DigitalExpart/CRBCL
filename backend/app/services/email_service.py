@@ -245,7 +245,6 @@ class EmailService:
     <tr>
       <td align="center">
         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden;">
-          
           <!-- Header Banner -->
           <tr>
             <td style="background-color: #881337; padding: 28px 32px; text-align: center;">

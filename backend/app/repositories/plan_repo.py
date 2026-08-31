@@ -1,18 +1,15 @@
 """Repository for Plans, Versions, Goals, Activities, Signatures."""
 
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from typing import Any
 
-import sqlalchemy as sa
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.case import Case
 from app.models.plan import (
-    GoalProgressUpdate,
     Plan,
     PlanActivity,
     PlanAssessment,
@@ -20,7 +17,6 @@ from app.models.plan import (
     PlanGoal,
     PlanParticipant,
     PlanSequence,
-    PlanSignature,
     PlanStrength,
     PlanVersion,
 )
@@ -272,9 +268,7 @@ class PlanRepository:
         stmt = (
             select(PlanActivity)
             .options(
-                selectinload(PlanActivity.goal)
-                .selectinload(PlanGoal.plan_version)
-                .selectinload(PlanVersion.plan),
+                selectinload(PlanActivity.goal).selectinload(PlanGoal.plan_version).selectinload(PlanVersion.plan),
             )
             .where(PlanActivity.id == activity_id)
         )

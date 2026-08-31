@@ -1,6 +1,7 @@
 """Tests for Case Note to Plan Goal Linkage and Boundary Enforcement."""
 
 import uuid
+
 import pytest
 from httpx import AsyncClient
 

@@ -13,7 +13,12 @@ async def test_threat_assessment_danger_indicators_and_completion(
     # 1. Create a test case
     case_res = await client.post(
         "/api/v1/cases",
-        json={"title": "Emergency Referral Safety Investigation", "case_type": "Child Safety", "status": "Open", "priority": "Urgent"},
+        json={
+            "title": "Emergency Referral Safety Investigation",
+            "case_type": "Child Safety",
+            "status": "Open",
+            "priority": "Urgent",
+        },
         headers=caseworker_user["headers"],
     )
     assert case_res.status_code == 201
@@ -46,10 +51,16 @@ async def test_threat_assessment_danger_indicators_and_completion(
             {"question_id": q_map["child_in_acute_peril"], "boolean_value": False},
             {"question_id": q_map["uncontrolled_escalating_threat"], "boolean_value": True},
             {"question_id": q_map["vulnerable_child"], "boolean_value": True},
-            {"question_id": q_map["impending_danger_notes"], "text_value": "Escalating domestic conflict; infant in residence."},
+            {
+                "question_id": q_map["impending_danger_notes"],
+                "text_value": "Escalating domestic conflict; infant in residence.",
+            },
             {"question_id": q_map["kinship_safety_placement"], "boolean_value": True},
             {"question_id": q_map["community_supports_active"], "boolean_value": True},
-            {"question_id": q_map["intervention_details"], "text_value": "Maternal aunt providing 24/7 in-home protective care."},
+            {
+                "question_id": q_map["intervention_details"],
+                "text_value": "Maternal aunt providing 24/7 in-home protective care.",
+            },
             {
                 "question_id": q_map["threat_determination_outcome"],
                 "selected_option_ids": [opt_map["threat_determination_outcome:CONDITIONALLY_SAFE"]],

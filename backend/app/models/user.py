@@ -39,9 +39,7 @@ class User(Base, AuditMixin, SoftDeleteMixin):
     sessions: Mapped[list[Session]] = relationship("Session", back_populates="user", lazy="noload")
     preferences: Mapped[list[UserPreference]] = relationship("UserPreference", back_populates="user", lazy="noload")
 
-    __table_args__ = (
-        Index("ix_users_email_normalized", "email_normalized"),
-    )
+    __table_args__ = (Index("ix_users_email_normalized", "email_normalized"),)
 
 
 class Session(Base):
@@ -63,9 +61,7 @@ class Session(Base):
 
     user: Mapped[User] = relationship("User", back_populates="sessions", lazy="selectin")
 
-    __table_args__ = (
-        Index("ix_sessions_user_id_active", "user_id", "is_revoked"),
-    )
+    __table_args__ = (Index("ix_sessions_user_id_active", "user_id", "is_revoked"),)
 
 
 class UserPreference(Base):
@@ -81,15 +77,15 @@ class UserPreference(Base):
         DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now(),
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        server_default=func.now(),
         onupdate=lambda: datetime.now(UTC),
     )
 
     user: Mapped[User] = relationship("User", back_populates="preferences")
 
-    __table_args__ = (
-        Index("ix_user_preferences_user_key", "user_id", "key", unique=True),
-    )
+    __table_args__ = (Index("ix_user_preferences_user_key", "user_id", "key", unique=True),)
 
 
 class EmailVerificationCode(Base):
@@ -105,6 +101,4 @@ class EmailVerificationCode(Base):
         DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now()
     )
 
-    __table_args__ = (
-        Index("ix_email_verification_lookup", "email", "is_used", "expires_at"),
-    )
+    __table_args__ = (Index("ix_email_verification_lookup", "email", "is_used", "expires_at"),)

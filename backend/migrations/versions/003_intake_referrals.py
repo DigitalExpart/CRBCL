@@ -42,9 +42,19 @@ def upgrade() -> None:
         sa.Column("law_enforcement_involved", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("law_enforcement_file_number", sa.String(100), nullable=True),
         sa.Column("law_enforcement_officer_info", sa.String(300), nullable=True),
-        sa.Column("assigned_worker_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "assigned_worker_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("assigned_worker_name", sa.String(300), nullable=True),
-        sa.Column("assigned_team_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("teams.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "assigned_team_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("teams.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("origin_agency", sa.String(200), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=True),
@@ -64,8 +74,15 @@ def upgrade() -> None:
     op.create_table(
         "referral_people",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="RESTRICT"), nullable=False),
+        sa.Column(
+            "referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="RESTRICT"), nullable=False
+        ),
         sa.Column("role", sa.String(50), nullable=False),
         sa.Column("relationship_to_child", sa.String(100), nullable=True),
         sa.Column("is_primary_caregiver", sa.Boolean(), nullable=False, server_default="false"),
@@ -81,7 +98,13 @@ def upgrade() -> None:
     op.create_table(
         "referral_reporters",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False, unique=True),
+        sa.Column(
+            "referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        ),
         sa.Column("is_anonymous", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("is_mandated_reporter", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("wants_notification", sa.Boolean(), nullable=False, server_default="false"),
@@ -101,7 +124,12 @@ def upgrade() -> None:
     op.create_table(
         "referral_incidents",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("incident_date", sa.Date(), nullable=True),
         sa.Column("incident_time", sa.DateTime(timezone=True), nullable=True),
         sa.Column("location_description", sa.Text(), nullable=True),
@@ -120,7 +148,12 @@ def upgrade() -> None:
     op.create_table(
         "referral_concerns",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("concern_type", sa.String(100), nullable=False),
         sa.Column("is_primary", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("severity", sa.String(20), nullable=False, server_default="Moderate"),
@@ -135,16 +168,35 @@ def upgrade() -> None:
     op.create_table(
         "child_dispositions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="RESTRICT"), nullable=False),
+        sa.Column(
+            "referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="RESTRICT"), nullable=False
+        ),
         sa.Column("decision", sa.String(50), nullable=False),
         sa.Column("reason", sa.Text(), nullable=False, server_default=""),
-        sa.Column("destination_team_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("teams.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "destination_team_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("teams.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("destination_program", sa.String(200), nullable=True),
         sa.Column("external_agency_name", sa.String(255), nullable=True),
         sa.Column("external_referral_contact", sa.String(255), nullable=True),
-        sa.Column("resulting_case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("decided_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "resulting_case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+        sa.Column(
+            "decided_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("decided_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("approval_state", sa.String(50), nullable=False, server_default="DRAFT"),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
@@ -158,15 +210,27 @@ def upgrade() -> None:
     op.create_table(
         "intake_decisions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False, unique=True),
+        sa.Column(
+            "referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        ),
         sa.Column("overall_recommendation", sa.Text(), nullable=False, server_default=""),
         sa.Column("rationale", sa.Text(), nullable=False, server_default=""),
         sa.Column("supervisor_notes", sa.Text(), nullable=True),
-        sa.Column("submitted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "submitted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("submitted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("approved_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "approved_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("approved_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("returned_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "returned_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("returned_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("return_reason", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
@@ -178,21 +242,51 @@ def upgrade() -> None:
     op.create_table(
         "referral_links",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("source_referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("target_referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "source_referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "target_referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("link_type", sa.String(50), nullable=False),
         sa.Column("reason", sa.Text(), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.UniqueConstraint("source_referral_id", "target_referral_id", "link_type", name="uq_referral_links_source_target_type"),
+        sa.UniqueConstraint(
+            "source_referral_id", "target_referral_id", "link_type", name="uq_referral_links_source_target_type"
+        ),
     )
     op.create_index("ix_referral_links_source", "referral_links", ["source_referral_id"])
     op.create_index("ix_referral_links_target", "referral_links", ["target_referral_id"])
 
     # ── 10. Cases Table Intake Provenance Extension ─────────────
-    op.add_column("cases", sa.Column("origin_referral_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("referrals.id", ondelete="SET NULL"), nullable=True))
-    op.add_column("cases", sa.Column("origin_disposition_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("child_dispositions.id", ondelete="SET NULL"), nullable=True))
+    op.add_column(
+        "cases",
+        sa.Column(
+            "origin_referral_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("referrals.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+    )
+    op.add_column(
+        "cases",
+        sa.Column(
+            "origin_disposition_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("child_dispositions.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+    )
     op.create_index("ix_cases_origin_referral", "cases", ["origin_referral_id"])
 
 

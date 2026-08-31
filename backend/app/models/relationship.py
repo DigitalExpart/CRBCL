@@ -14,6 +14,7 @@ from app.core.database import Base, TimestampMixin
 
 class FamilyMember(Base, TimestampMixin):
     """Membership of a person in a family entity."""
+
     __tablename__ = "family_members"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -23,7 +24,9 @@ class FamilyMember(Base, TimestampMixin):
     person_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    role: Mapped[str] = mapped_column(String(100), default="Member", nullable=False)  # Parent, Child, Guardian, Kinship Caregiver, Elder
+    role: Mapped[str] = mapped_column(
+        String(100), default="Member", nullable=False
+    )  # Parent, Child, Guardian, Kinship Caregiver, Elder
     start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -31,9 +34,7 @@ class FamilyMember(Base, TimestampMixin):
 
     person: Mapped[Person] = relationship("Person", lazy="selectin")  # noqa: F821
 
-    __table_args__ = (
-        Index("ix_family_members_family_person", "family_id", "person_id"),
-    )
+    __table_args__ = (Index("ix_family_members_family_person", "family_id", "person_id"),)
 
 
 class FamilyRelationship(Base, TimestampMixin):
@@ -41,6 +42,7 @@ class FamilyRelationship(Base, TimestampMixin):
     Directional interpersonal relationship between two persons.
     Example: person_a_id is [relationship_type] of person_b_id (e.g. mother_of, guardian_of, sibling_of).
     """
+
     __tablename__ = "family_relationships"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -53,20 +55,21 @@ class FamilyRelationship(Base, TimestampMixin):
     person_b_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    relationship_type: Mapped[str] = mapped_column(String(100), nullable=False)  # mother_of, father_of, sibling_of, grandparent_of, aunt_of, uncle_of, guardian_of, spouse_of, cousin_of, other
+    relationship_type: Mapped[str] = mapped_column(
+        String(100), nullable=False
+    )  # mother_of, father_of, sibling_of, grandparent_of, aunt_of, uncle_of, guardian_of, spouse_of, cousin_of, other
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     person_a: Mapped[Person] = relationship("Person", foreign_keys=[person_a_id], lazy="selectin")  # noqa: F821
     person_b: Mapped[Person] = relationship("Person", foreign_keys=[person_b_id], lazy="selectin")  # noqa: F821
 
-    __table_args__ = (
-        Index("ix_family_relationships_pair", "person_a_id", "person_b_id"),
-    )
+    __table_args__ = (Index("ix_family_relationships_pair", "person_a_id", "person_b_id"),)
 
 
 class Household(Base, TimestampMixin):
     """A physical residential living arrangement distinct from biological family."""
+
     __tablename__ = "households"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -90,6 +93,7 @@ class Household(Base, TimestampMixin):
 
 class HouseholdMembership(Base, TimestampMixin):
     """Links a person to a residential household during a period."""
+
     __tablename__ = "household_memberships"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -99,7 +103,9 @@ class HouseholdMembership(Base, TimestampMixin):
     person_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    role: Mapped[str] = mapped_column(String(100), default="Resident", nullable=False)  # Head of Household, Resident, Temporary, Dependent
+    role: Mapped[str] = mapped_column(
+        String(100), default="Resident", nullable=False
+    )  # Head of Household, Resident, Temporary, Dependent
     start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_current: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -108,6 +114,4 @@ class HouseholdMembership(Base, TimestampMixin):
     household: Mapped[Household] = relationship("Household", back_populates="memberships")
     person: Mapped[Person] = relationship("Person", lazy="selectin")  # noqa: F821
 
-    __table_args__ = (
-        Index("ix_household_memberships_h_p", "household_id", "person_id"),
-    )
+    __table_args__ = (Index("ix_household_memberships_h_p", "household_id", "person_id"),)

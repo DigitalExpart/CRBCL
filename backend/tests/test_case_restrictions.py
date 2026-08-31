@@ -5,9 +5,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.anyio
-async def test_case_restriction_central_enforcement(
-    client: AsyncClient, supervisor_user: dict, caseworker_user: dict
-):
+async def test_case_restriction_central_enforcement(client: AsyncClient, supervisor_user: dict, caseworker_user: dict):
     admin_headers = supervisor_user["headers"]
     cw_headers = caseworker_user["headers"]
     cw_user_id = str(caseworker_user["user"].id)

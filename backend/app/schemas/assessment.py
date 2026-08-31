@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # ── Question Option Schemas ─────────────────────────────────────────
 
+
 class AssessmentQuestionOptionBase(BaseModel):
     key: str = Field(..., max_length=100)
     label: str = Field(..., max_length=255)
@@ -42,11 +43,14 @@ class AssessmentQuestionOptionResponse(AssessmentQuestionOptionBase):
 
 # ── Question Schemas ────────────────────────────────────────────────
 
+
 class AssessmentQuestionBase(BaseModel):
     key: str = Field(..., max_length=100)
     label: str
     help_text: str | None = None
-    question_type: str = Field(..., max_length=50)  # BOOLEAN, SINGLE_SELECT, MULTI_SELECT, TEXT, LONG_TEXT, NUMBER, DATE, DATETIME, LOOKUP
+    question_type: str = Field(
+        ..., max_length=50
+    )  # BOOLEAN, SINGLE_SELECT, MULTI_SELECT, TEXT, LONG_TEXT, NUMBER, DATE, DATETIME, LOOKUP
     is_required: bool = False
     sort_order: int = 0
     is_reportable: bool = True
@@ -82,6 +86,7 @@ class AssessmentQuestionResponse(AssessmentQuestionBase):
 
 # ── Section Schemas ─────────────────────────────────────────────────
 
+
 class AssessmentSectionBase(BaseModel):
     key: str = Field(..., max_length=100)
     title: str = Field(..., max_length=255)
@@ -115,6 +120,7 @@ class AssessmentSectionResponse(AssessmentSectionBase):
 
 # ── Template Version Schemas ────────────────────────────────────────
 
+
 class AssessmentTemplateVersionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -142,6 +148,7 @@ class AssessmentTemplateVersionCreate(BaseModel):
 
 
 # ── Template Schemas ────────────────────────────────────────────────
+
 
 class AssessmentTemplateBase(BaseModel):
     key: str = Field(..., max_length=100)
@@ -177,6 +184,7 @@ class AssessmentTemplateDetailResponse(AssessmentTemplateResponse):
 
 
 # ── Answer Schemas ──────────────────────────────────────────────────
+
 
 class AssessmentAnswerItem(BaseModel):
     question_id: uuid.UUID | None = None
@@ -220,6 +228,7 @@ class AssessmentAnswersSaveRequest(BaseModel):
 
 
 # ── Assessment Instance Schemas ─────────────────────────────────────
+
 
 class AssessmentCreate(BaseModel):
     case_id: uuid.UUID
@@ -355,6 +364,7 @@ class AssessmentDetailResponse(AssessmentResponse):
 
 
 # ── Comparison Schemas ──────────────────────────────────────────────
+
 
 class AssessmentComparisonQuestionValue(BaseModel):
     assessment_id: uuid.UUID

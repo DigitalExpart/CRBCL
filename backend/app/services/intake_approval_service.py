@@ -104,7 +104,9 @@ class IntakeApprovalService:
             raise ValueError("Referral not found")
 
         if referral.status != "PENDING_SUPERVISOR":
-            raise ValueError(f"Cannot return referral in status '{referral.status}'. It must be in PENDING_SUPERVISOR state.")
+            raise ValueError(
+                f"Cannot return referral in status '{referral.status}'. It must be in PENDING_SUPERVISOR state."
+            )
 
         before_status = referral.status
         referral.status = "RETURNED"
@@ -170,7 +172,9 @@ class IntakeApprovalService:
             return referral
 
         if referral.status != "PENDING_SUPERVISOR":
-            raise ValueError(f"Cannot approve referral in status '{referral.status}'. Must be in PENDING_SUPERVISOR state.")
+            raise ValueError(
+                f"Cannot approve referral in status '{referral.status}'. Must be in PENDING_SUPERVISOR state."
+            )
 
         before_status = referral.status
         referral.status = "APPROVED"

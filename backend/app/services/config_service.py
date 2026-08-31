@@ -17,11 +17,7 @@ class ConfigService:
 
     async def get_lookup_values(self, list_key: str, active_only: bool = True) -> list[LookupValue]:
         """Fetch all lookup values for a given list key, ordered by sort_order."""
-        query = (
-            select(LookupList)
-            .where(LookupList.key == list_key)
-            .options(selectinload(LookupList.values))
-        )
+        query = select(LookupList).where(LookupList.key == list_key).options(selectinload(LookupList.values))
         result = await self.db.execute(query)
         lookup_list = result.scalar_one_or_none()
         if not lookup_list or not lookup_list.is_active:

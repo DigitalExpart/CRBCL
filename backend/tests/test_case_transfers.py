@@ -13,6 +13,7 @@ async def test_case_transfer_lifecycle(client: AsyncClient, supervisor_user: dic
 
     # 1. Fetch or create two distinct teams
     from app.models.team import TeamMembership
+
     teams_res = await db_session.execute(select(Team).limit(2))
     teams = teams_res.scalars().all()
     source_team = teams[0]

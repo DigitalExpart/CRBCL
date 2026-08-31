@@ -58,7 +58,9 @@ async def test_duplicate_check_endpoint(client: AsyncClient, caseworker_user, db
         "last_name": "Cardinal",
         "treaty_number": "123456",
     }
-    response = await client.post("/api/v1/clients/duplicate-check", json=check_payload, headers=caseworker_user["headers"])
+    response = await client.post(
+        "/api/v1/clients/duplicate-check", json=check_payload, headers=caseworker_user["headers"]
+    )
     assert response.status_code == 200
     res_data = response.json()
     assert res_data["has_potential_duplicates"] is True

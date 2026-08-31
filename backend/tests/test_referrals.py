@@ -112,7 +112,12 @@ async def test_involved_people_and_concerns(client: AsyncClient, caseworker_user
     # Add mother
     rp2 = await client.post(
         f"/api/v1/referrals/{ref_id}/people",
-        json={"person_id": str(p2.id), "role": "parent", "relationship_to_child": "Mother", "is_primary_caregiver": True},
+        json={
+            "person_id": str(p2.id),
+            "role": "parent",
+            "relationship_to_child": "Mother",
+            "is_primary_caregiver": True,
+        },
         headers=caseworker_user["headers"],
     )
     assert rp2.status_code == 201
@@ -143,7 +148,11 @@ async def test_referral_linking_and_prior_history(client: AsyncClient, caseworke
     # Create first referral
     ref1_res = await client.post(
         "/api/v1/referrals",
-        json={"received_date": "2026-07-01", "summary": "First report in July", "people": [{"person_id": str(p.id), "role": "child"}]},
+        json={
+            "received_date": "2026-07-01",
+            "summary": "First report in July",
+            "people": [{"person_id": str(p.id), "role": "child"}],
+        },
         headers=caseworker_user["headers"],
     )
     ref1_id = ref1_res.json()["id"]
@@ -151,7 +160,11 @@ async def test_referral_linking_and_prior_history(client: AsyncClient, caseworke
     # Create second referral
     ref2_res = await client.post(
         "/api/v1/referrals",
-        json={"received_date": "2026-08-30", "summary": "Second report in August", "people": [{"person_id": str(p.id), "role": "child"}]},
+        json={
+            "received_date": "2026-08-30",
+            "summary": "Second report in August",
+            "people": [{"person_id": str(p.id), "role": "child"}],
+        },
         headers=caseworker_user["headers"],
     )
     ref2_id = ref2_res.json()["id"]
@@ -212,8 +225,16 @@ async def test_multi_child_disposition_and_supervisor_approval(
         "overall_recommendation": "Recommend immediate protection investigation for Ava, voluntary prevention for Ben, and screen out for Cora.",
         "rationale": "Ava has acute medical neglect. Ben benefits from prevention counselling. Cora is safely supported by kinship caregiver.",
         "dispositions": [
-            {"person_id": str(c1.id), "decision": "PROTECTION", "reason": "Severe medical neglect requires statutory investigation."},
-            {"person_id": str(c2.id), "decision": "PREVENTION", "reason": "Voluntary youth wellness and tutoring support."},
+            {
+                "person_id": str(c1.id),
+                "decision": "PROTECTION",
+                "reason": "Severe medical neglect requires statutory investigation.",
+            },
+            {
+                "person_id": str(c2.id),
+                "decision": "PREVENTION",
+                "reason": "Voluntary youth wellness and tutoring support.",
+            },
             {"person_id": str(c3.id), "decision": "SCREEN_OUT", "reason": "No child welfare safety concerns present."},
         ],
     }
@@ -249,9 +270,7 @@ async def test_multi_child_disposition_and_supervisor_approval(
     assert "Family Prevention" in case_types
 
     # Verify Sacred Timeline Events generated
-    timeline_res = await db_session.execute(
-        select(TimelineEvent).where(TimelineEvent.entity_id == ref_uuid)
-    )
+    timeline_res = await db_session.execute(select(TimelineEvent).where(TimelineEvent.entity_id == ref_uuid))
     timeline_events = list(timeline_res.scalars().all())
     event_types = {te.event_type for te in timeline_events}
     assert "REFERRAL_RECEIVED" in event_types
@@ -300,7 +319,10 @@ async def test_supervisor_return_workflow(
     assert return_res.status_code == 200
     returned_data = return_res.json()
     assert returned_data["status"] == "RETURNED"
-    assert returned_data["decision"]["return_reason"] == "Please interview the school principal and add collateral information."
+    assert (
+        returned_data["decision"]["return_reason"]
+        == "Please interview the school principal and add collateral information."
+    )
 
     # Worker updates and resubmits
     resubmit_res = await client.post(

@@ -13,7 +13,12 @@ async def test_aiei_prevention_assessment_flow(
     # 1. Create a test case
     case_res = await client.post(
         "/api/v1/cases",
-        json={"title": "Voluntary Family Wellness Request", "case_type": "Prevention & Wellness", "status": "Open", "priority": "Medium"},
+        json={
+            "title": "Voluntary Family Wellness Request",
+            "case_type": "Prevention & Wellness",
+            "status": "Open",
+            "priority": "Medium",
+        },
         headers=caseworker_user["headers"],
     )
     assert case_res.status_code == 201
@@ -22,7 +27,11 @@ async def test_aiei_prevention_assessment_flow(
     # 2. Start AIEI_ASSESSMENT
     start_res = await client.post(
         f"/api/v1/cases/{case_id}/assessments",
-        json={"case_id": case_id, "template_key": "AIEI_ASSESSMENT", "title": "Early Intervention & Cultural Reconnection Plan"},
+        json={
+            "case_id": case_id,
+            "template_key": "AIEI_ASSESSMENT",
+            "title": "Early Intervention & Cultural Reconnection Plan",
+        },
         headers=caseworker_user["headers"],
     )
     assert start_res.status_code == 201
@@ -75,7 +84,10 @@ async def test_aiei_prevention_assessment_flow(
                     opt_map["recommended_services:FAMILY_WELLNESS_CIRCLES"],
                 ],
             },
-            {"question_id": q_map["prevention_plan_notes"], "text_value": "Agreed to link family with Elder cultural mentorship program."},
+            {
+                "question_id": q_map["prevention_plan_notes"],
+                "text_value": "Agreed to link family with Elder cultural mentorship program.",
+            },
             {
                 "question_id": q_map["aiei_determination_outcome"],
                 "selected_option_ids": [opt_map["aiei_determination_outcome:COMMUNITY_PREVENTION_OPEN"]],

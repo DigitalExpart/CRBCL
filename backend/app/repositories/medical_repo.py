@@ -79,7 +79,9 @@ class MedicalRepository:
         await self.db.flush()
         return med
 
-    async def update_medication_status(self, medication_id: uuid.UUID, status: str, notes: str | None = None) -> ClientMedication | None:
+    async def update_medication_status(
+        self, medication_id: uuid.UUID, status: str, notes: str | None = None
+    ) -> ClientMedication | None:
         query = select(ClientMedication).where(ClientMedication.id == medication_id)
         result = await self.db.execute(query)
         med = result.scalar_one_or_none()

@@ -34,9 +34,7 @@ class CaseNote(Base, AuditMixin, SoftDeleteMixin):
     notify_team: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Immutability & Status
-    status: Mapped[str] = mapped_column(
-        String(50), default="COMPLETED", nullable=False
-    )  # DRAFT, COMPLETED, LOCKED
+    status: Mapped[str] = mapped_column(String(50), default="COMPLETED", nullable=False)  # DRAFT, COMPLETED, LOCKED
     is_confidential: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -57,6 +55,7 @@ class CaseNote(Base, AuditMixin, SoftDeleteMixin):
 
 class CaseNotePerson(Base):
     """People present or involved during the recorded contact."""
+
     __tablename__ = "case_note_people"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -76,6 +75,7 @@ class CaseNotePerson(Base):
 
 class CaseNoteAttachment(Base):
     """Uploaded attachments specifically linked to the case note."""
+
     __tablename__ = "case_note_attachments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -97,6 +97,7 @@ class CaseNoteAttachment(Base):
 
 class CaseNoteAddendum(Base):
     """Immutable addenda appended to locked case notes for corrections or clarifications."""
+
     __tablename__ = "case_note_addenda"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

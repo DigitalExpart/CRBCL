@@ -49,6 +49,7 @@ class TeamMembership(Base):
 
 class UserTeamAccess(Base):
     """Grants a user data-access to a team's scoped records without full membership."""
+
     __tablename__ = "user_team_access"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

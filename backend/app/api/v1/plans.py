@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
@@ -13,6 +13,7 @@ from app.core.database import get_db
 from app.models.plan import Plan
 from app.models.user import User
 from app.permissions.constants import Permissions
+from app.permissions.service import PermissionService
 from app.schemas.plan import (
     ActiveGoalItem,
     PhysicalSignatureUploadRequest,
@@ -39,7 +40,6 @@ from app.schemas.plan import (
     PlanUnlockRequest,
     PlanUpdate,
     PlanVersionCreate,
-    PlanVersionResponse,
 )
 from app.services.plan_service import PlanService
 
@@ -110,7 +110,12 @@ async def list_active_goals_for_case(
                 plan_type=plan.plan_type,
                 plan_title=plan.title,
                 activities=[
-                    {"id": str(a.id), "activity_text": a.activity_text, "status": a.status, "due_date": a.due_date.isoformat() if a.due_date else None}
+                    {
+                        "id": str(a.id),
+                        "activity_text": a.activity_text,
+                        "status": a.status,
+                        "due_date": a.due_date.isoformat() if a.due_date else None,
+                    }
                     for a in g.activities
                 ],
             )
@@ -293,7 +298,9 @@ async def complete_goal(
     return await service.complete_goal(current_user, goal_id, payload)
 
 
-@router.post("/plans/goals/{goal_id}/activities", response_model=PlanActivityResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/plans/goals/{goal_id}/activities", response_model=PlanActivityResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_activity(
     goal_id: uuid.UUID,
     payload: PlanActivityCreate,
@@ -369,7 +376,9 @@ async def add_signature(
     return await service.add_signature(current_user, id, payload)
 
 
-@router.post("/plans/{id}/physical-signature", response_model=PlanSignatureResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/plans/{id}/physical-signature", response_model=PlanSignatureResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_physical_signature(
     id: uuid.UUID,
     payload: PhysicalSignatureUploadRequest,

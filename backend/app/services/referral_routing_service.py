@@ -44,9 +44,11 @@ class ReferralRoutingService:
             child_name = f"{person.first_name} {person.last_name}" if person else "Child"
 
             # Check if person is already linked to a client
-            client_stmt = select(Client).where(
-                (Client.first_name == person.first_name) & (Client.last_name == person.last_name)
-            ) if person else None
+            client_stmt = (
+                select(Client).where((Client.first_name == person.first_name) & (Client.last_name == person.last_name))
+                if person
+                else None
+            )
             client_id = None
             if client_stmt is not None:
                 client_res = await self.db.execute(client_stmt)

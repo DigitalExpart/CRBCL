@@ -12,7 +12,12 @@ async def test_case_restriction_blocks_assessments(
     # 1. Supervisor creates a case
     case_res = await client.post(
         "/api/v1/cases",
-        json={"title": "Restricted Family Safety File", "case_type": "Child Safety", "status": "Open", "priority": "High"},
+        json={
+            "title": "Restricted Family Safety File",
+            "case_type": "Child Safety",
+            "status": "Open",
+            "priority": "High",
+        },
         headers=supervisor_user["headers"],
     )
     case_id = case_res.json()["id"]
@@ -41,7 +46,9 @@ async def test_case_restriction_blocks_assessments(
     # 4. Caseworker attempts to list assessments for the restricted case -> 403 Forbidden
     list_res = await client.get(f"/api/v1/cases/{case_id}/assessments", headers=caseworker_user["headers"])
     assert list_res.status_code == 403
-    assert "restriction" in (list_res.json().get("detail") or list_res.json().get("error", {}).get("message", "")).lower()
+    assert (
+        "restriction" in (list_res.json().get("detail") or list_res.json().get("error", {}).get("message", "")).lower()
+    )
 
     # 5. Caseworker attempts to fetch the specific assessment by ID -> 403 Forbidden
     get_res = await client.get(f"/api/v1/assessments/{asm_id}", headers=caseworker_user["headers"])
@@ -55,7 +62,9 @@ async def test_case_restriction_blocks_assessments(
         headers=caseworker_user["headers"],
     )
     assert save_res.status_code == 403
-    assert "restriction" in (save_res.json().get("detail") or save_res.json().get("error", {}).get("message", "")).lower()
+    assert (
+        "restriction" in (save_res.json().get("detail") or save_res.json().get("error", {}).get("message", "")).lower()
+    )
 
     # 7. Supervisor (not restricted) can access the assessment without issue -> 200 OK
     sup_get = await client.get(f"/api/v1/assessments/{asm_id}", headers=supervisor_user["headers"])

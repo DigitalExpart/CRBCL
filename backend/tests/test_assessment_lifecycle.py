@@ -14,7 +14,12 @@ async def test_director_unlock_governance_and_audit(
     # 1. Create case & start assessment
     case_res = await client.post(
         "/api/v1/cases",
-        json={"title": "Test Case for Unlock Governance", "case_type": "Child Safety", "status": "Open", "priority": "Medium"},
+        json={
+            "title": "Test Case for Unlock Governance",
+            "case_type": "Child Safety",
+            "status": "Open",
+            "priority": "Medium",
+        },
         headers=caseworker_user["headers"],
     )
     case_id = case_res.json()["id"]
@@ -28,7 +33,12 @@ async def test_director_unlock_governance_and_audit(
     version_data = start_res.json()["template_version"]
 
     q_map = {q["key"]: q["id"] for sec in version_data["sections"] for q in sec["questions"]}
-    opt_map = {f"{q['key']}:{opt['key']}": opt["id"] for sec in version_data["sections"] for q in sec["questions"] for opt in q["options"]}
+    opt_map = {
+        f"{q['key']}:{opt['key']}": opt["id"]
+        for sec in version_data["sections"]
+        for q in sec["questions"]
+        for opt in q["options"]
+    }
 
     # Save answers & complete
     await client.put(
@@ -107,7 +117,12 @@ async def test_director_reassignment_to_different_case(
 
     case2_res = await client.post(
         "/api/v1/cases",
-        json={"title": "Case 2 Correct Destination", "case_type": "Child Safety", "status": "Open", "priority": "Medium"},
+        json={
+            "title": "Case 2 Correct Destination",
+            "case_type": "Child Safety",
+            "status": "Open",
+            "priority": "Medium",
+        },
         headers=caseworker_user["headers"],
     )
     case2_id = case2_res.json()["id"]
@@ -162,7 +177,12 @@ async def test_time_series_assessment_comparison(
     asm1_id = asm1_res.json()["id"]
     version_data = asm1_res.json()["template_version"]
     q_map = {q["key"]: q["id"] for sec in version_data["sections"] for q in sec["questions"]}
-    opt_map = {f"{q['key']}:{opt['key']}": opt["id"] for sec in version_data["sections"] for q in sec["questions"] for opt in q["options"]}
+    opt_map = {
+        f"{q['key']}:{opt['key']}": opt["id"]
+        for sec in version_data["sections"]
+        for q in sec["questions"]
+        for opt in q["options"]
+    }
 
     await client.put(
         f"/api/v1/assessments/{asm1_id}/answers",

@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 class AssessmentTemplate(Base, TimestampMixin):
     """Logical assessment type definition (e.g., HOME_ASSESSMENT, THREAT_ASSESSMENT, AIEI_ASSESSMENT)."""
+
     __tablename__ = "assessment_templates"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -41,6 +42,7 @@ class AssessmentTemplate(Base, TimestampMixin):
 
 class AssessmentTemplateVersion(Base, TimestampMixin, SoftDeleteMixin):
     """Immutable published or draft version of an assessment questionnaire."""
+
     __tablename__ = "assessment_template_versions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -69,22 +71,22 @@ class AssessmentTemplateVersion(Base, TimestampMixin, SoftDeleteMixin):
         order_by="AssessmentSection.sort_order",
         lazy="selectin",
     )
-    assessments: Mapped[list[Assessment]] = relationship(
-        "Assessment", back_populates="template_version", lazy="noload"
-    )
+    assessments: Mapped[list[Assessment]] = relationship("Assessment", back_populates="template_version", lazy="noload")
 
-    __table_args__ = (
-        UniqueConstraint("template_id", "version_number", name="uq_template_version_number"),
-    )
+    __table_args__ = (UniqueConstraint("template_id", "version_number", name="uq_template_version_number"),)
 
 
 class AssessmentSection(Base, TimestampMixin):
     """Ordered logical section within a specific template version."""
+
     __tablename__ = "assessment_sections"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     template_version_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("assessment_template_versions.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("assessment_template_versions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     key: Mapped[str] = mapped_column(String(100), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -94,7 +96,9 @@ class AssessmentSection(Base, TimestampMixin):
     visibility_condition: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Relationships
-    template_version: Mapped[AssessmentTemplateVersion] = relationship("AssessmentTemplateVersion", back_populates="sections")
+    template_version: Mapped[AssessmentTemplateVersion] = relationship(
+        "AssessmentTemplateVersion", back_populates="sections"
+    )
     questions: Mapped[list[AssessmentQuestion]] = relationship(
         "AssessmentQuestion",
         back_populates="section",
@@ -106,6 +110,7 @@ class AssessmentSection(Base, TimestampMixin):
 
 class AssessmentQuestion(Base, TimestampMixin):
     """Individual question within an assessment section with validation and visibility metadata."""
+
     __tablename__ = "assessment_questions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -115,7 +120,9 @@ class AssessmentQuestion(Base, TimestampMixin):
     key: Mapped[str] = mapped_column(String(100), nullable=False)
     label: Mapped[str] = mapped_column(Text, nullable=False)
     help_text: Mapped[str | None] = mapped_column(Text, nullable=True)
-    question_type: Mapped[str] = mapped_column(String(50), nullable=False)  # BOOLEAN, SINGLE_SELECT, MULTI_SELECT, TEXT, LONG_TEXT, NUMBER, DATE, DATETIME, LOOKUP
+    question_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # BOOLEAN, SINGLE_SELECT, MULTI_SELECT, TEXT, LONG_TEXT, NUMBER, DATE, DATETIME, LOOKUP
     is_required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_reportable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -136,6 +143,7 @@ class AssessmentQuestion(Base, TimestampMixin):
 
 class AssessmentQuestionOption(Base, TimestampMixin):
     """Pre-configured selectable option for select-type questions."""
+
     __tablename__ = "assessment_question_options"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -155,6 +163,7 @@ class AssessmentQuestionOption(Base, TimestampMixin):
 
 class AssessmentSequence(Base):
     """Concurrency-safe sequence counter for human-readable assessment IDs (e.g., ASM-202608-0001)."""
+
     __tablename__ = "assessment_sequences"
 
     period: Mapped[str] = mapped_column(String(6), primary_key=True)
@@ -163,6 +172,7 @@ class AssessmentSequence(Base):
 
 class Assessment(Base, AuditMixin, SoftDeleteMixin):
     """Completed or in-progress assessment instance."""
+
     __tablename__ = "assessments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -185,11 +195,16 @@ class Assessment(Base, AuditMixin, SoftDeleteMixin):
         UUID(as_uuid=True), ForeignKey("assessment_templates.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     template_version_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("assessment_template_versions.id", ondelete="RESTRICT"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("assessment_template_versions.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     assessment_number: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="DRAFT", index=True)  # DRAFT, IN_PROGRESS, COMPLETED, LOCKED, CANCELLED
+    status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="DRAFT", index=True
+    )  # DRAFT, IN_PROGRESS, COMPLETED, LOCKED, CANCELLED
     determination: Mapped[str | None] = mapped_column(String(100), nullable=True)
     determination_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     conducted_by: Mapped[uuid.UUID] = mapped_column(
@@ -214,7 +229,9 @@ class Assessment(Base, AuditMixin, SoftDeleteMixin):
     family: Mapped[Family | None] = relationship("Family", foreign_keys=[family_id], lazy="joined")
     household: Mapped[Household | None] = relationship("Household", foreign_keys=[household_id], lazy="joined")
     template: Mapped[AssessmentTemplate] = relationship("AssessmentTemplate", foreign_keys=[template_id], lazy="joined")
-    template_version: Mapped[AssessmentTemplateVersion] = relationship("AssessmentTemplateVersion", foreign_keys=[template_version_id], lazy="joined")
+    template_version: Mapped[AssessmentTemplateVersion] = relationship(
+        "AssessmentTemplateVersion", foreign_keys=[template_version_id], lazy="joined"
+    )
     conductor: Mapped[User] = relationship("User", foreign_keys=[conducted_by], lazy="joined")
     completer: Mapped[User | None] = relationship("User", foreign_keys=[completed_by], lazy="noload")
     locker: Mapped[User | None] = relationship("User", foreign_keys=[locked_by], lazy="noload")
@@ -223,15 +240,24 @@ class Assessment(Base, AuditMixin, SoftDeleteMixin):
         "AssessmentAnswer", back_populates="assessment", cascade="all, delete-orphan", lazy="selectin"
     )
     status_history: Mapped[list[AssessmentStatusHistory]] = relationship(
-        "AssessmentStatusHistory", back_populates="assessment", cascade="all, delete-orphan", order_by="AssessmentStatusHistory.created_at", lazy="selectin"
+        "AssessmentStatusHistory",
+        back_populates="assessment",
+        cascade="all, delete-orphan",
+        order_by="AssessmentStatusHistory.created_at",
+        lazy="selectin",
     )
     unlock_events: Mapped[list[AssessmentUnlockEvent]] = relationship(
-        "AssessmentUnlockEvent", back_populates="assessment", cascade="all, delete-orphan", order_by="AssessmentUnlockEvent.unlocked_at", lazy="selectin"
+        "AssessmentUnlockEvent",
+        back_populates="assessment",
+        cascade="all, delete-orphan",
+        order_by="AssessmentUnlockEvent.unlocked_at",
+        lazy="selectin",
     )
 
 
 class AssessmentAnswer(Base, TimestampMixin):
     """Normalized, typed response value for an individual assessment question."""
+
     __tablename__ = "assessment_answers"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -256,13 +282,12 @@ class AssessmentAnswer(Base, TimestampMixin):
         "AssessmentAnswerOption", back_populates="answer", cascade="all, delete-orphan", lazy="selectin"
     )
 
-    __table_args__ = (
-        UniqueConstraint("assessment_id", "question_id", name="uq_assessment_question_answer"),
-    )
+    __table_args__ = (UniqueConstraint("assessment_id", "question_id", name="uq_assessment_question_answer"),)
 
 
 class AssessmentAnswerOption(Base):
     """Relational selection container for multi-select option answers."""
+
     __tablename__ = "assessment_answer_options"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -270,7 +295,10 @@ class AssessmentAnswerOption(Base):
         UUID(as_uuid=True), ForeignKey("assessment_answers.id", ondelete="CASCADE"), nullable=False, index=True
     )
     option_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("assessment_question_options.id", ondelete="RESTRICT"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("assessment_question_options.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
@@ -278,13 +306,12 @@ class AssessmentAnswerOption(Base):
     answer: Mapped[AssessmentAnswer] = relationship("AssessmentAnswer", back_populates="selected_options")
     option: Mapped[AssessmentQuestionOption] = relationship("AssessmentQuestionOption", lazy="joined")
 
-    __table_args__ = (
-        UniqueConstraint("answer_id", "option_id", name="uq_answer_option_selection"),
-    )
+    __table_args__ = (UniqueConstraint("answer_id", "option_id", name="uq_answer_option_selection"),)
 
 
 class AssessmentStatusHistory(Base):
     """Audit log of assessment state transitions."""
+
     __tablename__ = "assessment_status_history"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -306,6 +333,7 @@ class AssessmentStatusHistory(Base):
 
 class AssessmentUnlockEvent(Base):
     """Append-only audit trail of Director unlock actions on finalized assessments."""
+
     __tablename__ = "assessment_unlock_events"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

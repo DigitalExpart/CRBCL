@@ -115,8 +115,10 @@ async def test_register_and_verify_otp_flow(client: AsyncClient, db_session: Asy
     assert dup_res.status_code == 409
 
     # 3. Retrieve generated verification code from DB
-    from app.models.user import EmailVerificationCode
     from sqlalchemy import select
+
+    from app.models.user import EmailVerificationCode
+
     res = await db_session.execute(
         select(EmailVerificationCode).where(EmailVerificationCode.email == "newuser@crbcl.ca")
     )
@@ -139,6 +141,7 @@ async def test_register_and_verify_otp_flow(client: AsyncClient, db_session: Asy
 
     # 6. Verify with helper that generates valid match
     from app.services.email_service import EmailService
+
     svc = EmailService(db_session)
     valid_code = await svc.create_and_send_verification_code("newuser@crbcl.ca")
     await db_session.commit()

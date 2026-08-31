@@ -77,6 +77,6 @@ class OutboxService:
             event.status = "failed"
         else:
             # Exponential backoff (2^attempt seconds)
-            backoff_sec = 2 ** event.attempt_count
+            backoff_sec = 2**event.attempt_count
             event.available_at = datetime.now(UTC) + timedelta(seconds=backoff_sec)
         await self.db.flush()

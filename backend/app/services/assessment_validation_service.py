@@ -87,7 +87,9 @@ class AssessmentValidationService:
                     item["question_id"] = qid
             if not qid or qid not in questions_map:
                 identifier = qid or item.get("question_key")
-                errors.append(f"Question '{identifier}' does not belong to template version {template_version.version_number}.")
+                errors.append(
+                    f"Question '{identifier}' does not belong to template version {template_version.version_number}."
+                )
                 continue
 
             # Auto-resolve selected_option_keys if provided
@@ -153,7 +155,9 @@ class AssessmentValidationService:
                             errors.append(f"Required question '{q.label}' must be answered.")
                         elif q.question_type in ("TEXT", "LONG_TEXT") and not (ans.get("text_value") or "").strip():
                             errors.append(f"Required text question '{q.label}' cannot be blank.")
-                        elif q.question_type in ("SINGLE_SELECT", "MULTI_SELECT") and not ans.get("selected_option_ids"):
+                        elif q.question_type in ("SINGLE_SELECT", "MULTI_SELECT") and not ans.get(
+                            "selected_option_ids"
+                        ):
                             errors.append(f"Required selection question '{q.label}' must have an option selected.")
                         elif q.question_type == "NUMBER" and ans.get("number_value") is None:
                             errors.append(f"Required numeric question '{q.label}' must have a number.")

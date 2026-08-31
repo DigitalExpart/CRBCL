@@ -24,6 +24,7 @@ from app.core.database import Base, SoftDeleteMixin
 
 class CaseSequence(Base):
     """Atomic period-based counter for concurrency-safe case number generation."""
+
     __tablename__ = "case_sequences"
 
     period: Mapped[str] = mapped_column(String(6), primary_key=True)  # e.g. '202608'
@@ -32,6 +33,7 @@ class CaseSequence(Base):
 
 class CasePerson(Base, SoftDeleteMixin):
     """Associates canonical Person records with a Case in specific roles."""
+
     __tablename__ = "case_people"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -64,6 +66,7 @@ class CasePerson(Base, SoftDeleteMixin):
 
 class CaseAssignment(Base):
     """Tracks internal investigator, caseworker, and supervisor assignments with full history."""
+
     __tablename__ = "case_assignments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -92,6 +95,7 @@ class CaseAssignment(Base):
 
 class CaseExternalWorker(Base, SoftDeleteMixin):
     """External professionals involved in the case (e.g. Band Representative, Legal Aid, Probation)."""
+
     __tablename__ = "case_external_workers"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -117,6 +121,7 @@ class CaseExternalWorker(Base, SoftDeleteMixin):
 
 class CaseSource(Base, SoftDeleteMixin):
     """Captures Other Sources (extended family, community) and Collateral Sources (professionals/providers)."""
+
     __tablename__ = "case_sources"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -150,6 +155,7 @@ class CaseSource(Base, SoftDeleteMixin):
 
 class CaseLink(Base):
     """Relational cross-links between related or sibling matters."""
+
     __tablename__ = "case_links"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -179,6 +185,7 @@ class CaseLink(Base):
 
 class CaseRestriction(Base):
     """Enforces conflict-of-interest and worker restrictions at the authorization layer."""
+
     __tablename__ = "case_restrictions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -210,6 +217,7 @@ class CaseRestriction(Base):
 
 class CaseTransfer(Base):
     """Formal workflow for transferring cases or children between teams/programs."""
+
     __tablename__ = "case_transfers"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -253,6 +261,7 @@ class CaseTransfer(Base):
 
 class CaseStatusHistory(Base):
     """Immutable audit trail of all case status transitions."""
+
     __tablename__ = "case_status_history"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

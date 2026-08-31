@@ -40,7 +40,9 @@ def upgrade() -> None:
     )
     op.add_column(
         "cases",
-        sa.Column("reopened_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "reopened_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
     )
     op.add_column(
         "cases",
@@ -53,8 +55,20 @@ def upgrade() -> None:
     op.create_table(
         "case_people",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "person_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("role", sa.String(length=50), nullable=False, server_default="other"),
         sa.Column("relationship_to_subject", sa.String(length=100), nullable=True),
         sa.Column("is_primary", sa.Boolean(), nullable=False, server_default="false"),
@@ -63,7 +77,9 @@ def upgrade() -> None:
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
     )
     op.create_index("ix_case_people_role", "case_people", ["role"])
@@ -72,13 +88,27 @@ def upgrade() -> None:
     op.create_table(
         "case_assignments",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "user_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("role", sa.String(length=50), nullable=False, server_default="caseworker"),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("assigned_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("unassigned_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("assigned_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "assigned_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
     )
@@ -89,7 +119,13 @@ def upgrade() -> None:
     op.create_table(
         "case_external_workers",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("organization", sa.String(length=255), nullable=True),
         sa.Column("role", sa.String(length=100), nullable=True),
@@ -100,7 +136,9 @@ def upgrade() -> None:
         sa.Column("end_date", sa.Date(), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
     )
 
@@ -108,10 +146,28 @@ def upgrade() -> None:
     op.create_table(
         "case_sources",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("category", sa.String(length=50), nullable=False, server_default="OTHER_SOURCE"),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True, index=True),
-        sa.Column("provider_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("providers.id", ondelete="SET NULL"), nullable=True, index=True),
+        sa.Column(
+            "person_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="SET NULL"),
+            nullable=True,
+            index=True,
+        ),
+        sa.Column(
+            "provider_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("providers.id", ondelete="SET NULL"),
+            nullable=True,
+            index=True,
+        ),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("relationship_or_role", sa.String(length=100), nullable=True),
         sa.Column("organization", sa.String(length=255), nullable=True),
@@ -119,7 +175,9 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=255), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
     )
     op.create_index("ix_case_sources_category", "case_sources", ["category"])
@@ -128,11 +186,25 @@ def upgrade() -> None:
     op.create_table(
         "case_links",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("source_case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("target_case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "source_case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "target_case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("link_type", sa.String(length=50), nullable=False, server_default="related_family"),
         sa.Column("reason", sa.Text(), nullable=True),
-        sa.Column("linked_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "linked_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("linked_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.UniqueConstraint("source_case_id", "target_case_id", name="uq_case_links_pair"),
         sa.CheckConstraint("source_case_id != target_case_id", name="ck_case_links_no_self_link"),
@@ -142,16 +214,32 @@ def upgrade() -> None:
     op.create_table(
         "case_restrictions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "user_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("restriction_type", sa.String(length=50), nullable=False, server_default="conflict_of_interest"),
         sa.Column("reason", sa.Text(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("removed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("removed_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "removed_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("removal_reason", sa.Text(), nullable=True),
     )
     op.create_index("ix_case_restrictions_active", "case_restrictions", ["is_active"])
@@ -160,15 +248,43 @@ def upgrade() -> None:
     op.create_table(
         "case_transfers",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True, index=True),
-        sa.Column("source_team_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("teams.id", ondelete="RESTRICT"), nullable=False, index=True),
-        sa.Column("destination_team_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("teams.id", ondelete="RESTRICT"), nullable=False, index=True),
+        sa.Column(
+            "case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "child_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="SET NULL"),
+            nullable=True,
+            index=True,
+        ),
+        sa.Column(
+            "source_team_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("teams.id", ondelete="RESTRICT"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "destination_team_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("teams.id", ondelete="RESTRICT"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("reason", sa.Text(), nullable=False),
         sa.Column("status", sa.String(length=50), nullable=False, server_default="DRAFT"),
-        sa.Column("requested_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "requested_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("requested_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("reviewed_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "reviewed_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("reviewed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("review_notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
@@ -180,11 +296,19 @@ def upgrade() -> None:
     op.create_table(
         "case_status_history",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("cases.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("previous_status", sa.String(length=50), nullable=True),
         sa.Column("new_status", sa.String(length=50), nullable=False),
         sa.Column("reason", sa.Text(), nullable=True),
-        sa.Column("changed_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "changed_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("changed_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("notes", sa.Text(), nullable=True),
     )
@@ -237,8 +361,20 @@ def upgrade() -> None:
     op.create_table(
         "case_note_people",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_note_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("case_notes.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_note_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("case_notes.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "person_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("role", sa.String(length=50), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
@@ -248,13 +384,21 @@ def upgrade() -> None:
     op.create_table(
         "case_note_attachments",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_note_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("case_notes.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_note_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("case_notes.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("document_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("file_name", sa.String(length=255), nullable=False),
         sa.Column("file_size", sa.Integer(), nullable=True),
         sa.Column("content_type", sa.String(length=100), nullable=True),
         sa.Column("storage_path", sa.String(length=500), nullable=False),
-        sa.Column("uploaded_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "uploaded_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
     )
 
@@ -262,10 +406,18 @@ def upgrade() -> None:
     op.create_table(
         "case_note_addenda",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("case_note_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("case_notes.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "case_note_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("case_notes.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("content", sa.Text(), nullable=False),
         sa.Column("reason", sa.Text(), nullable=False),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
     )
 

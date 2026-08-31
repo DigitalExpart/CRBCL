@@ -39,9 +39,7 @@ async def test_create_and_get_client(client: AsyncClient, caseworker_user, db_se
     assert audit_res.scalar_one_or_none() is not None
 
     # Verify Sacred Timeline Event generated
-    timeline_res = await db_session.execute(
-        select(TimelineEvent).where(TimelineEvent.client_id == client_id)
-    )
+    timeline_res = await db_session.execute(select(TimelineEvent).where(TimelineEvent.client_id == client_id))
     assert timeline_res.scalar_one_or_none() is not None
 
     # 2. Get client (profile view)

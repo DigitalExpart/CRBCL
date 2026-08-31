@@ -99,7 +99,11 @@ class PersonRepository(BaseRepository[Person]):
                 score += 0.40
                 factors.append("Exact treaty number match")
 
-            if health_card_number and p.health_card_number and p.health_card_number.strip() == health_card_number.strip():
+            if (
+                health_card_number
+                and p.health_card_number
+                and p.health_card_number.strip() == health_card_number.strip()
+            ):
                 score += 0.40
                 factors.append("Exact health card number match")
 

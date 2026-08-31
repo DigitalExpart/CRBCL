@@ -67,8 +67,7 @@ class AssessmentRepository(BaseRepository[Assessment]):
                 .selectinload(AssessmentTemplateVersion.sections)
                 .selectinload(AssessmentSection.questions)
                 .selectinload(AssessmentQuestion.options),
-                selectinload(Assessment.answers)
-                .joinedload(AssessmentAnswer.question),
+                selectinload(Assessment.answers).joinedload(AssessmentAnswer.question),
                 selectinload(Assessment.answers)
                 .selectinload(AssessmentAnswer.selected_options)
                 .joinedload(AssessmentAnswerOption.option),
@@ -172,9 +171,7 @@ class AssessmentRepository(BaseRepository[Assessment]):
             # Sync multi-select options
             selected_ids = item.get("selected_option_ids", [])
             # Remove old links
-            await self.db.execute(
-                delete(AssessmentAnswerOption).where(AssessmentAnswerOption.answer_id == ans.id)
-            )
+            await self.db.execute(delete(AssessmentAnswerOption).where(AssessmentAnswerOption.answer_id == ans.id))
             # Insert new links
             for opt_id in selected_ids:
                 link = AssessmentAnswerOption(

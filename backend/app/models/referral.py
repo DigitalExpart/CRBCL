@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 class ReferralSequence(Base):
     """Atomic counter for concurrency-safe human-readable referral numbers (e.g. INT-2026-000001)."""
+
     __tablename__ = "referral_sequences"
 
     year: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -26,6 +27,7 @@ class ReferralSequence(Base):
 
 class Referral(Base, AuditMixin, SoftDeleteMixin):
     """Primary Referral / Intake domain entity."""
+
     __tablename__ = "referrals"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -75,12 +77,16 @@ class Referral(Base, AuditMixin, SoftDeleteMixin):
         "IntakeDecision", back_populates="referral", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
     outgoing_links: Mapped[list[ReferralLink]] = relationship(
-        "ReferralLink", foreign_keys="ReferralLink.source_referral_id", back_populates="source_referral", lazy="selectin"
+        "ReferralLink",
+        foreign_keys="ReferralLink.source_referral_id",
+        back_populates="source_referral",
+        lazy="selectin",
     )
 
 
 class ReferralPerson(Base, TimestampMixin):
     """Associates a canonical Person to a Referral with domain role and caregiver context."""
+
     __tablename__ = "referral_people"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -90,7 +96,9 @@ class ReferralPerson(Base, TimestampMixin):
     person_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    role: Mapped[str] = mapped_column(String(50), nullable=False)  # child, parent, guardian, alleged_concern, relative, other_adult
+    role: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # child, parent, guardian, alleged_concern, relative, other_adult
     relationship_to_child: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_primary_caregiver: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_subject_of_concern: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -107,6 +115,7 @@ class ReferralPerson(Base, TimestampMixin):
 
 class ReferralReporter(Base, TimestampMixin):
     """Confidential reporter details container. Protected by strict permissions."""
+
     __tablename__ = "referral_reporters"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -130,6 +139,7 @@ class ReferralReporter(Base, TimestampMixin):
 
 class ReferralIncident(Base, TimestampMixin):
     """Specific allegation/incident event captured during intake."""
+
     __tablename__ = "referral_incidents"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -151,26 +161,30 @@ class ReferralIncident(Base, TimestampMixin):
 
 class ReferralConcern(Base, TimestampMixin):
     """Categorized screening concerns and harm types."""
+
     __tablename__ = "referral_concerns"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     referral_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    concern_type: Mapped[str] = mapped_column(String(100), nullable=False)  # physical_abuse, neglect, domestic_violence, etc.
+    concern_type: Mapped[str] = mapped_column(
+        String(100), nullable=False
+    )  # physical_abuse, neglect, domestic_violence, etc.
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    severity: Mapped[str] = mapped_column(String(20), default="Moderate", nullable=False)  # Low, Moderate, High, Critical
+    severity: Mapped[str] = mapped_column(
+        String(20), default="Moderate", nullable=False
+    )  # Low, Moderate, High, Critical
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     referral: Mapped[Referral] = relationship("Referral", back_populates="concerns")
 
-    __table_args__ = (
-        Index("ix_referral_concerns_type", "concern_type"),
-    )
+    __table_args__ = (Index("ix_referral_concerns_type", "concern_type"),)
 
 
 class ChildDisposition(Base, TimestampMixin):
     """Mandatory per-child screening disposition (Protection, Prevention, Screen Out, External)."""
+
     __tablename__ = "child_dispositions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -180,7 +194,9 @@ class ChildDisposition(Base, TimestampMixin):
     person_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    decision: Mapped[str] = mapped_column(String(50), nullable=False)  # PROTECTION, PREVENTION, SCREEN_OUT, EXTERNAL_REFERRAL, POST_MAJORITY
+    decision: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # PROTECTION, PREVENTION, SCREEN_OUT, EXTERNAL_REFERRAL, POST_MAJORITY
     reason: Mapped[str] = mapped_column(Text, default="", nullable=False)
 
     destination_team_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -205,6 +221,7 @@ class ChildDisposition(Base, TimestampMixin):
 
 class IntakeDecision(Base, TimestampMixin):
     """Formal decision recommendation and supervisor submission lifecycle state."""
+
     __tablename__ = "intake_decisions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -236,6 +253,7 @@ class IntakeDecision(Base, TimestampMixin):
 
 class ReferralLink(Base, TimestampMixin):
     """Relational cross-link between two Referrals (e.g. duplicate reports, related incidents)."""
+
     __tablename__ = "referral_links"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -245,7 +263,9 @@ class ReferralLink(Base, TimestampMixin):
     target_referral_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("referrals.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    link_type: Mapped[str] = mapped_column(String(50), nullable=False)  # duplicate_report, related_incident, prior_history, split_family
+    link_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # duplicate_report, related_incident, prior_history, split_family
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
@@ -257,5 +277,7 @@ class ReferralLink(Base, TimestampMixin):
     target_referral: Mapped[Referral] = relationship("Referral", foreign_keys=[target_referral_id])
 
     __table_args__ = (
-        UniqueConstraint("source_referral_id", "target_referral_id", "link_type", name="uq_referral_links_source_target_type"),
+        UniqueConstraint(
+            "source_referral_id", "target_referral_id", "link_type", name="uq_referral_links_source_target_type"
+        ),
     )

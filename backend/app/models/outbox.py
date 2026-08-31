@@ -14,6 +14,7 @@ from app.core.database import Base
 
 class OutboxEvent(Base):
     """Outbox event created in the same transaction as the business write."""
+
     __tablename__ = "outbox_events"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

@@ -139,9 +139,7 @@ class AuthService:
     async def revoke_session(self, refresh_token: str) -> bool:
         """Revoke a specific refresh token / session."""
         token_hash = hash_refresh_token(refresh_token)
-        result = await self.db.execute(
-            select(Session).where(Session.refresh_token_hash == token_hash)
-        )
+        result = await self.db.execute(select(Session).where(Session.refresh_token_hash == token_hash))
         session = result.scalar_one_or_none()
         if session:
             session.is_revoked = True

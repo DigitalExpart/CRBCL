@@ -38,14 +38,16 @@ class DuplicateService:
 
         candidates = []
         for person, score, factors in results:
-            candidates.append({
-                "person_id": str(person.id),
-                "first_name": person.first_name,
-                "last_name": person.last_name,
-                "date_of_birth": str(person.date_of_birth) if person.date_of_birth else None,
-                "treaty_number": person.treaty_number,
-                "health_card_number": person.health_card_number,
-                "similarity_score": score,
-                "matching_factors": factors,
-            })
+            candidates.append(
+                {
+                    "person_id": str(person.id),
+                    "first_name": person.first_name,
+                    "last_name": person.last_name,
+                    "date_of_birth": str(person.date_of_birth) if person.date_of_birth else None,
+                    "treaty_number": person.treaty_number,
+                    "health_card_number": person.health_card_number,
+                    "similarity_score": score,
+                    "matching_factors": factors,
+                }
+            )
         return candidates

@@ -408,7 +408,9 @@ class CaseService:
         if days_open > 365:
             alerts.append({"severity": "warning", "message": f"Extended Case: Open for {days_open} days (>12 months)."})
         if not last_note_date and days_open > 14:
-            alerts.append({"severity": "warning", "message": "Documentation Alert: No recorded case notes in >14 days."})
+            alerts.append(
+                {"severity": "warning", "message": "Documentation Alert: No recorded case notes in >14 days."}
+            )
 
         return {
             "case_id": str(case.id),
@@ -628,7 +630,12 @@ class CaseService:
             event_type="CASE_RESTRICTION_CREATED",
             entity_type="case_restriction",
             entity_id=restriction.id,
-            after_data={"case_id": str(case.id), "user_id": str(user.id), "restriction_type": restriction_type, "reason": reason},
+            after_data={
+                "case_id": str(case.id),
+                "user_id": str(user.id),
+                "restriction_type": restriction_type,
+                "reason": reason,
+            },
             user_id=current_user.id if current_user else None,
         )
 

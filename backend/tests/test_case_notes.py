@@ -57,9 +57,7 @@ async def test_case_note_atomic_creation(client: AsyncClient, caseworker_user, d
     )
     assert timeline_res.scalar_one_or_none() is not None
 
-    outbox_res = await db_session.execute(
-        select(OutboxEvent).where(OutboxEvent.aggregate_id == note_id)
-    )
+    outbox_res = await db_session.execute(select(OutboxEvent).where(OutboxEvent.aggregate_id == note_id))
     assert outbox_res.scalar_one_or_none() is not None
 
     # 4. List notes for case

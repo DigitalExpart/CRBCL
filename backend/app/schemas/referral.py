@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 # ── Referral Person Schemas ───────────────────────────────────
 
+
 class ReferralPersonCreate(BaseModel):
     person_id: uuid.UUID
     role: str  # child, parent, guardian, alleged_person_of_concern, relative, other_adult, collateral
@@ -43,6 +44,7 @@ class ReferralPersonResponse(BaseModel):
 
 # ── Referral Reporter Schemas ─────────────────────────────────
 
+
 class ReferralReporterCreate(BaseModel):
     is_anonymous: bool = False
     is_mandated_reporter: bool = False
@@ -76,6 +78,7 @@ class ReferralReporterResponse(BaseModel):
 
 # ── Referral Incident Schemas ─────────────────────────────────
 
+
 class ReferralIncidentCreate(BaseModel):
     incident_date: date | None = None
     incident_time: datetime | None = None
@@ -107,6 +110,7 @@ class ReferralIncidentResponse(BaseModel):
 
 # ── Referral Concern Schemas ──────────────────────────────────
 
+
 class ReferralConcernCreate(BaseModel):
     concern_type: str
     is_primary: bool = False
@@ -127,6 +131,7 @@ class ReferralConcernResponse(BaseModel):
 
 
 # ── Child Disposition Schemas ─────────────────────────────────
+
 
 class ChildDispositionCreate(BaseModel):
     person_id: uuid.UUID
@@ -162,6 +167,7 @@ class ChildDispositionResponse(BaseModel):
 
 
 # ── Intake Decision & Workflow Action Schemas ─────────────────
+
 
 class IntakeDecisionSave(BaseModel):
     overall_recommendation: str = ""
@@ -203,6 +209,7 @@ class IntakeDecisionResponse(BaseModel):
 
 # ── Referral Link Schemas ─────────────────────────────────────
 
+
 class ReferralLinkCreate(BaseModel):
     target_referral_id: uuid.UUID
     link_type: str = "related_incident"
@@ -223,6 +230,7 @@ class ReferralLinkResponse(BaseModel):
 
 
 # ── Core Referral Schemas ─────────────────────────────────────
+
 
 class ReferralCreate(BaseModel):
     received_date: date = Field(default_factory=date.today)

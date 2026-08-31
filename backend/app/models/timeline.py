@@ -14,6 +14,7 @@ from app.core.database import Base
 
 class TimelineEvent(Base):
     """Business history record — append-oriented, separate from compliance audit."""
+
     __tablename__ = "timeline_events"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

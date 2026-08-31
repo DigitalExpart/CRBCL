@@ -130,7 +130,9 @@ async def test_safety_plan_full_lifecycle(client: AsyncClient, admin_token: str)
     plan_id = plan_data["id"]
 
     # 3. Finalize Safety Plan (Generates SHA-256 Document Hash)
-    finalize_res = await client.post(f"/api/v1/plans/{plan_id}/finalize", headers=headers, json={"notes": "All parties agreed."})
+    finalize_res = await client.post(
+        f"/api/v1/plans/{plan_id}/finalize", headers=headers, json={"notes": "All parties agreed."}
+    )
     assert finalize_res.status_code == 200, finalize_res.text
     finalized_data = finalize_res.json()
     assert finalized_data["status"] == "FINALIZED"

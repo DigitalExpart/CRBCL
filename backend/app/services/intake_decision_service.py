@@ -43,7 +43,9 @@ class IntakeDecisionService:
 
         missing_disposition_children = child_person_ids - disp_person_ids
         if missing_disposition_children:
-            errors.append(f"{len(missing_disposition_children)} child(ren) on the referral are missing an individual disposition.")
+            errors.append(
+                f"{len(missing_disposition_children)} child(ren) on the referral are missing an individual disposition."
+            )
 
         # 4. Decision recommendation
         if not referral.decision or not referral.decision.overall_recommendation:

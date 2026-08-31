@@ -15,7 +15,12 @@ async def test_home_assessment_full_flow(
     # 1. Create a test case
     case_res = await client.post(
         "/api/v1/cases",
-        json={"title": "Test Family Case for Home Assessment", "case_type": "Child Safety", "status": "Open", "priority": "High"},
+        json={
+            "title": "Test Family Case for Home Assessment",
+            "case_type": "Child Safety",
+            "status": "Open",
+            "priority": "High",
+        },
         headers=caseworker_user["headers"],
     )
     assert case_res.status_code == 201
@@ -63,7 +68,10 @@ async def test_home_assessment_full_flow(
                 "question_id": q_map["home_safety_outcome"],
                 "selected_option_ids": [opt_map["home_safety_outcome:SAFETY_PLAN_CREATED"]],
             },
-            {"question_id": q_map["action_plan_summary"], "text_value": "Family agreed to remove all substances and attend family support."},
+            {
+                "question_id": q_map["action_plan_summary"],
+                "text_value": "Family agreed to remove all substances and attend family support.",
+            },
         ],
         "determination": "SAFETY_PLAN_CREATED",
         "determination_notes": "Child safe in home with active safety plan in place.",

@@ -89,9 +89,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
-    op.create_index(
-        "ix_assessment_sections_version_sort", "assessment_sections", ["template_version_id", "sort_order"]
-    )
+    op.create_index("ix_assessment_sections_version_sort", "assessment_sections", ["template_version_id", "sort_order"])
 
     # ── 4. Assessment Questions ─────────────────────────────────────
     op.create_table(
@@ -140,9 +138,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
-    op.create_index(
-        "ix_assessment_options_question_sort", "assessment_question_options", ["question_id", "sort_order"]
-    )
+    op.create_index("ix_assessment_options_question_sort", "assessment_question_options", ["question_id", "sort_order"])
 
     # ── 6. Assessment Sequences Table (Period Atomic Counter) ────────
     op.create_table(

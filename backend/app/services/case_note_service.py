@@ -71,7 +71,9 @@ class CaseNoteService:
 
         if goal_id:
             from sqlalchemy import select
+
             from app.models.plan import Plan, PlanGoal, PlanVersion
+
             goal_stmt = (
                 select(PlanGoal)
                 .join(PlanVersion, PlanGoal.plan_version_id == PlanVersion.id)
@@ -171,9 +173,11 @@ class CaseNoteService:
                 detail="Case note is legally locked and immutable. Add a supervisor-authorized addendum instead.",
             )
 
-        if "goal_id" in update_data and update_data["goal_id"]:
+        if update_data.get("goal_id"):
             from sqlalchemy import select
+
             from app.models.plan import Plan, PlanGoal, PlanVersion
+
             goal_stmt = (
                 select(PlanGoal)
                 .join(PlanVersion, PlanGoal.plan_version_id == PlanVersion.id)
@@ -188,7 +192,14 @@ class CaseNoteService:
                 )
 
         for key, val in update_data.items():
-            if hasattr(note, key) and key not in ("id", "case_id", "created_at", "created_by", "is_locked", "locked_at"):
+            if hasattr(note, key) and key not in (
+                "id",
+                "case_id",
+                "created_at",
+                "created_by",
+                "is_locked",
+                "locked_at",
+            ):
                 setattr(note, key, val)
 
         note.updated_at = datetime.now(UTC)
@@ -337,36 +348,40 @@ class CaseNoteService:
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow([
-            "Case Number",
-            "Subject",
-            "Note Type",
-            "Contact Type",
-            "Location",
-            "Duration (mins)",
-            "Appointment Status",
-            "Author",
-            "Created Date",
-            "Status",
-            "Is Locked",
-            "Narrative",
-        ])
+        writer.writerow(
+            [
+                "Case Number",
+                "Subject",
+                "Note Type",
+                "Contact Type",
+                "Location",
+                "Duration (mins)",
+                "Appointment Status",
+                "Author",
+                "Created Date",
+                "Status",
+                "Is Locked",
+                "Narrative",
+            ]
+        )
 
         for n in notes:
-            writer.writerow([
-                case.case_number,
-                n.subject,
-                n.note_type,
-                n.contact_type or "",
-                n.location or "",
-                n.duration_minutes or "",
-                n.appointment_status or "",
-                n.author_name or "",
-                n.created_at.strftime("%Y-%m-%d %H:%M:%S") if n.created_at else "",
-                n.status,
-                "Yes" if n.is_locked else "No",
-                n.content,
-            ])
+            writer.writerow(
+                [
+                    case.case_number,
+                    n.subject,
+                    n.note_type,
+                    n.contact_type or "",
+                    n.location or "",
+                    n.duration_minutes or "",
+                    n.appointment_status or "",
+                    n.author_name or "",
+                    n.created_at.strftime("%Y-%m-%d %H:%M:%S") if n.created_at else "",
+                    n.status,
+                    "Yes" if n.is_locked else "No",
+                    n.content,
+                ]
+            )
 
         await self.audit.log_event(
             event_type="CASE_NOTES_EXPORTED",

@@ -41,9 +41,7 @@ async def list_schools(
     db: AsyncSession = Depends(get_db),
 ):
     repo = SchoolRepository(db)
-    schools, total = await repo.list_schools(
-        query_text=query, school_type=school_type, offset=offset, limit=limit
-    )
+    schools, total = await repo.list_schools(query_text=query, school_type=school_type, offset=offset, limit=limit)
     return {"items": schools, "total": total, "offset": offset, "limit": limit}
 
 

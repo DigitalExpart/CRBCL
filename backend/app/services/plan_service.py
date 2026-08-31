@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, date, datetime
-from typing import Any
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
-from app.models.case import Case
 from app.models.plan import (
     GoalProgressUpdate,
     Plan,
@@ -31,25 +29,17 @@ from app.schemas.plan import (
     PhysicalSignatureUploadRequest,
     PlanActivityCompleteRequest,
     PlanActivityCreate,
-    PlanActivityUpdate,
     PlanApproveRequest,
     PlanCloneRequest,
-    PlanConcernCreate,
-    PlanConcernUpdate,
     PlanCreate,
-    PlanDetailResponse,
     PlanFinalizeRequest,
     PlanGoalCompleteRequest,
     PlanGoalCreate,
     PlanGoalUpdate,
     PlanLockRequest,
-    PlanParticipantCreate,
-    PlanParticipantUpdate,
     PlanPrintResponse,
     PlanReturnRequest,
     PlanSignatureCreate,
-    PlanStrengthCreate,
-    PlanStrengthUpdate,
     PlanSubmitRequest,
     PlanSummaryResponse,
     PlanUnlockRequest,
@@ -106,7 +96,9 @@ class PlanService:
         total_activities = len(all_activities)
         completed_activities = sum(1 for a in all_activities if a.status == "COMPLETED")
         overdue_activities = sum(
-            1 for a in all_activities if a.due_date and a.due_date < today and a.status not in ("COMPLETED", "CANCELLED")
+            1
+            for a in all_activities
+            if a.due_date and a.due_date < today and a.status not in ("COMPLETED", "CANCELLED")
         )
 
         pct = (completed / total_goals * 100.0) if total_goals > 0 else 0.0
@@ -286,7 +278,10 @@ class PlanService:
 
         curr_v = self._get_current_version(plan)
         if curr_v.status != "DRAFT":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Plan is not in DRAFT state (currently {curr_v.status}).")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Plan is not in DRAFT state (currently {curr_v.status}).",
+            )
 
         curr_v.status = "IN_REVIEW"
         plan.status = "IN_REVIEW"
@@ -313,7 +308,9 @@ class PlanService:
 
         curr_v = self._get_current_version(plan)
         if curr_v.status != "IN_REVIEW":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Plan is not IN_REVIEW (currently {curr_v.status}).")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Plan is not IN_REVIEW (currently {curr_v.status})."
+            )
 
         # Generate canonical document hash
         doc_hash = SignatureService.compute_document_hash(curr_v)
@@ -343,7 +340,9 @@ class PlanService:
 
         curr_v = self._get_current_version(plan)
         if curr_v.status != "IN_REVIEW":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Plan is not IN_REVIEW (currently {curr_v.status}).")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Plan is not IN_REVIEW (currently {curr_v.status})."
+            )
 
         curr_v.status = "DRAFT"
         plan.status = "DRAFT"
@@ -658,7 +657,9 @@ class PlanService:
 
         curr_v = self._get_current_version(plan)
         if curr_v.status in ("FINALIZED", "LOCKED"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot add goals to {curr_v.status} plan.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot add goals to {curr_v.status} plan."
+            )
 
         goal_id = uuid.uuid4()
         goal = PlanGoal(
@@ -703,7 +704,9 @@ class PlanService:
         await self._require_perm(user_id, Permissions.PLAN_GOAL_UPDATE)
 
         if goal.plan_version.status in ("FINALIZED", "LOCKED"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot edit goal in finalized/locked plan.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot edit goal in finalized/locked plan."
+            )
 
         if payload.goal_text is not None:
             goal.goal_text = payload.goal_text
@@ -771,7 +774,9 @@ class PlanService:
         await self._require_perm(user_id, Permissions.PLAN_ACTIVITY_CREATE)
 
         if goal.plan_version.status in ("FINALIZED", "LOCKED"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot add activities to finalized/locked plan.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot add activities to finalized/locked plan."
+            )
 
         act_id = uuid.uuid4()
         activity = PlanActivity(
@@ -847,7 +852,8 @@ class PlanService:
             signed_at=datetime.now(UTC),
             method=payload.method,
             document_hash=curr_v.document_hash,  # type: ignore
-            attestation_text=payload.attestation_text or "I agree with this Family Wellness Plan and my commitments within it.",
+            attestation_text=payload.attestation_text
+            or "I agree with this Family Wellness Plan and my commitments within it.",
             ip_address=payload.ip_address,
         )
         self.db.add(sig)
@@ -867,7 +873,11 @@ class PlanService:
             user_id=user_id,
             entity_type="plan_signature",
             entity_id=sig_id,
-            after_data={"plan_number": plan.plan_number, "signer_name": payload.signer_name, "role": payload.signer_role},
+            after_data={
+                "plan_number": plan.plan_number,
+                "signer_name": payload.signer_name,
+                "role": payload.signer_role,
+            },
         )
 
         await self.db.commit()
@@ -940,7 +950,9 @@ class PlanService:
             document_hash=curr_v.document_hash,
             case_number=plan.case.case_number if plan.case else "N/A",
             case_title=plan.case.title if plan.case else "N/A",
-            client_name=f"{plan.primary_person.first_name} {plan.primary_person.last_name}" if plan.primary_person else None,
+            client_name=f"{plan.primary_person.first_name} {plan.primary_person.last_name}"
+            if plan.primary_person
+            else None,
             family_name=plan.family.family_name if plan.family else None,
             participants=[p for p in curr_v.participants],  # type: ignore
             concerns=[c for c in curr_v.concerns],  # type: ignore

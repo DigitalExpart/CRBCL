@@ -16,6 +16,7 @@ from app.permissions.service import PermissionService
 
 def require_permission(permission_key: str) -> Callable:
     """Dependency factory checking that the authenticated user possesses the given permission."""
+
     async def permission_checker(
         user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db),
@@ -39,6 +40,7 @@ def require_permission(permission_key: str) -> Callable:
 
 def require_team_access() -> Callable:
     """Dependency checking that the authenticated user can access a specific team."""
+
     async def team_checker(
         team_id: uuid.UUID,
         user: User = Depends(get_current_user),

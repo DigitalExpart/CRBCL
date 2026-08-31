@@ -152,7 +152,9 @@ class CasePersonResponse(BaseModel):
 # ── Case Assignment Schemas ───────────────────────────────────
 class CaseAssignmentCreate(BaseModel):
     user_id: uuid.UUID
-    role: str = "caseworker"  # primary_investigator, secondary_investigator, backup_investigator, caseworker, supervisor
+    role: str = (
+        "caseworker"  # primary_investigator, secondary_investigator, backup_investigator, caseworker, supervisor
+    )
     notes: str | None = None
 
 

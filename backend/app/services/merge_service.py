@@ -41,16 +41,12 @@ class MergeService:
 
         # 2. Redirect Clients
         await self.db.execute(
-            update(Client)
-            .where(Client.person_id == source_person_id)
-            .values(person_id=target_person_id)
+            update(Client).where(Client.person_id == source_person_id).values(person_id=target_person_id)
         )
 
         # 3. Redirect Family Memberships
         await self.db.execute(
-            update(FamilyMember)
-            .where(FamilyMember.person_id == source_person_id)
-            .values(person_id=target_person_id)
+            update(FamilyMember).where(FamilyMember.person_id == source_person_id).values(person_id=target_person_id)
         )
 
         # 4. Redirect Family Relationships

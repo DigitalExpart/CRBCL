@@ -47,7 +47,9 @@ class CaseAssignmentRepository(BaseRepository[CaseAssignment]):
         super().__init__(CaseAssignment, db)
 
     async def get_by_id_with_user(self, assignment_id: uuid.UUID) -> CaseAssignment | None:
-        stmt = select(CaseAssignment).where(CaseAssignment.id == assignment_id).options(selectinload(CaseAssignment.user))
+        stmt = (
+            select(CaseAssignment).where(CaseAssignment.id == assignment_id).options(selectinload(CaseAssignment.user))
+        )
         res = await self.db.execute(stmt)
         return res.scalar_one_or_none()
 
@@ -143,7 +145,11 @@ class CaseRestrictionRepository(BaseRepository[CaseRestriction]):
         super().__init__(CaseRestriction, db)
 
     async def get_by_id_with_user(self, restriction_id: uuid.UUID) -> CaseRestriction | None:
-        stmt = select(CaseRestriction).where(CaseRestriction.id == restriction_id).options(selectinload(CaseRestriction.user))
+        stmt = (
+            select(CaseRestriction)
+            .where(CaseRestriction.id == restriction_id)
+            .options(selectinload(CaseRestriction.user))
+        )
         res = await self.db.execute(stmt)
         return res.scalar_one_or_none()
 

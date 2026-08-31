@@ -33,7 +33,10 @@ class ReferralHistoryService:
         referral_people = list(people_res.scalars().all())
 
         person_ids = [rp.person_id for rp in referral_people]
-        person_names = {rp.person_id: f"{rp.person.first_name} {rp.person.last_name}" if rp.person else "Unknown" for rp in referral_people}
+        person_names = {
+            rp.person_id: f"{rp.person.first_name} {rp.person.last_name}" if rp.person else "Unknown"
+            for rp in referral_people
+        }
 
         if not person_ids:
             return {"prior_referrals": [], "prior_cases": []}
@@ -108,16 +111,18 @@ class ReferralHistoryService:
                 cases = list(case_res.scalars().all())
 
                 for cs in cases:
-                    prior_cases.append({
-                        "case_id": str(cs.id),
-                        "case_number": cs.case_number,
-                        "title": cs.title,
-                        "case_type": cs.case_type,
-                        "status": cs.status,
-                        "priority": cs.priority,
-                        "intake_date": str(cs.intake_date) if cs.intake_date else None,
-                        "client_id": str(cs.client_id) if cs.client_id else None,
-                    })
+                    prior_cases.append(
+                        {
+                            "case_id": str(cs.id),
+                            "case_number": cs.case_number,
+                            "title": cs.title,
+                            "case_type": cs.case_type,
+                            "status": cs.status,
+                            "priority": cs.priority,
+                            "intake_date": str(cs.intake_date) if cs.intake_date else None,
+                            "client_id": str(cs.client_id) if cs.client_id else None,
+                        }
+                    )
 
         return {
             "prior_referrals": list(prior_referrals_map.values()),

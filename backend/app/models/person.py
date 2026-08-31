@@ -14,6 +14,7 @@ from app.core.database import AuditMixin, Base, SoftDeleteMixin, TimestampMixin
 
 class Person(Base, AuditMixin, SoftDeleteMixin):
     """Canonical human identity across clients, relatives, collaterals, and community members."""
+
     __tablename__ = "persons"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -62,7 +63,9 @@ class Person(Base, AuditMixin, SoftDeleteMixin):
         "PersonCulturalProfile", back_populates="person", uselist=False, lazy="selectin"
     )
     strengths: Mapped[list[PersonStrength]] = relationship("PersonStrength", back_populates="person", lazy="selectin")
-    challenges: Mapped[list[PersonChallenge]] = relationship("PersonChallenge", back_populates="person", lazy="selectin")
+    challenges: Mapped[list[PersonChallenge]] = relationship(
+        "PersonChallenge", back_populates="person", lazy="selectin"
+    )
 
     __table_args__ = (
         Index("ix_persons_name_trgm", "first_name", "last_name"),
@@ -74,6 +77,7 @@ class Person(Base, AuditMixin, SoftDeleteMixin):
 
 class PersonAddress(Base, TimestampMixin):
     """Historical and primary address tracking for a person."""
+
     __tablename__ = "person_addresses"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -99,6 +103,7 @@ class PersonAddress(Base, TimestampMixin):
 
 class PersonContact(Base, TimestampMixin):
     """Normalized contact entry (phones, emails, social accounts)."""
+
     __tablename__ = "person_contacts"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -115,6 +120,7 @@ class PersonContact(Base, TimestampMixin):
 
 class PersonPhysicalDescription(Base, TimestampMixin):
     """Physical characteristics and distinguishing features."""
+
     __tablename__ = "person_physical_descriptions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -139,6 +145,7 @@ class PersonPhysicalDescription(Base, TimestampMixin):
 
 class PersonCulturalProfile(Base, TimestampMixin):
     """Cultural engagement, traditions, ceremonies, and linguistic goals."""
+
     __tablename__ = "person_cultural_profiles"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -159,6 +166,7 @@ class PersonCulturalProfile(Base, TimestampMixin):
 
 class PersonStrength(Base, TimestampMixin):
     """Relational strengths mapped to configurable lookup categories."""
+
     __tablename__ = "person_strengths"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -174,6 +182,7 @@ class PersonStrength(Base, TimestampMixin):
 
 class PersonChallenge(Base, TimestampMixin):
     """Relational challenges/alerts mapped to configurable lookup categories."""
+
     __tablename__ = "person_challenges"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -191,6 +200,7 @@ class PersonChallenge(Base, TimestampMixin):
 
 class PersonMerge(Base):
     """Immutable audit trail for controlled person duplicate merges."""
+
     __tablename__ = "person_merges"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

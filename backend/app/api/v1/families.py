@@ -27,6 +27,7 @@ router = APIRouter(prefix="/families", tags=["Families"])
 
 # ── Family Sub-Schemas ───────────────────────────────────────
 
+
 class FamilyMemberCreate(BaseModel):
     person_id: uuid.UUID
     role: str = "Member"
@@ -42,6 +43,7 @@ class RelationshipCreate(BaseModel):
 
 
 # ── Family Endpoints ─────────────────────────────────────────
+
 
 @router.get("", response_model=PaginatedResponse[FamilyResponse])
 async def list_families(
@@ -189,6 +191,7 @@ async def update_family(
 
 
 # ── Family Members & Relationships ───────────────────────────
+
 
 @router.get("/{family_id}/members")
 async def list_family_members(

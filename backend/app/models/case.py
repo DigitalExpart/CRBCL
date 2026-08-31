@@ -49,7 +49,10 @@ class Case(Base, AuditMixin, SoftDeleteMixin):
         UUID(as_uuid=True), ForeignKey("referrals.id", ondelete="SET NULL", use_alter=True), nullable=True, index=True
     )
     origin_disposition_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("child_dispositions.id", ondelete="SET NULL", use_alter=True), nullable=True, index=True
+        UUID(as_uuid=True),
+        ForeignKey("child_dispositions.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+        index=True,
     )
 
     # Relational Sub-entities
@@ -57,8 +60,12 @@ class Case(Base, AuditMixin, SoftDeleteMixin):
     assignments = relationship("CaseAssignment", back_populates="case", cascade="all, delete-orphan")
     external_workers = relationship("CaseExternalWorker", back_populates="case", cascade="all, delete-orphan")
     sources = relationship("CaseSource", back_populates="case", cascade="all, delete-orphan")
-    outgoing_links = relationship("CaseLink", foreign_keys="CaseLink.source_case_id", back_populates="source_case", cascade="all, delete-orphan")
-    incoming_links = relationship("CaseLink", foreign_keys="CaseLink.target_case_id", back_populates="target_case", cascade="all, delete-orphan")
+    outgoing_links = relationship(
+        "CaseLink", foreign_keys="CaseLink.source_case_id", back_populates="source_case", cascade="all, delete-orphan"
+    )
+    incoming_links = relationship(
+        "CaseLink", foreign_keys="CaseLink.target_case_id", back_populates="target_case", cascade="all, delete-orphan"
+    )
     restrictions = relationship("CaseRestriction", back_populates="case", cascade="all, delete-orphan")
     transfers = relationship("CaseTransfer", back_populates="case", cascade="all, delete-orphan")
     status_history = relationship("CaseStatusHistory", back_populates="case", cascade="all, delete-orphan")

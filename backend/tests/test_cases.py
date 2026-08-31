@@ -34,9 +34,7 @@ async def test_create_and_list_cases(client: AsyncClient, caseworker_user, db_se
     assert timeline_res.scalar_one_or_none() is not None
 
     # Verify Outbox event created
-    outbox_res = await db_session.execute(
-        select(OutboxEvent).where(OutboxEvent.aggregate_id == case_id)
-    )
+    outbox_res = await db_session.execute(select(OutboxEvent).where(OutboxEvent.aggregate_id == case_id))
     assert outbox_res.scalar_one_or_none() is not None
 
     # List cases

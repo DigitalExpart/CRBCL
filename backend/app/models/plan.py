@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Family Wellness Case & Safety Plan domain models (Phase 6)."""
+
+from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship as sa_relationship
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import relationship as sa_relationship
 
-from app.core.database import AuditMixin, Base, SoftDeleteMixin, TimestampMixin
+from app.core.database import Base, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.assessment import Assessment
@@ -60,20 +61,20 @@ class Plan(Base, TimestampMixin):
     deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
     # Relationships
-    case: Mapped["Case"] = sa_relationship("Case", foreign_keys=[case_id], lazy="selectin")
-    primary_person: Mapped["Person | None"] = sa_relationship("Person", foreign_keys=[primary_person_id], lazy="selectin")
-    family: Mapped["Family | None"] = sa_relationship("Family", foreign_keys=[family_id], lazy="selectin")
-    creator: Mapped["User"] = sa_relationship("User", foreign_keys=[created_by], lazy="selectin")
-    updater: Mapped["User | None"] = sa_relationship("User", foreign_keys=[updated_by], lazy="selectin")
+    case: Mapped[Case] = sa_relationship("Case", foreign_keys=[case_id], lazy="selectin")
+    primary_person: Mapped[Person | None] = sa_relationship("Person", foreign_keys=[primary_person_id], lazy="selectin")
+    family: Mapped[Family | None] = sa_relationship("Family", foreign_keys=[family_id], lazy="selectin")
+    creator: Mapped[User] = sa_relationship("User", foreign_keys=[created_by], lazy="selectin")
+    updater: Mapped[User | None] = sa_relationship("User", foreign_keys=[updated_by], lazy="selectin")
 
-    versions: Mapped[list["PlanVersion"]] = sa_relationship(
+    versions: Mapped[list[PlanVersion]] = sa_relationship(
         "PlanVersion",
         back_populates="plan",
         cascade="all, delete-orphan",
         order_by="PlanVersion.version_number.desc()",
         lazy="selectin",
     )
-    assessments: Mapped[list["PlanAssessment"]] = sa_relationship(
+    assessments: Mapped[list[PlanAssessment]] = sa_relationship(
         "PlanAssessment",
         back_populates="plan",
         cascade="all, delete-orphan",
@@ -131,40 +132,40 @@ class PlanVersion(Base, TimestampMixin):
     __table_args__ = (sa.UniqueConstraint("plan_id", "version_number", name="uq_plan_version_number"),)
 
     # Relationships
-    plan: Mapped["Plan"] = sa_relationship("Plan", back_populates="versions")
-    creator: Mapped["User | None"] = sa_relationship("User", foreign_keys=[created_by], lazy="selectin")
-    finalizer: Mapped["User | None"] = sa_relationship("User", foreign_keys=[finalized_by], lazy="selectin")
-    locker: Mapped["User | None"] = sa_relationship("User", foreign_keys=[locked_by], lazy="selectin")
+    plan: Mapped[Plan] = sa_relationship("Plan", back_populates="versions")
+    creator: Mapped[User | None] = sa_relationship("User", foreign_keys=[created_by], lazy="selectin")
+    finalizer: Mapped[User | None] = sa_relationship("User", foreign_keys=[finalized_by], lazy="selectin")
+    locker: Mapped[User | None] = sa_relationship("User", foreign_keys=[locked_by], lazy="selectin")
 
-    participants: Mapped[list["PlanParticipant"]] = sa_relationship(
+    participants: Mapped[list[PlanParticipant]] = sa_relationship(
         "PlanParticipant",
         back_populates="plan_version",
         cascade="all, delete-orphan",
         order_by="PlanParticipant.name",
         lazy="selectin",
     )
-    concerns: Mapped[list["PlanConcern"]] = sa_relationship(
+    concerns: Mapped[list[PlanConcern]] = sa_relationship(
         "PlanConcern",
         back_populates="plan_version",
         cascade="all, delete-orphan",
         order_by="PlanConcern.sort_order",
         lazy="selectin",
     )
-    strengths: Mapped[list["PlanStrength"]] = sa_relationship(
+    strengths: Mapped[list[PlanStrength]] = sa_relationship(
         "PlanStrength",
         back_populates="plan_version",
         cascade="all, delete-orphan",
         order_by="PlanStrength.sort_order",
         lazy="selectin",
     )
-    goals: Mapped[list["PlanGoal"]] = sa_relationship(
+    goals: Mapped[list[PlanGoal]] = sa_relationship(
         "PlanGoal",
         back_populates="plan_version",
         cascade="all, delete-orphan",
         order_by="PlanGoal.sort_order",
         lazy="selectin",
     )
-    signatures: Mapped[list["PlanSignature"]] = sa_relationship(
+    signatures: Mapped[list[PlanSignature]] = sa_relationship(
         "PlanSignature",
         back_populates="plan_version",
         cascade="all, delete-orphan",
@@ -199,10 +200,10 @@ class PlanParticipant(Base, TimestampMixin):
     signature_required: Mapped[bool] = mapped_column(sa.Boolean, default=True, nullable=False)
 
     # Relationships
-    plan_version: Mapped["PlanVersion"] = sa_relationship("PlanVersion", back_populates="participants")
-    user: Mapped["User | None"] = sa_relationship("User", foreign_keys=[user_id], lazy="selectin")
-    person: Mapped["Person | None"] = sa_relationship("Person", foreign_keys=[person_id], lazy="selectin")
-    provider: Mapped["Provider | None"] = sa_relationship("Provider", foreign_keys=[provider_id], lazy="selectin")
+    plan_version: Mapped[PlanVersion] = sa_relationship("PlanVersion", back_populates="participants")
+    user: Mapped[User | None] = sa_relationship("User", foreign_keys=[user_id], lazy="selectin")
+    person: Mapped[Person | None] = sa_relationship("Person", foreign_keys=[person_id], lazy="selectin")
+    provider: Mapped[Provider | None] = sa_relationship("Provider", foreign_keys=[provider_id], lazy="selectin")
 
 
 class PlanConcern(Base, TimestampMixin):
@@ -219,7 +220,7 @@ class PlanConcern(Base, TimestampMixin):
     severity: Mapped[str | None] = mapped_column(sa.String(50), nullable=True)  # Low, Medium, High, Critical
     sort_order: Mapped[int] = mapped_column(sa.Integer, default=0, nullable=False)
 
-    plan_version: Mapped["PlanVersion"] = sa_relationship("PlanVersion", back_populates="concerns")
+    plan_version: Mapped[PlanVersion] = sa_relationship("PlanVersion", back_populates="concerns")
 
 
 class PlanStrength(Base, TimestampMixin):
@@ -235,7 +236,7 @@ class PlanStrength(Base, TimestampMixin):
     statement: Mapped[str] = mapped_column(sa.Text, nullable=False)
     sort_order: Mapped[int] = mapped_column(sa.Integer, default=0, nullable=False)
 
-    plan_version: Mapped["PlanVersion"] = sa_relationship("PlanVersion", back_populates="strengths")
+    plan_version: Mapped[PlanVersion] = sa_relationship("PlanVersion", back_populates="strengths")
 
 
 class PlanGoal(Base, TimestampMixin):
@@ -261,18 +262,18 @@ class PlanGoal(Base, TimestampMixin):
         UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    plan_version: Mapped["PlanVersion"] = sa_relationship("PlanVersion", back_populates="goals")
-    completer: Mapped["User | None"] = sa_relationship("User", foreign_keys=[completed_by], lazy="selectin")
-    creator: Mapped["User | None"] = sa_relationship("User", foreign_keys=[created_by], lazy="selectin")
+    plan_version: Mapped[PlanVersion] = sa_relationship("PlanVersion", back_populates="goals")
+    completer: Mapped[User | None] = sa_relationship("User", foreign_keys=[completed_by], lazy="selectin")
+    creator: Mapped[User | None] = sa_relationship("User", foreign_keys=[created_by], lazy="selectin")
 
-    activities: Mapped[list["PlanActivity"]] = sa_relationship(
+    activities: Mapped[list[PlanActivity]] = sa_relationship(
         "PlanActivity",
         back_populates="goal",
         cascade="all, delete-orphan",
         order_by="PlanActivity.sort_order",
         lazy="selectin",
     )
-    progress_updates: Mapped[list["GoalProgressUpdate"]] = sa_relationship(
+    progress_updates: Mapped[list[GoalProgressUpdate]] = sa_relationship(
         "GoalProgressUpdate",
         back_populates="goal",
         cascade="all, delete-orphan",
@@ -306,9 +307,11 @@ class PlanActivity(Base, TimestampMixin):
     completion_notes: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     sort_order: Mapped[int] = mapped_column(sa.Integer, default=0, nullable=False)
 
-    goal: Mapped["PlanGoal"] = sa_relationship("PlanGoal", back_populates="activities")
-    responsible_user: Mapped["User | None"] = sa_relationship("User", foreign_keys=[responsible_user_id], lazy="selectin")
-    responsible_person: Mapped["Person | None"] = sa_relationship("Person", foreign_keys=[responsible_person_id], lazy="selectin")
+    goal: Mapped[PlanGoal] = sa_relationship("PlanGoal", back_populates="activities")
+    responsible_user: Mapped[User | None] = sa_relationship("User", foreign_keys=[responsible_user_id], lazy="selectin")
+    responsible_person: Mapped[Person | None] = sa_relationship(
+        "Person", foreign_keys=[responsible_person_id], lazy="selectin"
+    )
 
 
 class GoalProgressUpdate(Base):
@@ -325,10 +328,12 @@ class GoalProgressUpdate(Base):
     updated_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+    )
 
-    goal: Mapped["PlanGoal"] = sa_relationship("PlanGoal", back_populates="progress_updates")
-    updater: Mapped["User | None"] = sa_relationship("User", foreign_keys=[updated_by], lazy="selectin")
+    goal: Mapped[PlanGoal] = sa_relationship("PlanGoal", back_populates="progress_updates")
+    updater: Mapped[User | None] = sa_relationship("User", foreign_keys=[updated_by], lazy="selectin")
 
 
 class PlanAssessment(Base):
@@ -345,12 +350,14 @@ class PlanAssessment(Base):
     )
     relationship_type: Mapped[str] = mapped_column(sa.String(50), default="INFORMED_BY", nullable=False)
     notes: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+    )
 
     __table_args__ = (sa.UniqueConstraint("plan_id", "assessment_id", name="uq_plan_assessment_link"),)
 
-    plan: Mapped["Plan"] = sa_relationship("Plan", back_populates="assessments")
-    assessment: Mapped["Assessment"] = sa_relationship("Assessment", foreign_keys=[assessment_id], lazy="selectin")
+    plan: Mapped[Plan] = sa_relationship("Plan", back_populates="assessments")
+    assessment: Mapped[Assessment] = sa_relationship("Assessment", foreign_keys=[assessment_id], lazy="selectin")
 
 
 class PlanSignature(Base):
@@ -362,7 +369,9 @@ class PlanSignature(Base):
     plan_version_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), sa.ForeignKey("plan_versions.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    signer_type: Mapped[str] = mapped_column(sa.String(50), nullable=False)  # WORKER, PARENT_GUARDIAN, CHILD_YOUTH, ELDER, PROVIDER, OTHER
+    signer_type: Mapped[str] = mapped_column(
+        sa.String(50), nullable=False
+    )  # WORKER, PARENT_GUARDIAN, CHILD_YOUTH, ELDER, PROVIDER, OTHER
     signer_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -374,12 +383,16 @@ class PlanSignature(Base):
     signature_data: Mapped[str | None] = mapped_column(sa.Text, nullable=True)  # Base64 Canvas/Vector
     signature_image_url: Mapped[str | None] = mapped_column(sa.String(500), nullable=True)
     signed_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
-    method: Mapped[str] = mapped_column(sa.String(50), default="ELECTRONIC_DRAW", nullable=False)  # ELECTRONIC_DRAW, ELECTRONIC_TYPE, PHYSICAL_UPLOAD
+    method: Mapped[str] = mapped_column(
+        sa.String(50), default="ELECTRONIC_DRAW", nullable=False
+    )  # ELECTRONIC_DRAW, ELECTRONIC_TYPE, PHYSICAL_UPLOAD
     document_hash: Mapped[str] = mapped_column(sa.String(64), nullable=False)
     attestation_text: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     ip_address: Mapped[str | None] = mapped_column(sa.String(45), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+    )
 
-    plan_version: Mapped["PlanVersion"] = sa_relationship("PlanVersion", back_populates="signatures")
-    signer_user: Mapped["User | None"] = sa_relationship("User", foreign_keys=[signer_user_id], lazy="selectin")
-    signer_person: Mapped["Person | None"] = sa_relationship("Person", foreign_keys=[signer_person_id], lazy="selectin")
+    plan_version: Mapped[PlanVersion] = sa_relationship("PlanVersion", back_populates="signatures")
+    signer_user: Mapped[User | None] = sa_relationship("User", foreign_keys=[signer_user_id], lazy="selectin")
+    signer_person: Mapped[Person | None] = sa_relationship("Person", foreign_keys=[signer_person_id], lazy="selectin")

@@ -25,7 +25,9 @@ class AssessmentTemplateService:
         self.repo = AssessmentTemplateRepository(db)
         self.audit = AuditService(db)
 
-    async def list_templates(self, category: str | None = None, is_active: bool | None = None) -> list[AssessmentTemplate]:
+    async def list_templates(
+        self, category: str | None = None, is_active: bool | None = None
+    ) -> list[AssessmentTemplate]:
         return await self.repo.list_templates(category=category, is_active=is_active)
 
     async def get_template_by_key_or_404(self, key: str) -> AssessmentTemplate:
@@ -122,7 +124,10 @@ class AssessmentTemplateService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot publish a retired version.")
 
         if not version.sections:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot publish a template version without any sections.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot publish a template version without any sections.",
+            )
 
         published = await self.repo.publish_version(version_id, published_by=user_id)
         await self.audit.log_event(
@@ -146,7 +151,10 @@ class AssessmentTemplateService:
     ) -> AssessmentSection:
         version = await self.get_version_by_id_or_404(version_id)
         if version.status == "PUBLISHED":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Published versions are immutable. Create a new draft version to make changes.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Published versions are immutable. Create a new draft version to make changes.",
+            )
 
         section = AssessmentSection(
             template_version_id=version_id,

@@ -9,7 +9,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # ── Participant Schemas ──────────────────────────────────────────────
 class PlanParticipantCreate(BaseModel):
-    participant_type: str = Field(..., description="WORKER, FAMILY_MEMBER, CHILD_YOUTH, ELDER, PROVIDER, EXTERNAL_WORKER, OTHER")
+    participant_type: str = Field(
+        ..., description="WORKER, FAMILY_MEMBER, CHILD_YOUTH, ELDER, PROVIDER, EXTERNAL_WORKER, OTHER"
+    )
     user_id: uuid.UUID | None = None
     person_id: uuid.UUID | None = None
     provider_id: uuid.UUID | None = None
@@ -78,7 +80,9 @@ class PlanConcernResponse(BaseModel):
 
 # ── Strength / Protective Factor Schemas ─────────────────────────────
 class PlanStrengthCreate(BaseModel):
-    category: str | None = Field(None, description="Kinship Support, Cultural Connections, Caregiver Capacities, Community")
+    category: str | None = Field(
+        None, description="Kinship Support, Cultural Connections, Caregiver Capacities, Community"
+    )
     statement: str = Field(..., min_length=1)
     sort_order: int = 0
 
@@ -222,7 +226,9 @@ class PlanSignatureCreate(BaseModel):
 class PhysicalSignatureUploadRequest(BaseModel):
     signer_name: str = Field(..., min_length=1, max_length=255)
     signer_role: str = Field(..., min_length=1, max_length=100)
-    signer_type: str = Field("PARENT_GUARDIAN", description="WORKER, PARENT_GUARDIAN, CHILD_YOUTH, ELDER, PROVIDER, OTHER")
+    signer_type: str = Field(
+        "PARENT_GUARDIAN", description="WORKER, PARENT_GUARDIAN, CHILD_YOUTH, ELDER, PROVIDER, OTHER"
+    )
     document_url: str = Field(..., description="URL / ID of uploaded scanned file in Document repository")
     notes: str | None = None
 
@@ -416,7 +422,9 @@ class PlanLockRequest(BaseModel):
 
 
 class PlanUnlockRequest(BaseModel):
-    justification: str = Field(..., min_length=10, description="Mandatory Director justification for unlocking sealed plan")
+    justification: str = Field(
+        ..., min_length=10, description="Mandatory Director justification for unlocking sealed plan"
+    )
 
 
 # ── Case Note Goal Linking Schemas ───────────────────────────────────

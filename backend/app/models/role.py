@@ -57,9 +57,7 @@ class RolePermission(Base):
     role: Mapped[Role] = relationship("Role", back_populates="permissions")
     permission: Mapped[Permission] = relationship("Permission", lazy="selectin")
 
-    __table_args__ = (
-        {"comment": "Maps roles to their granted permissions"},
-    )
+    __table_args__ = ({"comment": "Maps roles to their granted permissions"},)
 
 
 class UserRole(Base):

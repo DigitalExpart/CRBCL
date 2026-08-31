@@ -30,7 +30,9 @@ from app.main import app
 @pytest.mark.asyncio
 async def test_supabase_live_integration():
     settings = get_settings()
-    assert "supabase" in settings.database_url or "pooler" in settings.database_url, "Must be configured against Supabase"
+    assert (
+        "supabase" in settings.database_url or "pooler" in settings.database_url
+    ), "Must be configured against Supabase"
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -185,7 +187,9 @@ async def test_supabase_live_integration():
         assert case_resp.status_code == 200
         case_data = case_resp.json()
         assert "Prevention" in case_data["case_type"] or "PREVENTION" in case_data["case_type"]
-        print(f"[LIVE SUPABASE] 10. Generated Case verified: {case_data.get('case_number')} ({case_data.get('case_type')})")
+        print(
+            f"[LIVE SUPABASE] 10. Generated Case verified: {case_data.get('case_number')} ({case_data.get('case_type')})"
+        )
 
         # 10. Snapshot Retrieval
         snap_resp = await client.get(f"/api/v1/cases/{resulting_case_id}/snapshot", headers=headers)
@@ -375,9 +379,15 @@ async def test_supabase_live_integration():
                 {"question_key": "impending_danger_notes", "text_value": "No impending danger identified."},
                 {"question_key": "kinship_safety_placement", "boolean_value": True},
                 {"question_key": "community_supports_active", "boolean_value": True},
-                {"question_key": "intervention_details", "text_value": "Elder kinship circle actively engaged and monitoring."},
+                {
+                    "question_key": "intervention_details",
+                    "text_value": "Elder kinship circle actively engaged and monitoring.",
+                },
                 {"question_key": "threat_determination_outcome", "selected_option_keys": ["SAFE"]},
-                {"question_key": "clinical_safety_rationale", "text_value": "No active threats. Elder kinship circle providing protective support."},
+                {
+                    "question_key": "clinical_safety_rationale",
+                    "text_value": "No active threats. Elder kinship circle providing protective support.",
+                },
             ]
         }
         save_threat_resp = await client.put(
@@ -431,7 +441,9 @@ async def test_supabase_live_integration():
         assert compare_resp.status_code == 200
         compare_data = compare_resp.json()
         assert len(compare_data["assessments"]) == 2
-        print(f"[LIVE SUPABASE] 27. Cross-assessment time-series comparison verified ({len(compare_data['assessments'])} assessments compared)")
+        print(
+            f"[LIVE SUPABASE] 27. Cross-assessment time-series comparison verified ({len(compare_data['assessments'])} assessments compared)"
+        )
 
         # 26. Director Unlock with Mandatory Justification
         unlock_resp = await client.post(

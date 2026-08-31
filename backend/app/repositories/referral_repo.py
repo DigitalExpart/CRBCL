@@ -31,11 +31,7 @@ class ReferralRepository:
         current_year = (target_date or date.today()).year
 
         # Query sequence with row lock where possible
-        stmt = (
-            select(ReferralSequence)
-            .where(ReferralSequence.year == current_year)
-            .with_for_update()
-        )
+        stmt = select(ReferralSequence).where(ReferralSequence.year == current_year).with_for_update()
         result = await self.db.execute(stmt)
         seq = result.scalar_one_or_none()
 

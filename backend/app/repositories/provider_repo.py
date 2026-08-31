@@ -37,9 +37,7 @@ class ProviderRepository(BaseRepository[Provider]):
 
         if query_text:
             search_pattern = f"%{query_text}%"
-            query = query.where(
-                Provider.name.ilike(search_pattern) | Provider.organization_name.ilike(search_pattern)
-            )
+            query = query.where(Provider.name.ilike(search_pattern) | Provider.organization_name.ilike(search_pattern))
 
         count_query = select(func.count()).select_from(query.subquery())
         total = (await self.db.execute(count_query)).scalar_one()
@@ -48,7 +46,9 @@ class ProviderRepository(BaseRepository[Provider]):
         result = await self.db.execute(query)
         return list(result.scalars().all()), total
 
-    async def link_client_provider(self, client_id: uuid.UUID, provider_id: uuid.UUID, role: str = "Primary Care", notes: str = "") -> ClientProvider:
+    async def link_client_provider(
+        self, client_id: uuid.UUID, provider_id: uuid.UUID, role: str = "Primary Care", notes: str = ""
+    ) -> ClientProvider:
         link = ClientProvider(
             client_id=client_id,
             provider_id=provider_id,

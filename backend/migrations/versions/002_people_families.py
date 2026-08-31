@@ -62,14 +62,21 @@ def upgrade() -> None:
     op.execute("CREATE INDEX ix_persons_last_name_trgm ON persons USING gin (last_name gin_trgm_ops)")
 
     # ── 2. Add person_id to clients ──────────────────────────
-    op.add_column("clients", sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True))
+    op.add_column(
+        "clients",
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True
+        ),
+    )
     op.create_index("ix_clients_person_id", "clients", ["person_id"])
 
     # ── 3. Person Addresses ──────────────────────────────────
     op.create_table(
         "person_addresses",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("address_type", sa.String(50), nullable=False, server_default="Residential"),
         sa.Column("address_line_1", sa.String(500), nullable=False),
         sa.Column("address_line_2", sa.String(500), nullable=True),
@@ -92,7 +99,9 @@ def upgrade() -> None:
     op.create_table(
         "person_contacts",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("contact_type", sa.String(50), nullable=False),
         sa.Column("value", sa.String(320), nullable=False),
         sa.Column("label", sa.String(100), nullable=False, server_default="Primary"),
@@ -106,7 +115,13 @@ def upgrade() -> None:
     op.create_table(
         "person_physical_descriptions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, unique=True),
+        sa.Column(
+            "person_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        ),
         sa.Column("eye_colour", sa.String(50), nullable=True),
         sa.Column("hair_colour", sa.String(50), nullable=True),
         sa.Column("height_cm", sa.Float, nullable=True),
@@ -127,7 +142,13 @@ def upgrade() -> None:
     op.create_table(
         "person_cultural_profiles",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, unique=True),
+        sa.Column(
+            "person_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        ),
         sa.Column("cultural_connections", sa.Text, nullable=True),
         sa.Column("ceremonies", sa.Text, nullable=True),
         sa.Column("elders_connected", sa.Text, nullable=True),
@@ -144,7 +165,9 @@ def upgrade() -> None:
     op.create_table(
         "person_strengths",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("lookup_value_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("notes", sa.Text, nullable=True),
@@ -156,7 +179,9 @@ def upgrade() -> None:
     op.create_table(
         "person_challenges",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("lookup_value_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("severity", sa.String(50), nullable=False, server_default="Moderate"),
@@ -185,7 +210,13 @@ def upgrade() -> None:
     op.create_table(
         "client_medical_profiles",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, unique=True),
+        sa.Column(
+            "client_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("clients.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        ),
         sa.Column("dental_notes", sa.Text, nullable=True),
         sa.Column("mental_health_notes", sa.Text, nullable=True),
         sa.Column("chemical_dependency_history", sa.Text, nullable=True),
@@ -200,7 +231,9 @@ def upgrade() -> None:
     op.create_table(
         "client_allergies",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("allergen", sa.String(200), nullable=False),
         sa.Column("reaction", sa.String(300), nullable=False, server_default=""),
         sa.Column("severity", sa.String(50), nullable=False, server_default="Moderate"),
@@ -214,7 +247,9 @@ def upgrade() -> None:
     op.create_table(
         "client_medical_conditions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("condition_name", sa.String(300), nullable=False),
         sa.Column("diagnosed_date", sa.Date, nullable=True),
         sa.Column("is_chronic", sa.Boolean, nullable=False, server_default=sa.text("false")),
@@ -229,7 +264,9 @@ def upgrade() -> None:
     op.create_table(
         "client_medications",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("medication_name", sa.String(300), nullable=False),
         sa.Column("dosage", sa.String(100), nullable=False),
         sa.Column("frequency", sa.String(100), nullable=False),
@@ -265,7 +302,12 @@ def upgrade() -> None:
     op.create_table(
         "provider_locations",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("provider_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("providers.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "provider_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("providers.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("address_line_1", sa.String(500), nullable=False),
         sa.Column("city", sa.String(200), nullable=False, server_default="Regina"),
         sa.Column("province", sa.String(100), nullable=False, server_default="Saskatchewan"),
@@ -280,7 +322,12 @@ def upgrade() -> None:
     op.create_table(
         "provider_specialties",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("provider_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("providers.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "provider_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("providers.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("specialty", sa.String(200), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
@@ -290,8 +337,15 @@ def upgrade() -> None:
     op.create_table(
         "client_providers",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("provider_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("providers.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "provider_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("providers.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("role", sa.String(100), nullable=False, server_default="Primary Care"),
         sa.Column("start_date", sa.Date, nullable=True),
         sa.Column("end_date", sa.Date, nullable=True),
@@ -326,8 +380,12 @@ def upgrade() -> None:
     op.create_table(
         "client_school_enrolments",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("school_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("schools.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "client_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("clients.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "school_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("schools.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("grade_level", sa.String(50), nullable=False, server_default="Grade 1"),
         sa.Column("start_date", sa.Date, nullable=True),
         sa.Column("end_date", sa.Date, nullable=True),
@@ -347,8 +405,12 @@ def upgrade() -> None:
     op.create_table(
         "family_members",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("family_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("families.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "family_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("families.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("role", sa.String(100), nullable=False, server_default="Member"),
         sa.Column("start_date", sa.Date, nullable=True),
         sa.Column("end_date", sa.Date, nullable=True),
@@ -362,9 +424,21 @@ def upgrade() -> None:
     op.create_table(
         "family_relationships",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("family_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("families.id", ondelete="CASCADE"), nullable=True),
-        sa.Column("person_a_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("person_b_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "family_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("families.id", ondelete="CASCADE"), nullable=True
+        ),
+        sa.Column(
+            "person_a_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "person_b_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("relationship_type", sa.String(100), nullable=False),
         sa.Column("is_active", sa.Boolean, nullable=False, server_default=sa.text("true")),
         sa.Column("notes", sa.Text, nullable=True),
@@ -396,8 +470,15 @@ def upgrade() -> None:
     op.create_table(
         "household_memberships",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("household_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("households.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "household_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("households.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("role", sa.String(100), nullable=False, server_default="Resident"),
         sa.Column("start_date", sa.Date, nullable=True),
         sa.Column("end_date", sa.Date, nullable=True),
@@ -411,13 +492,27 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     tables = [
-        "household_memberships", "households",
-        "family_relationships", "family_members",
-        "client_school_enrolments", "schools",
-        "client_providers", "provider_specialties", "provider_locations", "providers",
-        "client_medications", "client_medical_conditions", "client_allergies", "client_medical_profiles",
-        "person_merges", "person_challenges", "person_strengths", "person_cultural_profiles",
-        "person_physical_descriptions", "person_contacts", "person_addresses",
+        "household_memberships",
+        "households",
+        "family_relationships",
+        "family_members",
+        "client_school_enrolments",
+        "schools",
+        "client_providers",
+        "provider_specialties",
+        "provider_locations",
+        "providers",
+        "client_medications",
+        "client_medical_conditions",
+        "client_allergies",
+        "client_medical_profiles",
+        "person_merges",
+        "person_challenges",
+        "person_strengths",
+        "person_cultural_profiles",
+        "person_physical_descriptions",
+        "person_contacts",
+        "person_addresses",
     ]
     for table in tables:
         op.drop_table(table)

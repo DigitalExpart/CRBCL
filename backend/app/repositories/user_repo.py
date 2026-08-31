@@ -45,9 +45,7 @@ class UserRepository(BaseRepository[User]):
 
         if query_text:
             search_pattern = f"%{query_text}%"
-            query = query.where(
-                User.email.ilike(search_pattern) | User.full_name.ilike(search_pattern)
-            )
+            query = query.where(User.email.ilike(search_pattern) | User.full_name.ilike(search_pattern))
 
         count_query = select(func.count()).select_from(query.subquery())
         total = (await self.db.execute(count_query)).scalar_one()
@@ -56,7 +54,9 @@ class UserRepository(BaseRepository[User]):
         result = await self.db.execute(query)
         return list(result.scalars().all()), total
 
-    async def assign_roles(self, user_id: uuid.UUID, role_keys: list[str], assigned_by: uuid.UUID | None = None) -> None:
+    async def assign_roles(
+        self, user_id: uuid.UUID, role_keys: list[str], assigned_by: uuid.UUID | None = None
+    ) -> None:
         """Replace user roles with new list of role keys."""
         # Find role models
         roles_res = await self.db.execute(select(Role).where(Role.key.in_(role_keys)))
@@ -73,7 +73,9 @@ class UserRepository(BaseRepository[User]):
             self.db.add(ur)
         await self.db.flush()
 
-    async def assign_teams(self, user_id: uuid.UUID, team_ids: list[uuid.UUID], assigned_by: uuid.UUID | None = None) -> None:
+    async def assign_teams(
+        self, user_id: uuid.UUID, team_ids: list[uuid.UUID], assigned_by: uuid.UUID | None = None
+    ) -> None:
         """Replace user team memberships."""
         existing_res = await self.db.execute(select(TeamMembership).where(TeamMembership.user_id == user_id))
         for tm in existing_res.scalars().all():

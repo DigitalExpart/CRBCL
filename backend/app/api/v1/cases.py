@@ -374,7 +374,9 @@ async def list_case_external_workers(
     return [CaseExternalWorkerResponse.model_validate(w) for w in workers]
 
 
-@router.post("/cases/{case_id}/external-workers", response_model=CaseExternalWorkerResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/cases/{case_id}/external-workers", response_model=CaseExternalWorkerResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_case_external_worker(
     case_id: uuid.UUID,
     payload: CaseExternalWorkerCreate,
@@ -575,7 +577,9 @@ async def list_case_restrictions(
     ]
 
 
-@router.post("/cases/{case_id}/restrictions", response_model=CaseRestrictionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/cases/{case_id}/restrictions", response_model=CaseRestrictionResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_case_restriction(
     case_id: uuid.UUID,
     payload: CaseRestrictionCreate,
@@ -792,7 +796,9 @@ async def return_case_transfer(
     db: AsyncSession = Depends(get_db),
 ):
     if not payload.review_notes:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Review notes required when returning transfer.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Review notes required when returning transfer."
+        )
     service = CaseTransferService(db)
     transfer = await service.return_transfer(
         transfer_id=transfer_id,
@@ -831,7 +837,9 @@ async def deny_case_transfer(
     db: AsyncSession = Depends(get_db),
 ):
     if not payload.review_notes:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Review notes required when denying transfer.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Review notes required when denying transfer."
+        )
     service = CaseTransferService(db)
     transfer = await service.deny_transfer(
         transfer_id=transfer_id,

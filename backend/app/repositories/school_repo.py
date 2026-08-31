@@ -30,9 +30,7 @@ class SchoolRepository(BaseRepository[School]):
 
         if query_text:
             search_pattern = f"%{query_text}%"
-            query = query.where(
-                School.name.ilike(search_pattern) | School.city.ilike(search_pattern)
-            )
+            query = query.where(School.name.ilike(search_pattern) | School.city.ilike(search_pattern))
 
         count_query = select(func.count()).select_from(query.subquery())
         total = (await self.db.execute(count_query)).scalar_one()
@@ -46,7 +44,7 @@ class SchoolRepository(BaseRepository[School]):
         client_id: uuid.UUID,
         school_id: uuid.UUID,
         grade_level: str = "Grade 1",
-        start_date = None,
+        start_date=None,
         has_iep: bool = False,
         iep_details: str | None = None,
         school_contact_person: str | None = None,

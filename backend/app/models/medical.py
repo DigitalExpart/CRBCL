@@ -14,6 +14,7 @@ from app.core.database import Base, TimestampMixin
 
 class ClientMedicalProfile(Base, TimestampMixin):
     """Overview medical profile for a client."""
+
     __tablename__ = "client_medical_profiles"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -31,6 +32,7 @@ class ClientMedicalProfile(Base, TimestampMixin):
 
 class ClientAllergy(Base, TimestampMixin):
     """Allergies and adverse reactions."""
+
     __tablename__ = "client_allergies"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -39,13 +41,16 @@ class ClientAllergy(Base, TimestampMixin):
     )
     allergen: Mapped[str] = mapped_column(String(200), nullable=False)
     reaction: Mapped[str] = mapped_column(String(300), default="", nullable=False)
-    severity: Mapped[str] = mapped_column(String(50), default="Moderate", nullable=False)  # Mild, Moderate, Severe, Life-Threatening
+    severity: Mapped[str] = mapped_column(
+        String(50), default="Moderate", nullable=False
+    )  # Mild, Moderate, Severe, Life-Threatening
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class ClientMedicalCondition(Base, TimestampMixin):
     """Diagnosed chronic and acute medical conditions."""
+
     __tablename__ = "client_medical_conditions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -62,6 +67,7 @@ class ClientMedicalCondition(Base, TimestampMixin):
 
 class ClientMedication(Base, TimestampMixin):
     """Historical and active prescription medications."""
+
     __tablename__ = "client_medications"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -76,6 +82,8 @@ class ClientMedication(Base, TimestampMixin):
     prescriber_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    status: Mapped[str] = mapped_column(String(50), default="Active", nullable=False)  # Active, Discontinued, Completed, Paused
+    status: Mapped[str] = mapped_column(
+        String(50), default="Active", nullable=False
+    )  # Active, Discontinued, Completed, Paused
     instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

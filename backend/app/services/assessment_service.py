@@ -84,9 +84,29 @@ class AssessmentService:
             key = q.key.lower()
 
             if q.question_type == "BOOLEAN" and ans.boolean_value is True:
-                if any(w in key for w in ("capacity", "protective", "strength", "willing", "recognize", "support", "kinship")):
+                if any(
+                    w in key
+                    for w in ("capacity", "protective", "strength", "willing", "recognize", "support", "kinship")
+                ):
                     protective_capacities.append(q.label)
-                elif any(w in key for w in ("danger", "concern", "threat", "substance", "chemical", "broken", "overcrowd", "structural", "harm", "incapacitated", "peril", "vulnerable", "hazard")):
+                elif any(
+                    w in key
+                    for w in (
+                        "danger",
+                        "concern",
+                        "threat",
+                        "substance",
+                        "chemical",
+                        "broken",
+                        "overcrowd",
+                        "structural",
+                        "harm",
+                        "incapacitated",
+                        "peril",
+                        "vulnerable",
+                        "hazard",
+                    )
+                ):
                     active_concerns.append(q.label)
                     if "present" in key or "immediate" in key or "incapacitated" in key or "peril" in key:
                         present_danger_count += 1
@@ -98,7 +118,21 @@ class AssessmentService:
                     if opt_link.option:
                         opt = opt_link.option
                         opt_key = opt.key.lower()
-                        if any(w in opt_key for w in ("concern", "danger", "severe", "unsafe", "risk", "unstable", "overcrowded", "homeless", "plan_created", "custody")):
+                        if any(
+                            w in opt_key
+                            for w in (
+                                "concern",
+                                "danger",
+                                "severe",
+                                "unsafe",
+                                "risk",
+                                "unstable",
+                                "overcrowded",
+                                "homeless",
+                                "plan_created",
+                                "custody",
+                            )
+                        ):
                             active_concerns.append(f"{q.label}: {opt.label}")
                         elif any(w in opt_key for w in ("safe", "connected", "stable", "protective")):
                             protective_capacities.append(f"{q.label}: {opt.label}")
@@ -134,7 +168,9 @@ class AssessmentService:
         if payload.template_version_id:
             version = await self.template_repo.get_version_with_full_structure(payload.template_version_id)
             if not version:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Specified template version not found.")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Specified template version not found."
+                )
             template = await self.template_repo.get(version.template_id)
         else:
             version = await self.template_repo.get_active_published_version_by_key(payload.template_key)
@@ -347,11 +383,16 @@ class AssessmentService:
             for ans in assessment.answers
         ]
 
-        validation_errors = AssessmentValidationService.validate_answers(version, current_answers_data, is_completing=True)
+        validation_errors = AssessmentValidationService.validate_answers(
+            version, current_answers_data, is_completing=True
+        )
         if validation_errors:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail={"message": "Cannot complete assessment. Required fields missing or invalid.", "errors": validation_errors},
+                detail={
+                    "message": "Cannot complete assessment. Required fields missing or invalid.",
+                    "errors": validation_errors,
+                },
             )
 
         prev_status = assessment.status
@@ -599,7 +640,9 @@ class AssessmentService:
         current_user: User,
     ) -> AssessmentComparisonResponse:
         if len(assessment_ids) < 2:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="At least 2 assessment IDs are required for comparison.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="At least 2 assessment IDs are required for comparison."
+            )
 
         # Load all assessments
         assessments: list[Assessment] = []

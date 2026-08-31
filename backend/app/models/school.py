@@ -14,11 +14,14 @@ from app.core.database import Base, TimestampMixin
 
 class School(Base, TimestampMixin):
     """School and daycare directory entity."""
+
     __tablename__ = "schools"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(300), nullable=False)
-    school_type: Mapped[str] = mapped_column(String(100), default="Elementary", nullable=False)  # Daycare, Elementary, Middle, High, Alternative
+    school_type: Mapped[str] = mapped_column(
+        String(100), default="Elementary", nullable=False
+    )  # Daycare, Elementary, Middle, High, Alternative
     district: Mapped[str | None] = mapped_column(String(200), nullable=True)
     address: Mapped[str | None] = mapped_column(String(500), nullable=True)
     city: Mapped[str] = mapped_column(String(200), default="Regina", nullable=False)
@@ -33,6 +36,7 @@ class School(Base, TimestampMixin):
 
 class ClientSchoolEnrolment(Base, TimestampMixin):
     """Client school enrollment records with IEP and attendance tracking."""
+
     __tablename__ = "client_school_enrolments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

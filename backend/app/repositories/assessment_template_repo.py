@@ -28,7 +28,10 @@ class AssessmentTemplateRepository(BaseRepository[AssessmentTemplate]):
             select(AssessmentTemplate)
             .where(AssessmentTemplate.key == key)
             .options(
-                selectinload(AssessmentTemplate.versions).selectinload(AssessmentTemplateVersion.sections).selectinload(AssessmentSection.questions).selectinload(AssessmentQuestion.options)
+                selectinload(AssessmentTemplate.versions)
+                .selectinload(AssessmentTemplateVersion.sections)
+                .selectinload(AssessmentSection.questions)
+                .selectinload(AssessmentQuestion.options)
             )
             .execution_options(populate_existing=True)
         )
@@ -40,7 +43,10 @@ class AssessmentTemplateRepository(BaseRepository[AssessmentTemplate]):
             select(AssessmentTemplate)
             .where(AssessmentTemplate.id == template_id)
             .options(
-                selectinload(AssessmentTemplate.versions).selectinload(AssessmentTemplateVersion.sections).selectinload(AssessmentSection.questions).selectinload(AssessmentQuestion.options)
+                selectinload(AssessmentTemplate.versions)
+                .selectinload(AssessmentTemplateVersion.sections)
+                .selectinload(AssessmentSection.questions)
+                .selectinload(AssessmentQuestion.options)
             )
             .execution_options(populate_existing=True)
         )
@@ -105,10 +111,14 @@ class AssessmentTemplateRepository(BaseRepository[AssessmentTemplate]):
         res = await self.db.execute(stmt)
         return res.scalar_one_or_none()
 
-    async def list_templates(self, category: str | None = None, is_active: bool | None = None) -> list[AssessmentTemplate]:
-        stmt = select(AssessmentTemplate).options(
-            selectinload(AssessmentTemplate.versions)
-        ).order_by(AssessmentTemplate.name.asc())
+    async def list_templates(
+        self, category: str | None = None, is_active: bool | None = None
+    ) -> list[AssessmentTemplate]:
+        stmt = (
+            select(AssessmentTemplate)
+            .options(selectinload(AssessmentTemplate.versions))
+            .order_by(AssessmentTemplate.name.asc())
+        )
         if category:
             stmt = stmt.where(AssessmentTemplate.category == category)
         if is_active is not None:
@@ -154,9 +164,12 @@ class AssessmentTemplateRepository(BaseRepository[AssessmentTemplate]):
         created_by: uuid.UUID | None = None,
     ) -> AssessmentTemplateVersion:
         # Determine highest version number
-        stmt = select(AssessmentTemplateVersion.version_number).where(
-            AssessmentTemplateVersion.template_id == template_id
-        ).order_by(AssessmentTemplateVersion.version_number.desc()).limit(1)
+        stmt = (
+            select(AssessmentTemplateVersion.version_number)
+            .where(AssessmentTemplateVersion.template_id == template_id)
+            .order_by(AssessmentTemplateVersion.version_number.desc())
+            .limit(1)
+        )
         res = await self.db.execute(stmt)
         max_v = res.scalar_one_or_none() or 0
 
@@ -218,19 +231,18 @@ class AssessmentTemplateRepository(BaseRepository[AssessmentTemplate]):
         await self.db.flush()
         return new_version
 
-    async def publish_version(self, version_id: uuid.UUID, published_by: uuid.UUID | None = None) -> AssessmentTemplateVersion:
+    async def publish_version(
+        self, version_id: uuid.UUID, published_by: uuid.UUID | None = None
+    ) -> AssessmentTemplateVersion:
         version = await self.get_version_with_full_structure(version_id)
         if not version:
             raise ValueError("Template version not found")
 
         # Retire previously published versions for this template
-        retire_stmt = (
-            select(AssessmentTemplateVersion)
-            .where(
-                AssessmentTemplateVersion.template_id == version.template_id,
-                AssessmentTemplateVersion.status == "PUBLISHED",
-                AssessmentTemplateVersion.id != version_id,
-            )
+        retire_stmt = select(AssessmentTemplateVersion).where(
+            AssessmentTemplateVersion.template_id == version.template_id,
+            AssessmentTemplateVersion.status == "PUBLISHED",
+            AssessmentTemplateVersion.id != version_id,
         )
         retire_res = await self.db.execute(retire_stmt)
         for prev in retire_res.scalars().all():

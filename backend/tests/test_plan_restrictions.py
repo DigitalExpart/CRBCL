@@ -23,6 +23,7 @@ async def test_case_restrictions_block_plan_access(client: AsyncClient, admin_to
     restricted_user_id = user_res.json()["id"]
 
     from app.auth.security import create_access_token
+
     worker_token = create_access_token(restricted_user_id)
     worker_headers = {"Authorization": f"Bearer {worker_token}"}
     client.cookies.clear()

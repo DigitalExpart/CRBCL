@@ -45,6 +45,7 @@ router = APIRouter(prefix="/referrals", tags=["Intake & Referrals"])
 
 # ── Referral Core Endpoints ───────────────────────────────────
 
+
 @router.get("", response_model=ReferralListResponse)
 async def list_referrals(
     page: int = Query(1, ge=1),
@@ -217,9 +218,7 @@ async def update_referral_metadata(
     """Update referral metadata (status cannot be mutated arbitrarily via PATCH)."""
     service = ReferralService(db)
     try:
-        await service.update_referral(
-            referral_id, payload.model_dump(exclude_unset=True), user_id=user.id
-        )
+        await service.update_referral(referral_id, payload.model_dump(exclude_unset=True), user_id=user.id)
         await db.commit()
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": {"message": str(e)}}) from e
@@ -230,6 +229,7 @@ async def update_referral_metadata(
 
 
 # ── Involved People Endpoints ─────────────────────────────────
+
 
 @router.post("/{referral_id}/people", response_model=ReferralPersonResponse, status_code=status.HTTP_201_CREATED)
 async def add_person_to_referral(
@@ -274,6 +274,7 @@ async def remove_person_from_referral(
 
 # ── Confidential Reporter Endpoints ───────────────────────────
 
+
 @router.get("/{referral_id}/reporter", response_model=ReferralReporterResponse)
 async def get_referral_reporter(
     referral_id: uuid.UUID,
@@ -307,6 +308,7 @@ async def save_referral_reporter(
 
 
 # ── Incidents & Concerns Endpoints ────────────────────────────
+
 
 @router.post("/{referral_id}/incidents", response_model=ReferralIncidentResponse, status_code=status.HTTP_201_CREATED)
 async def add_incident(
@@ -358,6 +360,7 @@ async def delete_concern(
 
 # ── Prior History Discovery ───────────────────────────────────
 
+
 @router.get("/{referral_id}/history")
 async def get_prior_history(
     referral_id: uuid.UUID,
@@ -370,6 +373,7 @@ async def get_prior_history(
 
 
 # ── Cross-Referral Links ──────────────────────────────────────
+
 
 @router.get("/{referral_id}/links", response_model=list[ReferralLinkResponse])
 async def get_referral_links(
@@ -427,6 +431,7 @@ async def create_referral_link(
 
 
 # ── Decision & Workflow Actions ───────────────────────────────
+
 
 @router.put("/{referral_id}/decision", response_model=ReferralDetailResponse)
 async def save_decision_draft(

@@ -34,6 +34,7 @@ router = APIRouter(prefix="/clients", tags=["Clients"])
 
 # ── Phase 2 Schemas ──────────────────────────────────────────
 
+
 class DuplicateCheckRequest(BaseModel):
     first_name: str
     last_name: str
@@ -150,6 +151,7 @@ class CulturalProfileUpdate(BaseModel):
 
 # ── Client Base Endpoints ────────────────────────────────────
 
+
 @router.get("", response_model=PaginatedResponse[ClientResponse])
 async def list_clients(
     request: Request,
@@ -248,7 +250,12 @@ async def get_client(
     if not can_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"error": {"code": "TEAM_ACCESS_DENIED", "message": "Access to this client is restricted to their assigned team"}},
+            detail={
+                "error": {
+                    "code": "TEAM_ACCESS_DENIED",
+                    "message": "Access to this client is restricted to their assigned team",
+                }
+            },
         )
 
     # Log sensitive read access event
@@ -317,14 +324,18 @@ async def get_client(
                     "piercings": person_model.physical_description.piercings,
                     "scars": person_model.physical_description.scars,
                     "glasses": person_model.physical_description.glasses,
-                } if person_model.physical_description else None,
+                }
+                if person_model.physical_description
+                else None,
                 "cultural_profile": {
                     "cultural_connections": person_model.cultural_profile.cultural_connections,
                     "ceremonies": person_model.cultural_profile.ceremonies,
                     "elders_connected": person_model.cultural_profile.elders_connected,
                     "land_based_activities": person_model.cultural_profile.land_based_activities,
                     "language_goals": person_model.cultural_profile.language_goals,
-                } if person_model.cultural_profile else None,
+                }
+                if person_model.cultural_profile
+                else None,
             }
 
     data = ClientResponse.model_validate(client).model_dump()
@@ -435,7 +446,16 @@ async def update_client(
         person_repo = PersonRepository(db)
         person = await person_repo.get(client.person_id)
         if person:
-            person_fields = ["first_name", "last_name", "date_of_birth", "gender", "phone", "email", "indigenous_identity", "band_nation"]
+            person_fields = [
+                "first_name",
+                "last_name",
+                "date_of_birth",
+                "gender",
+                "phone",
+                "email",
+                "indigenous_identity",
+                "band_nation",
+            ]
             for field in person_fields:
                 if field in update_data and update_data[field] is not None:
                     setattr(person, field, update_data[field])
@@ -467,6 +487,7 @@ async def update_client(
 
 
 # ── Sub-Resource Routes (Medical, Medications, Providers, Schools, etc.) ──
+
 
 @router.get("/{client_id}/medical")
 async def get_client_medical(

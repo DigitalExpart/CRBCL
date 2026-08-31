@@ -19,9 +19,9 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     # Enable extensions
-    op.execute("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
-    op.execute("CREATE EXTENSION IF NOT EXISTS \"postgis\"")
-    op.execute("CREATE EXTENSION IF NOT EXISTS \"pg_trgm\"")
+    op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
+    op.execute('CREATE EXTENSION IF NOT EXISTS "postgis"')
+    op.execute('CREATE EXTENSION IF NOT EXISTS "pg_trgm"')
 
     # ── Users ────────────────────────────────────────────────
     op.create_table(
@@ -104,8 +104,15 @@ def upgrade() -> None:
     op.create_table(
         "role_permissions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("role_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("roles.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("permission_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("permissions.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "role_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("roles.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "permission_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("permissions.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
     op.create_index("ix_role_permissions_role_id", "role_permissions", ["role_id"])
@@ -115,8 +122,12 @@ def upgrade() -> None:
     op.create_table(
         "user_roles",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("role_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("roles.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "role_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("roles.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("assigned_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("assigned_by", postgresql.UUID(as_uuid=True), nullable=True),
     )
@@ -142,8 +153,12 @@ def upgrade() -> None:
     op.create_table(
         "team_memberships",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("team_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("teams.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "team_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("teams.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("is_primary", sa.Boolean, nullable=False, server_default=sa.text("false")),
         sa.Column("is_active", sa.Boolean, nullable=False, server_default=sa.text("true")),
         sa.Column("joined_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
@@ -156,8 +171,12 @@ def upgrade() -> None:
     op.create_table(
         "user_team_access",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("team_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("teams.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "team_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("teams.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("granted_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("granted_by", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("is_active", sa.Boolean, nullable=False, server_default=sa.text("true")),
@@ -278,7 +297,12 @@ def upgrade() -> None:
     op.create_table(
         "lookup_values",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("list_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("lookup_lists.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "list_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("lookup_lists.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("key", sa.String(100), nullable=False),
         sa.Column("label", sa.String(200), nullable=False),
         sa.Column("description", sa.Text, nullable=False, server_default=""),
@@ -304,7 +328,12 @@ def upgrade() -> None:
     op.create_table(
         "terminology_translations",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("key_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("terminology_keys.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "key_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("terminology_keys.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("language", sa.String(10), nullable=False, server_default="en"),
         sa.Column("value", sa.Text, nullable=False),
         sa.Column("is_approved", sa.Boolean, nullable=False, server_default=sa.text("false")),
@@ -342,7 +371,12 @@ def upgrade() -> None:
     op.create_table(
         "document_versions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("document_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("documents.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "document_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("documents.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("version_number", sa.Integer, nullable=False),
         sa.Column("storage_path", sa.String(1000), nullable=False),
         sa.Column("size_bytes", sa.Integer, nullable=False),
@@ -354,7 +388,12 @@ def upgrade() -> None:
     op.create_table(
         "document_links",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("document_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("documents.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "document_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("documents.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("entity_type", sa.String(100), nullable=False),
         sa.Column("entity_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
@@ -365,7 +404,12 @@ def upgrade() -> None:
     op.create_table(
         "document_access_events",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("document_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("documents.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "document_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("documents.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("action", sa.String(50), nullable=False),
         sa.Column("timestamp", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
@@ -475,7 +519,9 @@ def upgrade() -> None:
     op.create_table(
         "case_notes",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("uuid_generate_v4()")),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("subject", sa.String(500), nullable=False, server_default=""),
         sa.Column("content", sa.Text, nullable=False),
         sa.Column("note_type", sa.String(50), nullable=False, server_default="Progress Note"),
@@ -511,14 +557,34 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     tables = [
-        "idempotency_keys", "case_notes", "cases", "families", "clients",
-        "document_access_events", "document_links", "document_versions", "documents",
-        "terminology_translations", "terminology_keys",
-        "lookup_values", "lookup_lists", "system_config",
-        "outbox_events", "timeline_events", "access_events", "audit_events",
-        "user_team_access", "team_memberships", "teams",
-        "user_roles", "role_permissions", "roles", "permissions",
-        "user_preferences", "sessions", "users",
+        "idempotency_keys",
+        "case_notes",
+        "cases",
+        "families",
+        "clients",
+        "document_access_events",
+        "document_links",
+        "document_versions",
+        "documents",
+        "terminology_translations",
+        "terminology_keys",
+        "lookup_values",
+        "lookup_lists",
+        "system_config",
+        "outbox_events",
+        "timeline_events",
+        "access_events",
+        "audit_events",
+        "user_team_access",
+        "team_memberships",
+        "teams",
+        "user_roles",
+        "role_permissions",
+        "roles",
+        "permissions",
+        "user_preferences",
+        "sessions",
+        "users",
     ]
     for table in tables:
         op.drop_table(table)

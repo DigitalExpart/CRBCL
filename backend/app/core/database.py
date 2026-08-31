@@ -69,6 +69,7 @@ class SoftDeleteMixin:
 
 # ── Engine & Session factory ─────────────────────────────────
 
+
 def _create_engine():
     settings = get_settings()
     engine_kwargs = {
@@ -77,11 +78,13 @@ def _create_engine():
     if "sqlite" in settings.database_url:
         engine_kwargs["connect_args"] = {"check_same_thread": False}
     else:
-        engine_kwargs.update({
-            "pool_pre_ping": True,
-            "pool_size": 10,
-            "max_overflow": 20,
-        })
+        engine_kwargs.update(
+            {
+                "pool_pre_ping": True,
+                "pool_size": 10,
+                "max_overflow": 20,
+            }
+        )
     return create_async_engine(settings.database_url, **engine_kwargs)
 
 

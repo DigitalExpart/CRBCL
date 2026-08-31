@@ -52,7 +52,9 @@ async def list_assessment_templates(
                 is_active=t.is_active,
                 created_at=t.created_at,
                 updated_at=t.updated_at,
-                published_version=AssessmentTemplateVersionResponse.model_validate(pub_version) if pub_version else None,
+                published_version=AssessmentTemplateVersionResponse.model_validate(pub_version)
+                if pub_version
+                else None,
             )
         )
     return results
@@ -126,7 +128,11 @@ async def create_assessment_template(
     return AssessmentTemplateVersionDetailResponse.model_validate(full_version)
 
 
-@router.post("/{template_id}/versions", response_model=AssessmentTemplateVersionDetailResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{template_id}/versions",
+    response_model=AssessmentTemplateVersionDetailResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_template_version(
     template_id: uuid.UUID,
     payload: AssessmentTemplateVersionCreate,
@@ -160,7 +166,9 @@ async def publish_template_version(
     return AssessmentTemplateVersionDetailResponse.model_validate(full_version)
 
 
-@router.post("/versions/{version_id}/sections", response_model=AssessmentSectionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/versions/{version_id}/sections", response_model=AssessmentSectionResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_section_to_version(
     version_id: uuid.UUID,
     payload: AssessmentSectionCreate,
@@ -199,7 +207,9 @@ async def add_section_to_version(
     return AssessmentSectionResponse.model_validate(sec)
 
 
-@router.post("/sections/{section_id}/questions", response_model=AssessmentQuestionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/sections/{section_id}/questions", response_model=AssessmentQuestionResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_question_to_section(
     section_id: uuid.UUID,
     payload: AssessmentQuestionCreate,
