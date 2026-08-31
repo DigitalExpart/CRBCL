@@ -28,12 +28,15 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { placementsApi } from '@/api/placements';
+import { placementHomesApi } from '@/api/placementHomes';
+import { Link } from 'react-router-dom';
 
 export default function PlacementsTab({ caseId, caseData, people = [] }) {
   const [placements, setPlacements] = useState([]);
   const [inHomePlacements, setInHomePlacements] = useState([]);
   const [removals, setRemovals] = useState([]);
   const [discharges, setDischarges] = useState([]);
+  const [availableHomes, setAvailableHomes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -49,6 +52,7 @@ export default function PlacementsTab({ caseId, caseData, people = [] }) {
   const [placementForm, setPlacementForm] = useState({
     child_id: '',
     removal_episode_id: '',
+    placement_home_id: '',
     placement_type: 'KINSHIP',
     provider_name: '',
     provider_contact: '',
@@ -59,6 +63,7 @@ export default function PlacementsTab({ caseId, caseData, people = [] }) {
     cultural_plan_in_place: true,
     placement_notes: '',
   });
+
 
   const [inHomeForm, setInHomeForm] = useState({
     child_id: '',
@@ -104,16 +109,18 @@ export default function PlacementsTab({ caseId, caseData, people = [] }) {
   const loadAllPlacements = async () => {
     try {
       setLoading(true);
-      const [placementsRes, inHomeRes, removalsRes, dischargesRes] = await Promise.all([
+      const [placementsRes, inHomeRes, removalsRes, dischargesRes, homesRes] = await Promise.all([
         placementsApi.listPlacements(caseId).catch(() => []),
         placementsApi.listInHomePlacements(caseId).catch(() => []),
         placementsApi.listRemovals(caseId).catch(() => []),
         placementsApi.listDischarges(caseId).catch(() => []),
+        placementHomesApi.list({ page_size: 100 }).catch(() => ({ data: { items: [] } })),
       ]);
       setPlacements(placementsRes || []);
       setInHomePlacements(inHomeRes || []);
       setRemovals(removalsRes || []);
       setDischarges(dischargesRes || []);
+      setAvailableHomes(homesRes?.data?.items || []);
     } catch (err) {
       console.error('Failed to load placement data:', err);
     } finally {
@@ -133,6 +140,7 @@ export default function PlacementsTab({ caseId, caseData, people = [] }) {
     try {
       const payload = {
         ...placementForm,
+        placement_home_id: placementForm.placement_home_id || null,
         removal_episode_id: placementForm.removal_episode_id || null,
         per_diem_rate: placementForm.per_diem_rate ? parseFloat(placementForm.per_diem_rate) : null,
       };
@@ -141,9 +149,10 @@ export default function PlacementsTab({ caseId, caseData, people = [] }) {
       loadAllPlacements();
     } catch (err) {
       console.error('Failed to create placement:', err);
-      alert(err.message || 'Failed to create placement');
+      alert(err.response?.data?.detail || err.message || 'Failed to create placement');
     }
   };
+
 
   const handleCreateInHome = async (e) => {
     e.preventDefault();
@@ -350,8 +359,16 @@ export default function PlacementsTab({ caseId, caseData, people = [] }) {
                       <p className="text-xs text-muted-foreground mt-1">
                         Primary Caregiver: <span className="font-medium text-foreground">{p.primary_caregiver_name || 'Not specified'}</span>
                         {p.provider_contact && <span> • Contact: {p.provider_contact}</span>}
+                        {p.placement_home_id && (
+                          <span className="ml-2">
+                            • <Link to={`/placement-homes/${p.placement_home_id}`} className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
+                              Registered Home Profile →
+                            </Link>
+                          </span>
+                        )}
                       </p>
                     </div>
+
 
                     {p.status === 'ACTIVE' && (
                       <div className="flex items-center gap-2">
@@ -565,6 +582,42 @@ export default function PlacementsTab({ caseId, caseData, people = [] }) {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreatePlacement} className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-semibold">Registered Placement Home / Facility (Optional)</label>
+              <Select
+                value={placementForm.placement_home_id || "none"}
+                onValueChange={(val) => {
+                  if (val === "none") {
+                    setPlacementForm({ ...placementForm, placement_home_id: "" });
+                  } else {
+                    const selected = availableHomes.find((h) => h.id === val);
+                    if (selected) {
+                      setPlacementForm({
+                        ...placementForm,
+                        placement_home_id: selected.id,
+                        provider_name: selected.name,
+                        provider_address: `${selected.address_line_1 || ""} ${selected.city || ""}`.trim(),
+                        primary_caregiver_name: selected.primary_caregiver_name || placementForm.primary_caregiver_name,
+                        provider_contact: selected.phone || selected.email || placementForm.provider_contact,
+                      });
+                    }
+                  }
+                }}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Choose approved home or manual..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- Manual Provider Entry --</SelectItem>
+                  {availableHomes.map((h) => (
+                    <SelectItem key={h.id} value={h.id}>
+                      {h.name} ({h.available_beds} beds available • {h.home_type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold">Child *</label>
@@ -627,6 +680,7 @@ export default function PlacementsTab({ caseId, caseData, people = [] }) {
                 />
               </div>
             </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>

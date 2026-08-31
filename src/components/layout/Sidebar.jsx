@@ -4,9 +4,10 @@ import {
   LayoutDashboard, Users, Heart, FolderOpen, BookOpen, 
   Calendar, DollarSign, Gift, FileText, AlertTriangle,
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
-  Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock
+  Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home
 } from "lucide-react";
 import { api } from "@/api";
+
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/" },
@@ -14,8 +15,10 @@ const navItems = [
   { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
   { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
   { label: "Cases", icon: FolderOpen, path: "/cases" },
+  { label: "Placement Homes", icon: Home, path: "/placement-homes" },
   { label: "Clients", icon: Users, path: "/clients" },
   { label: "Families", icon: Heart, path: "/families" },
+
   { label: "Programs", icon: BookOpen, path: "/programs" },
   { label: "Appointments", icon: Calendar, path: "/appointments" },
   { label: "HR & Staff", icon: UserCog, path: "/employees" },

@@ -110,8 +110,16 @@ from app.models.placement import (  # noqa: F401
     RespiteEpisode,
     VisitationPlan,
 )
+from app.models.placement_home import (  # noqa: F401
+    PlacementHome,
+    PlacementHomeContactLog,
+    PlacementHomeLicense,
+    PlacementHomeMember,
+    PlacementHomeVisit,
+)
 from app.models.team import Team, TeamMembership, UserTeamAccess  # noqa: F401
 from app.models.terminology import TerminologyKey, TerminologyTranslation  # noqa: F401
 from app.models.timeline import TimelineEvent  # noqa: F401
 from app.models.user import EmailVerificationCode, Session, User, UserPreference  # noqa: F401
+
 

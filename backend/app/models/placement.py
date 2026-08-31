@@ -150,6 +150,9 @@ class PlacementEpisode(Base, AuditMixin, SoftDeleteMixin):
     removal_episode_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("removal_episodes.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    placement_home_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("placement_homes.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     placement_type: Mapped[str] = mapped_column(String(50), nullable=False)  # KINSHIP, CUSTOMARY_CARE, FOSTER_HOME, GROUP_HOME, INDEPENDENT_LIVING, OTHER
     provider_name: Mapped[str] = mapped_column(String(255), nullable=False)
     provider_contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -165,8 +168,10 @@ class PlacementEpisode(Base, AuditMixin, SoftDeleteMixin):
     case = relationship("Case", backref="placement_episodes")
     child = relationship("Person", foreign_keys=[child_id])
     removal_episode = relationship("RemovalEpisode", back_populates="placements")
+    placement_home = relationship("PlacementHome", back_populates="placements")
     respite_episodes = relationship("RespiteEpisode", back_populates="placement_episode", cascade="all, delete-orphan")
     discharge_episode = relationship("DischargeEpisode", back_populates="placement_episode", uselist=False, cascade="all, delete-orphan")
+
 
 
 class RespiteEpisode(Base, AuditMixin, SoftDeleteMixin):

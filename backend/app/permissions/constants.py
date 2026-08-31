@@ -174,3 +174,28 @@ class Permissions(StrEnum):
     COURT_READ = "court.read"
     COURT_WRITE = "court.write"
 
+    # Placement Homes & Facilities (Phase 8)
+    PLACEMENT_HOME_READ = "placement_home.read"
+    PLACEMENT_HOME_CREATE = "placement_home.create"
+    PLACEMENT_HOME_UPDATE = "placement_home.update"
+    PLACEMENT_HOME_ARCHIVE = "placement_home.archive"
+    PLACEMENT_HOME_MEMBER_READ = "placement_home.member.read"
+    PLACEMENT_HOME_MEMBER_MANAGE = "placement_home.member.manage"
+    PLACEMENT_HOME_LICENSE_READ = "placement_home.license.read"
+    PLACEMENT_HOME_LICENSE_MANAGE = "placement_home.license.manage"
+    PLACEMENT_HOME_BACKGROUND_CHECK_READ = "placement_home.background_check.read"
+    PLACEMENT_HOME_BACKGROUND_CHECK_MANAGE = "placement_home.background_check.manage"
+    PLACEMENT_HOME_ASSESSMENT_READ = "placement_home.assessment.read"
+    PLACEMENT_HOME_ASSESSMENT_CREATE = "placement_home.assessment.create"
+    PLACEMENT_HOME_VISIT_READ = "placement_home.visit.read"
+    PLACEMENT_HOME_VISIT_CREATE = "placement_home.visit.create"
+    PLACEMENT_HOME_VISIT_UPDATE = "placement_home.visit.update"
+    PLACEMENT_HOME_CONTACT_READ = "placement_home.contact.read"
+    PLACEMENT_HOME_CONTACT_CREATE = "placement_home.contact.create"
+    PLACEMENT_HOME_DOCUMENT_READ = "placement_home.document.read"
+    PLACEMENT_HOME_DOCUMENT_MANAGE = "placement_home.document.manage"
+    PLACEMENT_HOME_CAPACITY_READ = "placement_home.capacity.read"
+    PLACEMENT_HOME_CAPACITY_MANAGE = "placement_home.capacity.manage"
+    PLACEMENT_HOME_MAP_READ = "placement_home.map.read"
+
+

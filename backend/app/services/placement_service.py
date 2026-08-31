@@ -89,17 +89,59 @@ class PlacementService:
                     detail="Referenced removal episode is invalid or does not match the case and child.",
                 )
 
+        provider_name = data.provider_name
+        provider_contact = data.provider_contact
+        provider_address = data.provider_address
+        primary_caregiver_name = data.primary_caregiver_name
+
+        # Concurrency & Capacity Protection for Placement Homes (ADR-018)
+        if data.placement_home_id:
+            from app.repositories.placement_home_repo import PlacementHomeRepository
+            home_repo = PlacementHomeRepository(self.db)
+            # Row lock placement_home to prevent overbooking races
+            home = await home_repo.get_for_update(data.placement_home_id)
+            if not home:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Placement Home with ID '{data.placement_home_id}' not found.",
+                )
+            if home.is_archived or home.status == "CLOSED":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Placement Home '{home.name}' is closed / archived and cannot accept new placements.",
+                )
+
+            current_occupancy = await home_repo.get_active_occupancy(home.id)
+            if current_occupancy >= home.total_capacity:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Placement Home '{home.name}' is at full capacity (approved capacity: {home.total_capacity}, active occupants: {current_occupancy}).",
+                )
+
+            if not provider_name:
+                provider_name = home.name
+            if not provider_address and home.address_line_1:
+                provider_address = f"{home.address_line_1}, {home.city}"
+            if not provider_contact and home.phone:
+                provider_contact = home.phone
+            if not primary_caregiver_name and home.primary_caregiver_name:
+                primary_caregiver_name = home.primary_caregiver_name
+
+        if not provider_name:
+            provider_name = "Placement Destination"
+
         placement = PlacementEpisode(
             case_id=case_id,
             child_id=data.child_id,
             removal_episode_id=data.removal_episode_id,
+            placement_home_id=data.placement_home_id,
             placement_type=data.placement_type.upper(),
-            provider_name=data.provider_name,
-            provider_contact=data.provider_contact,
-            provider_address=data.provider_address,
+            provider_name=provider_name,
+            provider_contact=provider_contact,
+            provider_address=provider_address,
             start_date=data.start_date,
             status="ACTIVE",
-            primary_caregiver_name=data.primary_caregiver_name,
+            primary_caregiver_name=primary_caregiver_name,
             per_diem_rate=data.per_diem_rate,
             cultural_plan_in_place=data.cultural_plan_in_place,
             placement_notes=data.placement_notes,
@@ -107,6 +149,7 @@ class PlacementService:
             updated_by=user.id,
         )
         created = await self.repo.create_placement_episode(placement)
+
 
         # Audit & Timeline
         await self.audit.log(

@@ -18,7 +18,9 @@ if TYPE_CHECKING:
     from app.models.family import Family
     from app.models.household import Household
     from app.models.person import Person
+    from app.models.placement_home import PlacementHome
     from app.models.user import User
+
 
 
 class AssessmentTemplate(Base, TimestampMixin):
@@ -191,6 +193,9 @@ class Assessment(Base, AuditMixin, SoftDeleteMixin):
     household_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("households.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    placement_home_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("placement_homes.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     template_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("assessment_templates.id", ondelete="RESTRICT"), nullable=False, index=True
     )
@@ -228,10 +233,12 @@ class Assessment(Base, AuditMixin, SoftDeleteMixin):
     client: Mapped[Client | None] = relationship("Client", foreign_keys=[client_id], lazy="joined")
     family: Mapped[Family | None] = relationship("Family", foreign_keys=[family_id], lazy="joined")
     household: Mapped[Household | None] = relationship("Household", foreign_keys=[household_id], lazy="joined")
+    placement_home: Mapped[PlacementHome | None] = relationship("PlacementHome", foreign_keys=[placement_home_id], lazy="joined")
     template: Mapped[AssessmentTemplate] = relationship("AssessmentTemplate", foreign_keys=[template_id], lazy="joined")
     template_version: Mapped[AssessmentTemplateVersion] = relationship(
         "AssessmentTemplateVersion", foreign_keys=[template_version_id], lazy="joined"
     )
+
     conductor: Mapped[User] = relationship("User", foreign_keys=[conducted_by], lazy="joined")
     completer: Mapped[User | None] = relationship("User", foreign_keys=[completed_by], lazy="noload")
     locker: Mapped[User | None] = relationship("User", foreign_keys=[locked_by], lazy="noload")

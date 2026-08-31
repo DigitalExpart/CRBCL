@@ -15,6 +15,7 @@ from app.api.v1.health import router as health_router
 from app.api.v1.households import router as households_router
 from app.api.v1.lookups import router as lookups_router
 from app.api.v1.permanency_plans import router as permanency_plans_router
+from app.api.v1.placement_homes import router as placement_homes_router
 from app.api.v1.placements import router as placements_router
 from app.api.v1.plans import router as plans_router
 from app.api.v1.providers import router as providers_router
@@ -45,8 +46,10 @@ api_v1_router.include_router(active_efforts_router)
 api_v1_router.include_router(background_checks_router)
 api_v1_router.include_router(court_events_router)
 api_v1_router.include_router(permanency_plans_router)
+api_v1_router.include_router(placement_homes_router)
 api_v1_router.include_router(placements_router)
 api_v1_router.include_router(removals_router)
 api_v1_router.include_router(users_router)
 api_v1_router.include_router(teams_router)
 api_v1_router.include_router(lookups_router)
+

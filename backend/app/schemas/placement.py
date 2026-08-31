@@ -245,8 +245,9 @@ class RemovalEpisodeListResponse(BaseModel):
 class PlacementEpisodeCreate(BaseModel):
     child_id: uuid.UUID
     removal_episode_id: uuid.UUID | None = None
+    placement_home_id: uuid.UUID | None = None
     placement_type: str = Field(..., description="KINSHIP, CUSTOMARY_CARE, FOSTER_HOME, GROUP_HOME, INDEPENDENT_LIVING, OTHER")
-    provider_name: str = Field(..., min_length=1, max_length=255)
+    provider_name: str | None = None
     provider_contact: str | None = None
     provider_address: str | None = None
     start_date: date
@@ -257,6 +258,7 @@ class PlacementEpisodeCreate(BaseModel):
 
 
 class PlacementEpisodeUpdate(BaseModel):
+    placement_home_id: uuid.UUID | None = None
     placement_type: str | None = None
     provider_name: str | None = None
     provider_contact: str | None = None
@@ -275,6 +277,7 @@ class PlacementEpisodeResponse(BaseModel):
     case_id: uuid.UUID
     child_id: uuid.UUID
     removal_episode_id: uuid.UUID | None = None
+    placement_home_id: uuid.UUID | None = None
     placement_type: str
     provider_name: str
     provider_contact: str | None = None
@@ -288,6 +291,7 @@ class PlacementEpisodeResponse(BaseModel):
     placement_notes: str | None = None
     version: int
     created_at: datetime
+
     updated_at: datetime
     created_by: uuid.UUID | None = None
     updated_by: uuid.UUID | None = None

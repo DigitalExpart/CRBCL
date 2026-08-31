@@ -30,10 +30,15 @@ import AssessmentDetail from '@/pages/AssessmentDetail';
 import PlanDetail from '@/pages/PlanDetail';
 import PlanEditor from '@/pages/PlanEditor';
 
+// Phase 8 Placement Homes & Facilities
+import PlacementHomesList from '@/pages/PlacementHomesList';
+import PlacementHomeDetail from '@/pages/PlacementHomeDetail';
+
 // Pages
 import Dashboard from '@/pages/Dashboard';
 import Cases from '@/pages/Cases';
 import CaseDetail from '@/pages/CaseDetail';
+
 import Clients from '@/pages/Clients';
 import ClientDetail from '@/pages/ClientDetail';
 import Families from '@/pages/Families';
@@ -90,7 +95,10 @@ const AuthenticatedApp = () => {
           <Route path="/intake/:id/decision" element={<IntakeDecision />} />
           <Route path="/cases" element={<Cases />} />
           <Route path="/cases/:id" element={<CaseDetail />} />
+          <Route path="/placement-homes" element={<PlacementHomesList />} />
+          <Route path="/placement-homes/:id" element={<PlacementHomeDetail />} />
           <Route path="/assessments/:id" element={<AssessmentDetail />} />
+
           <Route path="/plans/:id" element={<PlanDetail />} />
           <Route path="/plans/:id/edit" element={<PlanEditor />} />
           <Route path="/clients" element={<Clients />} />
