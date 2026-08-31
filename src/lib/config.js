@@ -47,13 +47,14 @@ const getAppParams = () => {
   };
 };
 
-export const appParams = {
-  ...getAppParams()
-};
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+const enableDemoData = import.meta.env.VITE_ENABLE_DEMO_DATA
+  ? import.meta.env.VITE_ENABLE_DEMO_DATA === 'true'
+  : !apiBaseUrl;
 
 export const config = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '',
+  apiBaseUrl,
   appId: import.meta.env.VITE_APP_ID || 'crbcl-portal',
-  enableDemoData: import.meta.env.VITE_ENABLE_DEMO_DATA === 'true',
+  enableDemoData,
   ...appParams,
 };
