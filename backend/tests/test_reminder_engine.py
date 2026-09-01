@@ -151,6 +151,18 @@ async def test_scheduled_reminders_comprehensive_and_idempotent(
         attendance_status="PENDING",
     )
     db_session.add(attendee)
+    # 7. Background Check expiring in 20 days (within 30d window)
+    bg_check = BackgroundCheck(
+        subject_type="PERSON",
+        subject_id=client_person.id,
+        check_type="CRIMINAL_RECORD",
+        status="PASSED",
+        subject_name=f"{client_person.first_name} {client_person.last_name}",
+        request_date=date.today() - timedelta(days=365),
+        completion_date=date.today() - timedelta(days=345),
+        expiry_date=(now + timedelta(days=20)).date(),
+    )
+    db_session.add(bg_check)
 
     await db_session.flush()
     await db_session.commit()
@@ -164,6 +176,7 @@ async def test_scheduled_reminders_comprehensive_and_idempotent(
     assert run1["appointment_reminders"] >= 1
     assert run1["goal_activity_reminders"] >= 1
     assert run1["license_expiry_reminders"] >= 1
+    assert run1["background_check_expiry_reminders"] >= 1
     assert run1["staffing_reminders"] >= 1
 
     # Count deliveries after Run 1
