@@ -268,3 +268,10 @@ class Permissions(StrEnum):
     FLEET_GEOFENCE_READ = "fleet.geofence.read"
     FLEET_GEOFENCE_MANAGE = "fleet.geofence.manage"
 
+    # Enterprise Integrations, M365, OCR, Ask Red Bear AI & Communications (Phase 13)
+    INTEGRATION_READ = "integration.read"
+    INTEGRATION_MANAGE = "integration.manage"
+    OCR_PROCESS = "ocr.process"
+    OCR_CONFIRM = "ocr.confirm"
+    AI_QUERY = "ai.query"
+    COMMUNICATIONS_MANAGE = "communications.manage"

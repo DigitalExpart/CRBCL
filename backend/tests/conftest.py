@@ -286,9 +286,14 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.FLEET_LOCATION_READ,
         Permissions.FLEET_LOCATION_CAPTURE,
         Permissions.FLEET_GEOFENCE_READ,
+        # Phase 13 Integrations
+        Permissions.INTEGRATION_READ,
+        Permissions.INTEGRATION_MANAGE,
+        Permissions.OCR_PROCESS,
+        Permissions.OCR_CONFIRM,
+        Permissions.AI_QUERY,
+        Permissions.COMMUNICATIONS_MANAGE,
     ]:
-
-
         rp = RolePermission(role_id=caseworker_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
 

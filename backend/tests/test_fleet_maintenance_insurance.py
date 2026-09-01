@@ -15,7 +15,6 @@ async def test_maintenance_scheduling_and_completion(
     """Test scheduling maintenance, updating vehicle status, completing service, and restoring vehicle availability."""
     headers = caseworker_user["headers"]
 
-
     # 1. Create vehicle
     v_data = {
         "vehicle_internal_id": "V-MAINT-101",
@@ -58,14 +57,12 @@ async def test_maintenance_scheduling_and_completion(
     assert Decimal(str(completed_rec["cost"])) == Decimal("145.50")
 
 
-
 @pytest.mark.asyncio
 async def test_insurance_policy_tracking_and_renewals(
     client: AsyncClient, db_session: AsyncSession, caseworker_user: dict
 ):
     """Test insurance policy creation, expiry updates, and renewal logging."""
     headers = caseworker_user["headers"]
-
 
     # 1. Create vehicle
     v_data = {

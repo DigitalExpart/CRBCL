@@ -35,7 +35,9 @@ class Vehicle(Base):
     licence_plate = Column(String(20), unique=True, nullable=False)
     vin = Column(String(50), nullable=True)
     vehicle_type = Column(String(20), nullable=False, default="CAR")  # CAR, VAN, TRUCK, SUV, OTHER
-    status = Column(String(20), nullable=False, default="AVAILABLE")  # AVAILABLE, IN_USE, MAINTENANCE, OUT_OF_SERVICE, RETIRED
+    status = Column(
+        String(20), nullable=False, default="AVAILABLE"
+    )  # AVAILABLE, IN_USE, MAINTENANCE, OUT_OF_SERVICE, RETIRED
     odometer_km = Column(Numeric(10, 2), nullable=False, default=Decimal("0.00"))
     current_driver_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     insurance_expiry = Column(Date, nullable=True)
@@ -120,7 +122,9 @@ class VehicleMaintenance(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     vehicle_id = Column(UUID(as_uuid=True), ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False)
-    maintenance_type = Column(String(50), nullable=False)  # OIL_CHANGE, TIRE_SERVICE, BRAKES, INSPECTION, REPAIR, RECALL, OTHER
+    maintenance_type = Column(
+        String(50), nullable=False
+    )  # OIL_CHANGE, TIRE_SERVICE, BRAKES, INSPECTION, REPAIR, RECALL, OTHER
     scheduled_date = Column(Date, nullable=True)
     scheduled_odometer = Column(Numeric(10, 2), nullable=True)
     completed_date = Column(Date, nullable=True)
@@ -128,7 +132,9 @@ class VehicleMaintenance(Base):
     provider_name = Column(String(255), nullable=True)
     cost = Column(Numeric(10, 2), nullable=True)
     description = Column(Text, nullable=False)
-    status = Column(String(20), nullable=False, default="SCHEDULED")  # SCHEDULED, DUE, IN_PROGRESS, COMPLETED, CANCELLED
+    status = Column(
+        String(20), nullable=False, default="SCHEDULED"
+    )  # SCHEDULED, DUE, IN_PROGRESS, COMPLETED, CANCELLED
     notes = Column(Text, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

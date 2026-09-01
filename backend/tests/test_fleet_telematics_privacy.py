@@ -16,7 +16,6 @@ async def test_fake_telematics_provider_feed_and_deduplication(
     """Test FakeProvider telematics feed normalization, location logging, and deduplication."""
     headers = caseworker_user["headers"]
 
-
     # 1. Create vehicle
     v_data = {
         "vehicle_internal_id": "V-GPS-303",
@@ -59,7 +58,6 @@ async def test_fleet_dashboard_metrics_aggregation(
 ):
     """Test Fleet Dashboard aggregate KPI counts endpoint."""
     headers = caseworker_user["headers"]
-
 
     dash_res = await client.get("/api/v1/fleet/dashboard", headers=headers)
     assert dash_res.status_code == 200, dash_res.text

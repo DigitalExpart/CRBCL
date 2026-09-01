@@ -41,6 +41,7 @@ from app.models.case_note import (  # noqa: F401
 )
 from app.models.client import Client  # noqa: F401
 from app.models.config import LookupList, LookupValue, SystemConfig  # noqa: F401
+from app.models.device import MobileDevice  # noqa: F401
 from app.models.document import Document, DocumentAccessEvent, DocumentLink, DocumentVersion  # noqa: F401
 from app.models.family import Family  # noqa: F401
 from app.models.finance import (  # noqa: F401
@@ -65,12 +66,20 @@ from app.models.fleet import (  # noqa: F401
     VehicleTrip,
 )
 from app.models.idempotency import IdempotencyKey  # noqa: F401
+from app.models.integrations import (  # noqa: F401
+    AiRequestAudit,
+    CommunicationsPost,
+    IntegrationExternalLink,
+    IntegrationRegistry,
+    OcrJob,
+)
 from app.models.medical import (  # noqa: F401
     ClientAllergy,
     ClientMedicalCondition,
     ClientMedicalProfile,
     ClientMedication,
 )
+from app.models.migration import MigrationLedger  # noqa: F401
 from app.models.notification import (  # noqa: F401
     Notification,
     NotificationDelivery,
@@ -168,4 +177,3 @@ from app.models.team import Team, TeamMembership, UserTeamAccess  # noqa: F401
 from app.models.terminology import TerminologyKey, TerminologyTranslation  # noqa: F401
 from app.models.timeline import TimelineEvent  # noqa: F401
 from app.models.user import EmailVerificationCode, Session, User, UserPreference  # noqa: F401
-

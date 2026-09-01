@@ -149,7 +149,6 @@ class ReportingCatalogue:
     }
 
 
-
 class ReportingService:
     """Service handling canned reports, ad-hoc builder, security filters, and export generation."""
 
@@ -404,7 +403,6 @@ class ReportingService:
 
         else:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported dataset")
-
 
         # Execute safe query
         count_stmt = select(func.count()).select_from(stmt.subquery())

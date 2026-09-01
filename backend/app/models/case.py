@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -36,6 +36,14 @@ class Case(Base, AuditMixin, SoftDeleteMixin):
     reopened_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     service_plan: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Phase 14 Legal Hold / Retention Governance
+    is_legal_hold: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    legal_hold_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    legal_hold_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    legal_hold_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Legacy & primary convenience references
     client_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)

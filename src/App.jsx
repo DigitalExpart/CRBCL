@@ -68,6 +68,11 @@ const VehiclesList = lazy(() => import('@/pages/VehiclesList'));
 const VehicleDetail = lazy(() => import('@/pages/VehicleDetail'));
 const FleetMaintenance = lazy(() => import('@/pages/FleetMaintenance'));
 
+// Phase 13 Enterprise Integrations, OCR & Communications
+const AdminIntegrations = lazy(() => import('@/pages/AdminIntegrations'));
+const OCRReview = lazy(() => import('@/pages/OCRReview'));
+const CommunicationsHub = lazy(() => import('@/pages/CommunicationsHub'));
+
 
 
 // Pages
@@ -173,6 +178,11 @@ const AuthenticatedApp = () => {
             <Route path="/fleet/vehicles" element={<VehiclesList />} />
             <Route path="/fleet/vehicles/:id" element={<VehicleDetail />} />
             <Route path="/fleet/maintenance" element={<FleetMaintenance />} />
+
+            {/* Phase 13 Enterprise Integrations, OCR & Communications */}
+            <Route path="/admin/integrations" element={<AdminIntegrations />} />
+            <Route path="/ocr/review" element={<OCRReview />} />
+            <Route path="/communications" element={<CommunicationsHub />} />
 
 
 

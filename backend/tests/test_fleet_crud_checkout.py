@@ -11,12 +11,9 @@ from app.models.fleet import Vehicle, VehicleTrip
 
 
 @pytest.mark.asyncio
-async def test_vehicle_crud_and_status_lifecycle(
-    client: AsyncClient, db_session: AsyncSession, caseworker_user: dict
-):
+async def test_vehicle_crud_and_status_lifecycle(client: AsyncClient, db_session: AsyncSession, caseworker_user: dict):
     """Test vehicle creation, filtering, update, and soft-delete archiving."""
     headers = caseworker_user["headers"]
-
 
     # 1. Create vehicle
     v_data = {
@@ -49,9 +46,7 @@ async def test_vehicle_crud_and_status_lifecycle(
     assert detail_res.json()["vehicle"]["id"] == v_id
 
     # 4. Update vehicle
-    up_res = await client.put(
-        f"/api/v1/fleet/vehicles/{v_id}", json={"notes": "Updated note"}, headers=headers
-    )
+    up_res = await client.put(f"/api/v1/fleet/vehicles/{v_id}", json={"notes": "Updated note"}, headers=headers)
     assert up_res.status_code == 200
     assert up_res.json()["notes"] == "Updated note"
 
@@ -68,7 +63,6 @@ async def test_checkout_checkin_odometer_monotonicity(
     """Test vehicle checkout, checkin, server distance calculation, and odometer monotonicity enforcement."""
     headers = caseworker_user["headers"]
     user_id = caseworker_user["user"].id
-
 
     # 1. Create available vehicle
     v_data = {
@@ -94,7 +88,6 @@ async def test_checkout_checkin_odometer_monotonicity(
     bad_res = await client.post(f"/api/v1/fleet/vehicles/{v_id}/checkout", json=bad_checkout, headers=headers)
     assert bad_res.status_code == 400
     assert "cannot be less than" in str(bad_res.json())
-
 
     # 3. Valid checkout
     valid_checkout = {
@@ -122,7 +115,6 @@ async def test_checkout_checkin_odometer_monotonicity(
     assert bad_in_res.status_code == 400
     assert "cannot be less than starting odometer" in str(bad_in_res.json())
 
-
     # 5. Valid checkin
     valid_checkin = {
         "end_odometer": 50150.50,
@@ -134,7 +126,6 @@ async def test_checkout_checkin_odometer_monotonicity(
     ended_trip = in_res.json()
     assert ended_trip["status"] == "CHECKED_IN"
     assert Decimal(str(ended_trip["calculated_distance_km"])) == Decimal("150.50")
-
 
     # Verify vehicle odometer updated atomically to 50150.50 and status returned to AVAILABLE
     v_updated = (await client.get(f"/api/v1/fleet/vehicles/{v_id}", headers=headers)).json()["vehicle"]

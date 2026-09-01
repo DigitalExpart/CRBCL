@@ -121,7 +121,6 @@ class FleetRepository:
         res = await session.execute(stmt)
         return res.scalar_one_or_none()
 
-
     @staticmethod
     async def get_trips(
         session: AsyncSession,

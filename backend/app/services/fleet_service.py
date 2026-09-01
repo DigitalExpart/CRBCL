@@ -92,9 +92,7 @@ class FleetService:
         }
 
     @classmethod
-    async def update_vehicle(
-        cls, session: AsyncSession, vehicle_id: uuid.UUID, update_data: dict[str, Any]
-    ) -> Vehicle:
+    async def update_vehicle(cls, session: AsyncSession, vehicle_id: uuid.UUID, update_data: dict[str, Any]) -> Vehicle:
         """Update vehicle parameters."""
         v = await FleetRepository.get_vehicle_by_id(session, vehicle_id)
         if not v or v.archived_at is not None:
@@ -123,7 +121,6 @@ class FleetService:
             )
         await FleetRepository.archive_vehicle(session, v)
         return await FleetRepository.get_vehicle_by_id(session, vehicle_id)
-
 
     # ── 2. Check-Out & Check-In Lifecycles (Concurrency Locking) ──
     @classmethod
@@ -187,7 +184,6 @@ class FleetService:
                 detail=f"Vehicle '{v.vehicle_internal_id}' was checked out simultaneously by another user.",
             ) from err
 
-
     @classmethod
     async def checkin_vehicle(
         cls, session: AsyncSession, trip_id: uuid.UUID, checkin_data: dict[str, Any]
@@ -239,12 +235,9 @@ class FleetService:
         await session.flush()
         return await FleetRepository.get_trip_by_id(session, trip.id)
 
-
     # ── 3. Maintenance Scheduling & History ───────────────────────
     @classmethod
-    async def schedule_maintenance(
-        cls, session: AsyncSession, maintenance_data: dict[str, Any]
-    ) -> VehicleMaintenance:
+    async def schedule_maintenance(cls, session: AsyncSession, maintenance_data: dict[str, Any]) -> VehicleMaintenance:
         """Schedule preventive or corrective vehicle maintenance."""
         v = await FleetRepository.get_vehicle_by_id(session, maintenance_data["vehicle_id"])
         if not v or v.archived_at is not None:
@@ -269,9 +262,7 @@ class FleetService:
         cls, session: AsyncSession, maintenance_id: uuid.UUID, completion_data: dict[str, Any]
     ) -> VehicleMaintenance:
         """Mark maintenance completed and return vehicle to AVAILABLE if applicable."""
-        res = await session.execute(
-            select(VehicleMaintenance).where(VehicleMaintenance.id == maintenance_id)
-        )
+        res = await session.execute(select(VehicleMaintenance).where(VehicleMaintenance.id == maintenance_id))
         m = res.scalar_one_or_none()
         if not m:
             raise HTTPException(
@@ -314,9 +305,7 @@ class FleetService:
 
     # ── 5. Location Privacy & Deduplication ───────────────────────
     @classmethod
-    async def record_vehicle_location(
-        cls, session: AsyncSession, location_data: dict[str, Any]
-    ) -> VehicleLocation:
+    async def record_vehicle_location(cls, session: AsyncSession, location_data: dict[str, Any]) -> VehicleLocation:
         """Log a vehicle location ping with deduplication."""
         # Deduplication by provider_event_id
         event_id = location_data.get("provider_event_id")
@@ -333,10 +322,8 @@ class FleetService:
             if existing_loc:
                 return existing_loc
 
-
         if not location_data.get("recorded_at"):
             location_data["recorded_at"] = datetime.utcnow()
-
 
         return await FleetRepository.create_location(session, location_data)
 
@@ -349,9 +336,7 @@ class FleetService:
 
         # Count vehicles by status
         v_res = await session.execute(
-            select(Vehicle.status, func.count(Vehicle.id))
-            .where(Vehicle.archived_at.is_(None))
-            .group_by(Vehicle.status)
+            select(Vehicle.status, func.count(Vehicle.id)).where(Vehicle.archived_at.is_(None)).group_by(Vehicle.status)
         )
         status_counts = dict(v_res.all())
 

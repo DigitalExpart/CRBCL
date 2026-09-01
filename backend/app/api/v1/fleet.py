@@ -88,9 +88,7 @@ async def get_vehicle_detail(vehicle_id: uuid.UUID, db: AsyncSession = Depends(g
     summary="Update vehicle details",
     dependencies=[Depends(require_permission(Permissions.FLEET_VEHICLE_UPDATE))],
 )
-async def update_vehicle(
-    vehicle_id: uuid.UUID, payload: VehicleUpdate, db: AsyncSession = Depends(get_db)
-):
+async def update_vehicle(vehicle_id: uuid.UUID, payload: VehicleUpdate, db: AsyncSession = Depends(get_db)):
     """Update vehicle specifications or parameters."""
     return await FleetService.update_vehicle(db, vehicle_id, payload.model_dump(exclude_unset=True))
 
@@ -114,9 +112,7 @@ async def archive_vehicle(vehicle_id: uuid.UUID, db: AsyncSession = Depends(get_
     summary="Check out a vehicle for a trip",
     dependencies=[Depends(require_permission(Permissions.FLEET_TRIP_CHECKOUT))],
 )
-async def checkout_vehicle(
-    vehicle_id: uuid.UUID, payload: TripCheckoutRequest, db: AsyncSession = Depends(get_db)
-):
+async def checkout_vehicle(vehicle_id: uuid.UUID, payload: TripCheckoutRequest, db: AsyncSession = Depends(get_db)):
     """Check out a vehicle with PostgreSQL atomic concurrency protection (HTTP 409 Conflict on double checkout)."""
     return await FleetService.checkout_vehicle(db, vehicle_id, payload.model_dump())
 
@@ -127,9 +123,7 @@ async def checkout_vehicle(
     summary="Check in a vehicle",
     dependencies=[Depends(require_permission(Permissions.FLEET_TRIP_CHECKIN))],
 )
-async def checkin_vehicle(
-    trip_id: uuid.UUID, payload: TripCheckinRequest, db: AsyncSession = Depends(get_db)
-):
+async def checkin_vehicle(trip_id: uuid.UUID, payload: TripCheckinRequest, db: AsyncSession = Depends(get_db)):
     """Check in a vehicle, verifying odometer monotonicity and updating vehicle mileage."""
     return await FleetService.checkin_vehicle(db, trip_id, payload.model_dump())
 
