@@ -252,6 +252,20 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.PLACEMENT_HOME_CAPACITY_READ,
         Permissions.PLACEMENT_HOME_CAPACITY_MANAGE,
         Permissions.PLACEMENT_HOME_MAP_READ,
+        # Phase 9 Scheduling, Staffing & Notifications
+        Permissions.CALENDAR_READ_OWN,
+        Permissions.CALENDAR_READ_TEAM,
+        Permissions.CALENDAR_WRITE,
+        Permissions.STAFFING_READ,
+        Permissions.STAFFING_CREATE,
+        Permissions.STAFFING_UPDATE,
+        Permissions.STAFFING_COMPLETE,
+        Permissions.NOTIFICATION_READ,
+        Permissions.NOTIFICATION_PREFERENCES_UPDATE,
+        Permissions.NOTIFICATION_TEMPLATE_READ,
+        Permissions.NOTIFICATION_TEMPLATE_MANAGE,
+        Permissions.NOTIFICATION_DELIVERY_READ,
+        Permissions.NOTIFICATION_DELIVERY_RETRY,
         # Admin & System
         Permissions.ADMIN_USERS_MANAGE,
         Permissions.ADMIN_ROLES_MANAGE,
@@ -412,6 +426,12 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.PLACEMENT_HOME_CAPACITY_READ,
         Permissions.PLACEMENT_HOME_MAP_READ,
         Permissions.TIMELINE_READ,
+        # Phase 9 Caseworker
+        Permissions.CALENDAR_READ_OWN,
+        Permissions.CALENDAR_WRITE,
+        Permissions.STAFFING_READ,
+        Permissions.NOTIFICATION_READ,
+        Permissions.NOTIFICATION_PREFERENCES_UPDATE,
     ]:
         rp = RolePermission(role_id=caseworker_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
@@ -563,6 +583,16 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.PLACEMENT_HOME_CAPACITY_MANAGE,
         Permissions.PLACEMENT_HOME_MAP_READ,
         Permissions.TIMELINE_READ,
+        # Phase 9 Supervisor
+        Permissions.CALENDAR_READ_OWN,
+        Permissions.CALENDAR_READ_TEAM,
+        Permissions.CALENDAR_WRITE,
+        Permissions.STAFFING_READ,
+        Permissions.STAFFING_CREATE,
+        Permissions.STAFFING_UPDATE,
+        Permissions.STAFFING_COMPLETE,
+        Permissions.NOTIFICATION_READ,
+        Permissions.NOTIFICATION_PREFERENCES_UPDATE,
     ]:
         rp = RolePermission(role_id=supervisor_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
@@ -574,6 +604,11 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.ADMIN_TEAMS_MANAGE,
         Permissions.ADMIN_CONFIGURATION_MANAGE,
         Permissions.AUDIT_READ,
+        # Phase 9 Technical Admin
+        Permissions.NOTIFICATION_TEMPLATE_READ,
+        Permissions.NOTIFICATION_TEMPLATE_MANAGE,
+        Permissions.NOTIFICATION_DELIVERY_READ,
+        Permissions.NOTIFICATION_DELIVERY_RETRY,
     ]:
         rp = RolePermission(role_id=it_admin_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)

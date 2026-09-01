@@ -15,5 +15,6 @@ export { assessmentTemplatesApi } from './assessmentTemplates';
 export { plansApi } from './plans';
 export { placementsApi } from './placements';
 export { placementHomesApi } from './placementHomes';
-
-
+export { calendarApi } from './calendar';
+export { staffingApi } from './staffing';
+export { notificationsApi } from './notifications';

@@ -6,10 +6,9 @@ import uuid
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.models.case_management import CaseRestriction
-from app.models.role import UserRole
+from app.models.role import Permission, Role, RolePermission, UserRole
 from app.models.team import TeamMembership, UserTeamAccess
 from app.models.user import User
 
@@ -19,21 +18,20 @@ class PermissionService:
         self.db = db
 
     async def get_user_permissions(self, user_id: uuid.UUID) -> set[str]:
-        """Load all active permissions for a user across all active assigned roles."""
-        result = await self.db.execute(
-            select(UserRole)
-            .where(UserRole.user_id == user_id)
-            .options(selectinload(UserRole.role).selectinload(UserRole.role.property.mapper.class_.permissions))
+        """Load all active permissions for a user across all active assigned roles with a single fast JOIN."""
+        stmt = (
+            select(Permission.key)
+            .join(RolePermission, RolePermission.permission_id == Permission.id)
+            .join(Role, Role.id == RolePermission.role_id)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .where(
+                UserRole.user_id == user_id,
+                Role.is_active == True,  # noqa: E712
+                Permission.is_active == True,  # noqa: E712
+            )
         )
-        user_roles = result.scalars().all()
-
-        perms = set()
-        for ur in user_roles:
-            if ur.role and ur.role.is_active:
-                for rp in ur.role.permissions:
-                    if rp.permission and rp.permission.is_active:
-                        perms.add(rp.permission.key)
-        return perms
+        result = await self.db.execute(stmt)
+        return set(result.scalars().all())
 
     async def get_user_accessible_team_ids(self, user_id: uuid.UUID) -> set[uuid.UUID] | None:
         """

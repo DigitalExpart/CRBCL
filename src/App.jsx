@@ -34,6 +34,13 @@ import PlanEditor from '@/pages/PlanEditor';
 import PlacementHomesList from '@/pages/PlacementHomesList';
 import PlacementHomeDetail from '@/pages/PlacementHomeDetail';
 
+// Phase 9 Scheduling, Staffing Facilitator & Notifications
+import MySchedule from '@/pages/MySchedule';
+import TeamSchedule from '@/pages/TeamSchedule';
+import StaffingFacilitator from '@/pages/StaffingFacilitator';
+import StaffingSessionDetail from '@/pages/StaffingSessionDetail';
+import Notifications from '@/pages/Notifications';
+
 // Pages
 import Dashboard from '@/pages/Dashboard';
 import Cases from '@/pages/Cases';
@@ -97,6 +104,11 @@ const AuthenticatedApp = () => {
           <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/placement-homes" element={<PlacementHomesList />} />
           <Route path="/placement-homes/:id" element={<PlacementHomeDetail />} />
+          <Route path="/schedule" element={<MySchedule />} />
+          <Route path="/schedule/team" element={<TeamSchedule />} />
+          <Route path="/staffing" element={<StaffingFacilitator />} />
+          <Route path="/staffing/:id" element={<StaffingSessionDetail />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/assessments/:id" element={<AssessmentDetail />} />
 
           <Route path="/plans/:id" element={<PlanDetail />} />

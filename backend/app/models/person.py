@@ -114,6 +114,9 @@ class PersonContact(Base, TimestampMixin):
     value: Mapped[str] = mapped_column(String(320), nullable=False)
     label: Mapped[str] = mapped_column(String(100), default="Primary", nullable=False)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    sms_consent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_consent: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    preferred_contact_method: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     person: Mapped[Person] = relationship("Person", back_populates="contacts")
 

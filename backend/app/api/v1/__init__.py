@@ -22,6 +22,11 @@ from app.api.v1.providers import router as providers_router
 from app.api.v1.referrals import router as referrals_router
 from app.api.v1.removals import router as removals_router
 from app.api.v1.schools import router as schools_router
+from app.api.v1.calendar import router as calendar_router
+from app.api.v1.notification_preferences import router as notification_preferences_router
+from app.api.v1.notification_templates import router as notification_templates_router
+from app.api.v1.notifications import router as notifications_router
+from app.api.v1.staffing import router as staffing_router
 from app.api.v1.teams import router as teams_router
 from app.api.v1.users import router as users_router
 from app.auth.router import router as auth_router
@@ -52,4 +57,9 @@ api_v1_router.include_router(removals_router)
 api_v1_router.include_router(users_router)
 api_v1_router.include_router(teams_router)
 api_v1_router.include_router(lookups_router)
+api_v1_router.include_router(calendar_router)
+api_v1_router.include_router(staffing_router)
+api_v1_router.include_router(notifications_router)
+api_v1_router.include_router(notification_preferences_router)
+api_v1_router.include_router(notification_templates_router)
 

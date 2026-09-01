@@ -102,6 +102,10 @@ class CourtEventService:
                 "hearing_date": str(created.hearing_date),
             },
         )
+
+        from app.services.calendar_service import CalendarService
+        await CalendarService(self.db).sync_court_event(created, user)
+
         return created
 
     async def get_court_event(self, user: User, event_id: uuid.UUID) -> CourtEvent:
@@ -146,4 +150,8 @@ class CourtEventService:
             entity_id=event.id,
             after_data=update_fields,
         )
+
+        from app.services.calendar_service import CalendarService
+        await CalendarService(self.db).sync_court_event(event, user)
+
         return event

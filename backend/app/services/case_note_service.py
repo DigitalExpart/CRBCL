@@ -154,6 +154,18 @@ class CaseNoteService:
             },
         )
 
+        # Synchronize follow-up with unified calendar
+        if next_appointment_at:
+            from app.services.calendar_service import CalendarService
+
+            await CalendarService(self.db).sync_case_note_followup(
+                case_note_id=note.id,
+                case_id=case.id,
+                next_appointment_at=next_appointment_at,
+                subject=note.subject,
+                current_user=current_user,
+            )
+
         await self.db.commit()
         return await self.get_note_or_404(note.id)
 
@@ -212,6 +224,17 @@ class CaseNoteService:
             after_data=update_data,
             user_id=current_user.id,
         )
+
+        if "next_appointment_at" in update_data:
+            from app.services.calendar_service import CalendarService
+
+            await CalendarService(self.db).sync_case_note_followup(
+                case_note_id=note.id,
+                case_id=note.case_id,
+                next_appointment_at=note.next_appointment_at,
+                subject=note.subject,
+                current_user=current_user,
+            )
 
         await self.db.commit()
         return await self.get_note_or_404(note.id)

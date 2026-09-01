@@ -81,6 +81,7 @@ def _create_engine():
         engine_kwargs.update(
             {
                 "pool_pre_ping": True,
+                "pool_recycle": 300,
                 "pool_size": 10,
                 "max_overflow": 20,
             }

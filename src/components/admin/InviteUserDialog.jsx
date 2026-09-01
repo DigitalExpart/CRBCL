@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Loader2, UserPlus, Mail, Lock } from "lucide-react";
+import { Loader2, UserPlus, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { api } from "@/api";
 import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
 import { toast } from "@/components/ui/use-toast";
@@ -14,6 +14,8 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState("user");
   const [teamAccess, setTeamAccess] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -148,14 +150,26 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="create-password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Min. 8 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
-                    className="pl-9"
+                    className="pl-9 pr-9"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:text-foreground p-1 rounded-md transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="w-4 h-4" aria-hidden="true" />
+                    )}
+                  </button>
                 </div>
               </div>
               <div className="space-y-2">
@@ -164,14 +178,26 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="create-confirm"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="Re-enter password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     disabled={loading}
-                    className="pl-9"
+                    className="pl-9 pr-9"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:text-foreground p-1 rounded-md transition-colors"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="w-4 h-4" aria-hidden="true" />
+                    )}
+                  </button>
                 </div>
               </div>
               <div className="space-y-2">

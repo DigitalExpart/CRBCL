@@ -198,4 +198,19 @@ class Permissions(StrEnum):
     PLACEMENT_HOME_CAPACITY_MANAGE = "placement_home.capacity.manage"
     PLACEMENT_HOME_MAP_READ = "placement_home.map.read"
 
+    # Scheduling, Staffing & Notifications (Phase 9)
+    CALENDAR_READ_OWN = "calendar.read_own"
+    CALENDAR_READ_TEAM = "calendar.read_team"
+    CALENDAR_WRITE = "calendar.write"
+    STAFFING_READ = "staffing.read"
+    STAFFING_CREATE = "staffing.create"
+    STAFFING_UPDATE = "staffing.update"
+    STAFFING_COMPLETE = "staffing.complete"
+    NOTIFICATION_READ = "notification.read"
+    NOTIFICATION_PREFERENCES_UPDATE = "notification.preferences.update"
+    NOTIFICATION_TEMPLATE_READ = "notification.template.read"
+    NOTIFICATION_TEMPLATE_MANAGE = "notification.template.manage"
+    NOTIFICATION_DELIVERY_READ = "notification.delivery.read"
+    NOTIFICATION_DELIVERY_RETRY = "notification.delivery.retry"
+
 

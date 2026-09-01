@@ -4,7 +4,8 @@ import {
   LayoutDashboard, Users, Heart, FolderOpen, BookOpen, 
   Calendar, DollarSign, Gift, FileText, AlertTriangle,
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
-  Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home
+  Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home,
+  CalendarDays, Bell, UserCheck
 } from "lucide-react";
 import { api } from "@/api";
 
@@ -13,14 +14,17 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/" },
   { label: "Intake & Referrals", icon: Inbox, path: "/intake" },
   { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
+  { label: "My Schedule", icon: Calendar, path: "/schedule" },
+  { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
+  { label: "Staffing Facilitator", icon: UserCheck, path: "/staffing" },
   { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
   { label: "Cases", icon: FolderOpen, path: "/cases" },
   { label: "Placement Homes", icon: Home, path: "/placement-homes" },
   { label: "Clients", icon: Users, path: "/clients" },
   { label: "Families", icon: Heart, path: "/families" },
+  { label: "Notifications", icon: Bell, path: "/notifications" },
 
   { label: "Programs", icon: BookOpen, path: "/programs" },
-  { label: "Appointments", icon: Calendar, path: "/appointments" },
   { label: "HR & Staff", icon: UserCog, path: "/employees" },
   { label: "Funding", icon: DollarSign, path: "/funding" },
   { label: "Donations", icon: Gift, path: "/donations" },

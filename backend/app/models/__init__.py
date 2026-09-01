@@ -117,6 +117,21 @@ from app.models.placement_home import (  # noqa: F401
     PlacementHomeMember,
     PlacementHomeVisit,
 )
+from app.models.calendar import (  # noqa: F401
+    CalendarEvent,
+    CalendarRecurrenceRule,
+)
+from app.models.staffing import (  # noqa: F401
+    StaffingAttendee,
+    StaffingCase,
+    StaffingSession,
+)
+from app.models.notification import (  # noqa: F401
+    Notification,
+    NotificationDelivery,
+    NotificationPreference,
+    NotificationTemplate,
+)
 from app.models.team import Team, TeamMembership, UserTeamAccess  # noqa: F401
 from app.models.terminology import TerminologyKey, TerminologyTranslation  # noqa: F401
 from app.models.timeline import TimelineEvent  # noqa: F401
