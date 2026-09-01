@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,9 +43,7 @@ class ActiveEffortService:
                 detail=f"User does not have required permission: {permission_key}",
             )
 
-    async def create_active_effort(
-        self, user: User, case_id: uuid.UUID, data: ActiveEffortCreate
-    ) -> ActiveEffort:
+    async def create_active_effort(self, user: User, case_id: uuid.UUID, data: ActiveEffortCreate) -> ActiveEffort:
         await self._require_case_access(user.id, case_id)
         await self._require_perm(user.id, Permissions.ACTIVE_EFFORTS_WRITE)
 
@@ -123,9 +120,7 @@ class ActiveEffortService:
             case_id, outcome=outcome, effort_type=effort_type, page=page, page_size=page_size
         )
 
-    async def update_active_effort(
-        self, user: User, effort_id: uuid.UUID, data: ActiveEffortUpdate
-    ) -> ActiveEffort:
+    async def update_active_effort(self, user: User, effort_id: uuid.UUID, data: ActiveEffortUpdate) -> ActiveEffort:
         effort = await self.repo.get_active_effort_by_id(effort_id)
         if not effort:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Active effort record not found.")
@@ -133,9 +128,9 @@ class ActiveEffortService:
         await self._require_perm(user.id, Permissions.ACTIVE_EFFORTS_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "effort_type" in update_fields and update_fields["effort_type"]:
+        if update_fields.get("effort_type"):
             update_fields["effort_type"] = update_fields["effort_type"].upper()
-        if "outcome" in update_fields and update_fields["outcome"]:
+        if update_fields.get("outcome"):
             update_fields["outcome"] = update_fields["outcome"].upper()
 
         for k, v in update_fields.items():

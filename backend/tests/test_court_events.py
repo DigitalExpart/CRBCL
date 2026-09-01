@@ -1,6 +1,7 @@
 """Tests for Court Events, Hearings, Orders, and Band Representation."""
 
 import uuid
+
 import pytest
 from httpx import AsyncClient
 

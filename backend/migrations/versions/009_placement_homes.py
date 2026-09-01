@@ -24,7 +24,12 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("home_code", sa.String(length=50), nullable=False, unique=True),
         sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("provider_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("providers.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "provider_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("providers.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("home_type", sa.String(length=50), nullable=False, server_default="LICENSED_FOSTER"),
         sa.Column("status", sa.String(length=50), nullable=False, server_default="ACTIVE"),
         sa.Column("licensing_status", sa.String(length=50), nullable=False, server_default="UNLICENSED"),
@@ -45,16 +50,24 @@ def upgrade() -> None:
         sa.Column("metadata_", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("is_archived", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("archived_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("archived_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "archived_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         # Audit & Soft Delete
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.CheckConstraint("total_capacity >= 0", name="ck_placement_homes_capacity_positive"),
     )
     op.create_index("ix_placement_homes_home_code", "placement_homes", ["home_code"])
@@ -69,8 +82,15 @@ def upgrade() -> None:
     op.create_table(
         "placement_home_members",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("placement_home_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("placement_homes.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="RESTRICT"), nullable=False),
+        sa.Column(
+            "placement_home_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("placement_homes.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="RESTRICT"), nullable=False
+        ),
         sa.Column("role", sa.String(length=50), nullable=False, server_default="PRIMARY_CAREGIVER"),
         sa.Column("start_date", sa.Date(), nullable=False, server_default=sa.text("CURRENT_DATE")),
         sa.Column("end_date", sa.Date(), nullable=True),
@@ -79,11 +99,17 @@ def upgrade() -> None:
         # Audit & Soft Delete
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
     )
     op.create_index("ix_placement_home_members_home_id", "placement_home_members", ["placement_home_id"])
     op.create_index("ix_placement_home_members_person_id", "placement_home_members", ["person_id"])
@@ -93,7 +119,12 @@ def upgrade() -> None:
     op.create_table(
         "placement_home_licenses",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("placement_home_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("placement_homes.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "placement_home_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("placement_homes.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("license_number", sa.String(length=100), nullable=False),
         sa.Column("license_type", sa.String(length=100), nullable=False, server_default="STANDARD_FOSTER"),
         sa.Column("status", sa.String(length=50), nullable=False, server_default="ACTIVE"),
@@ -102,18 +133,29 @@ def upgrade() -> None:
         sa.Column("effective_date", sa.Date(), nullable=False),
         sa.Column("expiry_date", sa.Date(), nullable=False),
         sa.Column("renewal_date", sa.Date(), nullable=True),
-        sa.Column("issuing_authority", sa.String(length=255), nullable=False, server_default="Ministry of Social Services / First Nation Authority"),
+        sa.Column(
+            "issuing_authority",
+            sa.String(length=255),
+            nullable=False,
+            server_default="Ministry of Social Services / First Nation Authority",
+        ),
         sa.Column("max_capacity", sa.Integer(), nullable=True),
         sa.Column("conditions", sa.Text(), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         # Audit & Soft Delete
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.CheckConstraint("expiry_date >= effective_date", name="ck_placement_home_licenses_dates_valid"),
     )
     op.create_index("ix_placement_home_licenses_home_id", "placement_home_licenses", ["placement_home_id"])
@@ -125,8 +167,15 @@ def upgrade() -> None:
     op.create_table(
         "placement_home_visits",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("placement_home_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("placement_homes.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("worker_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False),
+        sa.Column(
+            "placement_home_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("placement_homes.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "worker_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
+        ),
         sa.Column("visit_date", sa.Date(), nullable=False),
         sa.Column("visit_type", sa.String(length=50), nullable=False, server_default="ROUTINE_INSPECTION"),
         sa.Column("purpose", sa.String(length=255), nullable=False),
@@ -138,11 +187,17 @@ def upgrade() -> None:
         # Audit & Soft Delete
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
     )
     op.create_index("ix_placement_home_visits_home_id", "placement_home_visits", ["placement_home_id"])
     op.create_index("ix_placement_home_visits_worker_id", "placement_home_visits", ["worker_id"])
@@ -153,9 +208,18 @@ def upgrade() -> None:
     op.create_table(
         "placement_home_contact_logs",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("placement_home_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("placement_homes.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("worker_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False),
+        sa.Column(
+            "placement_home_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("placement_homes.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "person_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "worker_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
+        ),
         sa.Column("contact_type", sa.String(length=50), nullable=False, server_default="PHONE"),
         sa.Column("contact_date", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("duration_minutes", sa.Integer(), nullable=True),
@@ -165,11 +229,17 @@ def upgrade() -> None:
         # Audit & Soft Delete
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "deleted_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
     )
     op.create_index("ix_placement_home_contacts_home_id", "placement_home_contact_logs", ["placement_home_id"])
     op.create_index("ix_placement_home_contacts_worker_id", "placement_home_contact_logs", ["worker_id"])
@@ -178,14 +248,24 @@ def upgrade() -> None:
     # ── 6. Alter placement_episodes (add placement_home_id) ──────
     op.add_column(
         "placement_episodes",
-        sa.Column("placement_home_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("placement_homes.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "placement_home_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("placement_homes.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
     )
     op.create_index("ix_placement_episodes_placement_home_id", "placement_episodes", ["placement_home_id"])
 
     # ── 7. Alter assessments (add placement_home_id) ────────────
     op.add_column(
         "assessments",
-        sa.Column("placement_home_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("placement_homes.id", ondelete="CASCADE"), nullable=True),
+        sa.Column(
+            "placement_home_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("placement_homes.id", ondelete="CASCADE"),
+            nullable=True,
+        ),
     )
     op.create_index("ix_assessments_placement_home_id", "assessments", ["placement_home_id"])
 

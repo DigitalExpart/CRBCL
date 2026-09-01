@@ -60,9 +60,7 @@ class NotificationPreference(Base):
 
     user = relationship("User", foreign_keys=[user_id], lazy="selectin")
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "event_type", name="uq_notification_pref_user_event"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "event_type", name="uq_notification_pref_user_event"),)
 
 
 class NotificationDelivery(Base):
@@ -75,7 +73,9 @@ class NotificationDelivery(Base):
         UUID(as_uuid=True), ForeignKey("notifications.id", ondelete="CASCADE"), nullable=True, index=True
     )
     channel: Mapped[str] = mapped_column(String(20), nullable=False)  # IN_APP, EMAIL, SMS
-    provider: Mapped[str] = mapped_column(String(50), default="CONSOLE", nullable=False)  # CONSOLE, RESEND, SENDGRID, TWILIO
+    provider: Mapped[str] = mapped_column(
+        String(50), default="CONSOLE", nullable=False
+    )  # CONSOLE, RESEND, SENDGRID, TWILIO
     status: Mapped[str] = mapped_column(
         String(20), default="PENDING", nullable=False
     )  # PENDING, PROCESSING, SENT, FAILED, RETRYING, CANCELLED
@@ -92,9 +92,7 @@ class NotificationDelivery(Base):
 
     notification = relationship("Notification", back_populates="deliveries")
 
-    __table_args__ = (
-        Index("ix_notification_deliveries_status_created", "status", "created_at"),
-    )
+    __table_args__ = (Index("ix_notification_deliveries_status_created", "status", "created_at"),)
 
 
 class NotificationTemplate(Base):
@@ -113,6 +111,4 @@ class NotificationTemplate(Base):
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    __table_args__ = (
-        UniqueConstraint("event_type", "channel", name="uq_notification_template_type_channel"),
-    )
+    __table_args__ = (UniqueConstraint("event_type", "channel", name="uq_notification_template_type_channel"),)

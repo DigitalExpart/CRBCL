@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import and_, or_, select
@@ -90,18 +90,17 @@ class CalendarRepo:
         return res.scalar_one_or_none()
 
     async def get_by_source(self, source_type: str, source_id: uuid.UUID) -> CalendarEvent | None:
-        stmt = (
-            select(CalendarEvent)
-            .where(
-                CalendarEvent.source_entity_type == source_type,
-                CalendarEvent.source_entity_id == source_id,
-                CalendarEvent.deleted_at.is_(None),
-            )
+        stmt = select(CalendarEvent).where(
+            CalendarEvent.source_entity_type == source_type,
+            CalendarEvent.source_entity_id == source_id,
+            CalendarEvent.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         return res.scalar_one_or_none()
 
-    async def update(self, event_id: uuid.UUID, update_data: dict[str, Any], updated_by: uuid.UUID | None = None) -> CalendarEvent | None:
+    async def update(
+        self, event_id: uuid.UUID, update_data: dict[str, Any], updated_by: uuid.UUID | None = None
+    ) -> CalendarEvent | None:
         event = await self.get_by_id(event_id)
         if not event:
             return None

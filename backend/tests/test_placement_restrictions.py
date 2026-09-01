@@ -32,7 +32,12 @@ async def test_case_restrictions_block_placement_access(client: AsyncClient, adm
     client_res = await client.post(
         "/api/v1/clients",
         headers=headers,
-        json={"first_name": "Restricted", "last_name": "ChildPlacement", "date_of_birth": "2018-01-01", "gender": "Female"},
+        json={
+            "first_name": "Restricted",
+            "last_name": "ChildPlacement",
+            "date_of_birth": "2018-01-01",
+            "gender": "Female",
+        },
     )
     person_id = client_res.json()["id"]
 
@@ -95,4 +100,3 @@ async def test_case_restrictions_block_placement_access(client: AsyncClient, adm
         json={"respite_provider_name": "Test Respite", "start_date": "2026-08-10", "end_date": "2026-08-12"},
     )
     assert respite_create.status_code == 403
-

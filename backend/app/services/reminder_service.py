@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import logging
-import uuid
-from datetime import UTC, date, datetime, timedelta
-from typing import Any
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.calendar import CalendarEvent
-from app.models.case import Case
-from app.models.person import Person, PersonContact
+from app.models.person import Person
 from app.models.placement import BackgroundCheck, CourtEvent
-from app.models.placement_home import PlacementHomeLicense, PlacementHomeVisit
+from app.models.placement_home import PlacementHomeLicense
 from app.models.plan import Plan, PlanActivity, PlanGoal
 from app.models.staffing import StaffingAttendee, StaffingSession
 from app.models.user import User
@@ -226,8 +223,6 @@ class ScheduledReminderService:
     async def process_license_expiry_reminders(self) -> int:
         now = datetime.now(UTC).date()
         threshold_60 = now + timedelta(days=60)
-        threshold_30 = now + timedelta(days=30)
-        threshold_15 = now + timedelta(days=15)
 
         stmt = (
             select(PlacementHomeLicense)
@@ -276,15 +271,12 @@ class ScheduledReminderService:
         now = datetime.now(UTC).date()
         threshold_30 = now + timedelta(days=30)
 
-        stmt = (
-            select(BackgroundCheck)
-            .where(
-                BackgroundCheck.status == "PASSED",
-                BackgroundCheck.expiry_date.isnot(None),
-                BackgroundCheck.expiry_date <= threshold_30,
-                BackgroundCheck.expiry_date >= now,
-                BackgroundCheck.deleted_at.is_(None),
-            )
+        stmt = select(BackgroundCheck).where(
+            BackgroundCheck.status == "PASSED",
+            BackgroundCheck.expiry_date.isnot(None),
+            BackgroundCheck.expiry_date <= threshold_30,
+            BackgroundCheck.expiry_date >= now,
+            BackgroundCheck.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         checks = list(res.scalars().all())

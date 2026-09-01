@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-
 class AssessmentTemplate(Base, TimestampMixin):
     """Logical assessment type definition (e.g., HOME_ASSESSMENT, THREAT_ASSESSMENT, AIEI_ASSESSMENT)."""
 
@@ -233,7 +232,9 @@ class Assessment(Base, AuditMixin, SoftDeleteMixin):
     client: Mapped[Client | None] = relationship("Client", foreign_keys=[client_id], lazy="joined")
     family: Mapped[Family | None] = relationship("Family", foreign_keys=[family_id], lazy="joined")
     household: Mapped[Household | None] = relationship("Household", foreign_keys=[household_id], lazy="joined")
-    placement_home: Mapped[PlacementHome | None] = relationship("PlacementHome", foreign_keys=[placement_home_id], lazy="joined")
+    placement_home: Mapped[PlacementHome | None] = relationship(
+        "PlacementHome", foreign_keys=[placement_home_id], lazy="joined"
+    )
     template: Mapped[AssessmentTemplate] = relationship("AssessmentTemplate", foreign_keys=[template_id], lazy="joined")
     template_version: Mapped[AssessmentTemplateVersion] = relationship(
         "AssessmentTemplateVersion", foreign_keys=[template_version_id], lazy="joined"

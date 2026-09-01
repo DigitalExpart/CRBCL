@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -22,7 +22,6 @@ from app.schemas.placement_home import (
     PlacementHomeLicenseCreate,
     PlacementHomeLicenseRead,
     PlacementHomeLicenseRenew,
-    PlacementHomeListItem,
     PlacementHomeMapMarkerRead,
     PlacementHomeMemberCreate,
     PlacementHomeMemberRead,
@@ -32,9 +31,7 @@ from app.schemas.placement_home import (
     PlacementHomeUpdate,
     PlacementHomeVisitCreate,
     PlacementHomeVisitRead,
-    PlacementHomeVisitUpdate,
 )
-
 from app.services.placement_home_service import PlacementHomeService
 
 router = APIRouter(prefix="/placement-homes", tags=["Placement Homes"])
@@ -238,7 +235,6 @@ async def renew_home_license(
 
 @router.post("/{home_id}/visits", response_model=PlacementHomeVisitRead, status_code=status.HTTP_201_CREATED)
 async def create_home_visit(
-
     home_id: uuid.UUID,
     payload: PlacementHomeVisitCreate,
     db: AsyncSession = Depends(get_db),
@@ -247,11 +243,7 @@ async def create_home_visit(
     """Log an inspection or support visit to a placement home."""
     service = PlacementHomeService(db)
     visit = await service.create_visit(home_id, payload, current_user.id)
-    worker_name = (
-        visit.worker.display_name or visit.worker.full_name or visit.worker.email
-        if visit.worker
-        else None
-    )
+    worker_name = visit.worker.display_name or visit.worker.full_name or visit.worker.email if visit.worker else None
     return {
         "id": visit.id,
         "placement_home_id": visit.placement_home_id,
@@ -282,9 +274,7 @@ async def create_home_contact_log(
     service = PlacementHomeService(db)
     contact = await service.create_contact_log(home_id, payload, current_user.id)
     worker_name = (
-        contact.worker.display_name or contact.worker.full_name or contact.worker.email
-        if contact.worker
-        else None
+        contact.worker.display_name or contact.worker.full_name or contact.worker.email if contact.worker else None
     )
     person_name = f"{contact.person.first_name} {contact.person.last_name}" if contact.person else None
     return {
@@ -306,6 +296,7 @@ async def create_home_contact_log(
 
 
 # ── Background Checks Summary ──────────────────────────────────
+
 
 @router.get("/{home_id}/background-checks", response_model=list[HomeBackgroundCheckSummary])
 async def get_home_background_checks(

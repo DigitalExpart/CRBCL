@@ -127,7 +127,6 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.CLIENT_DOCUMENTS_READ,
         Permissions.CLIENT_DOCUMENTS_WRITE,
         Permissions.FAMILY_READ,
-
         Permissions.FAMILY_CREATE,
         Permissions.FAMILY_UPDATE,
         Permissions.FAMILY_RELATIONSHIPS_READ,

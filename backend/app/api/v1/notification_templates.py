@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import uuid
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +13,6 @@ from app.permissions.service import PermissionService
 from app.schemas.notification import (
     NotificationTemplateCreate,
     NotificationTemplateResponse,
-    NotificationTemplateUpdate,
 )
 from app.services.notification_service import NotificationService
 
@@ -31,7 +28,9 @@ async def list_templates(
     perm_service = PermissionService(db)
     has_perm = await perm_service.user_has_permission(current_user.id, Permissions.NOTIFICATION_TEMPLATE_READ)
     if not has_perm:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks notification.template.read permission.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks notification.template.read permission."
+        )
 
     service = NotificationService(db)
     templates = await service.repo.list_templates()
@@ -48,7 +47,10 @@ async def upsert_template(
     perm_service = PermissionService(db)
     has_perm = await perm_service.user_has_permission(current_user.id, Permissions.NOTIFICATION_TEMPLATE_MANAGE)
     if not has_perm:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks notification.template.manage permission.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: Lacks notification.template.manage permission.",
+        )
 
     service = NotificationService(db)
     template = await service.repo.upsert_template(

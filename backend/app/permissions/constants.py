@@ -212,5 +212,3 @@ class Permissions(StrEnum):
     NOTIFICATION_TEMPLATE_MANAGE = "notification.template.manage"
     NOTIFICATION_DELIVERY_READ = "notification.delivery.read"
     NOTIFICATION_DELIVERY_RETRY = "notification.delivery.retry"
-
-

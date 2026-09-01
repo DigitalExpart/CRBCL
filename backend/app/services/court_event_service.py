@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,9 +43,7 @@ class CourtEventService:
                 detail=f"User does not have required permission: {permission_key}",
             )
 
-    async def create_court_event(
-        self, user: User, case_id: uuid.UUID, data: CourtEventCreate
-    ) -> CourtEvent:
+    async def create_court_event(self, user: User, case_id: uuid.UUID, data: CourtEventCreate) -> CourtEvent:
         await self._require_case_access(user.id, case_id)
         await self._require_perm(user.id, Permissions.COURT_WRITE)
 
@@ -104,6 +101,7 @@ class CourtEventService:
         )
 
         from app.services.calendar_service import CalendarService
+
         await CalendarService(self.db).sync_court_event(created, user)
 
         return created
@@ -123,9 +121,7 @@ class CourtEventService:
         await self._require_perm(user.id, Permissions.COURT_READ)
         return await self.repo.list_court_events_by_case(case_id, page=page, page_size=page_size)
 
-    async def update_court_event(
-        self, user: User, event_id: uuid.UUID, data: CourtEventUpdate
-    ) -> CourtEvent:
+    async def update_court_event(self, user: User, event_id: uuid.UUID, data: CourtEventUpdate) -> CourtEvent:
         event = await self.repo.get_court_event_by_id(event_id)
         if not event:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Court event not found.")
@@ -133,9 +129,9 @@ class CourtEventService:
         await self._require_perm(user.id, Permissions.COURT_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "hearing_type" in update_fields and update_fields["hearing_type"]:
+        if update_fields.get("hearing_type"):
             update_fields["hearing_type"] = update_fields["hearing_type"].upper()
-        if "status" in update_fields and update_fields["status"]:
+        if update_fields.get("status"):
             update_fields["status"] = update_fields["status"].upper()
 
         for k, v in update_fields.items():
@@ -152,6 +148,7 @@ class CourtEventService:
         )
 
         from app.services.calendar_service import CalendarService
+
         await CalendarService(self.db).sync_court_event(event, user)
 
         return event

@@ -14,15 +14,13 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
-    Numeric,
     String,
     Text,
-    desc,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.database import AuditMixin, Base, SoftDeleteMixin, TimestampMixin
+from app.core.database import AuditMixin, Base, SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.assessment import Assessment
@@ -36,9 +34,7 @@ class PlacementHome(Base, AuditMixin, SoftDeleteMixin):
     """Authorized placement home, foster home, kinship home, or care facility."""
 
     __tablename__ = "placement_homes"
-    __table_args__ = (
-        CheckConstraint("total_capacity >= 0", name="ck_placement_homes_capacity_positive"),
-    )
+    __table_args__ = (CheckConstraint("total_capacity >= 0", name="ck_placement_homes_capacity_positive"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     home_code: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
@@ -106,9 +102,7 @@ class PlacementHome(Base, AuditMixin, SoftDeleteMixin):
     placements: Mapped[list[PlacementEpisode]] = relationship(
         "PlacementEpisode", back_populates="placement_home", lazy="selectin"
     )
-    assessments: Mapped[list[Assessment]] = relationship(
-        "Assessment", back_populates="placement_home", lazy="selectin"
-    )
+    assessments: Mapped[list[Assessment]] = relationship("Assessment", back_populates="placement_home", lazy="selectin")
 
 
 class PlacementHomeMember(Base, AuditMixin, SoftDeleteMixin):
@@ -140,9 +134,7 @@ class PlacementHomeLicense(Base, AuditMixin, SoftDeleteMixin):
     """Historical and active licensing terms for a placement home."""
 
     __tablename__ = "placement_home_licenses"
-    __table_args__ = (
-        CheckConstraint("expiry_date >= effective_date", name="ck_placement_home_licenses_dates_valid"),
-    )
+    __table_args__ = (CheckConstraint("expiry_date >= effective_date", name="ck_placement_home_licenses_dates_valid"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     placement_home_id: Mapped[uuid.UUID] = mapped_column(

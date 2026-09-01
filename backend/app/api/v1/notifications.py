@@ -99,7 +99,9 @@ async def list_deliveries(
     perm_service = PermissionService(db)
     has_perm = await perm_service.user_has_permission(current_user.id, Permissions.NOTIFICATION_DELIVERY_READ)
     if not has_perm:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks notification.delivery.read permission.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks notification.delivery.read permission."
+        )
 
     service = NotificationService(db)
     items, total = await service.repo.list_deliveries(status=status, channel=channel, page=page, page_size=page_size)
@@ -121,7 +123,9 @@ async def retry_delivery(
     perm_service = PermissionService(db)
     has_perm = await perm_service.user_has_permission(current_user.id, Permissions.NOTIFICATION_DELIVERY_RETRY)
     if not has_perm:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks notification.delivery.retry permission.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks notification.delivery.retry permission."
+        )
 
     service = NotificationService(db)
     delivery = await service.retry_delivery(delivery_id)

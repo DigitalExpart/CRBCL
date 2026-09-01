@@ -21,9 +21,17 @@ class FailingEmailProvider(EmailProvider):
     def __init__(self):
         self.should_fail = True
 
-    async def send_email(self, to_address: str, subject: str, body_text: str, body_html: str | None = None) -> DeliveryResult:
+    async def send_email(
+        self, to_address: str, subject: str, body_text: str, body_html: str | None = None
+    ) -> DeliveryResult:
         if self.should_fail:
-            return DeliveryResult(success=False, status="FAILED", provider="FAILING_PROVIDER", failure_code="SMTP_TIMEOUT", error_message="Connection timed out")
+            return DeliveryResult(
+                success=False,
+                status="FAILED",
+                provider="FAILING_PROVIDER",
+                failure_code="SMTP_TIMEOUT",
+                error_message="Connection timed out",
+            )
         return DeliveryResult(success=True, status="SENT", provider="FAILING_PROVIDER")
 
 

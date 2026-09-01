@@ -4,21 +4,17 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notification import Notification, NotificationDelivery, NotificationPreference
-from app.models.user import User
 from app.repositories.notification_repo import NotificationRepo
 from app.services.notification_providers import (
     ConsoleEmailProvider,
     ConsoleSmsProvider,
     EmailProvider,
     SmsProvider,
-    sanitize_external_message,
 )
 
 logger = logging.getLogger("crbcl.notifications")
@@ -111,7 +107,9 @@ class NotificationService:
         # 3. SMS Delivery (Requires Explicit SMS Consent)
         if sms_ok and recipient_phone:
             if not sms_consent:
-                logger.info("SMS delivery skipped for %s: recipient has not granted explicit SMS consent.", recipient_phone)
+                logger.info(
+                    "SMS delivery skipped for %s: recipient has not granted explicit SMS consent.", recipient_phone
+                )
             else:
                 sms_idem_key = f"{idempotency_key_prefix or event_type}:sms:{recipient_id}:{recipient_phone}"
                 delivery = await self.repo.create_delivery(
@@ -141,9 +139,16 @@ class NotificationService:
         }
 
     async def get_user_notifications(
-        self, user_id: uuid.UUID, is_read: bool | None = None, notification_type: str | None = None, page: int = 1, page_size: int = 50
+        self,
+        user_id: uuid.UUID,
+        is_read: bool | None = None,
+        notification_type: str | None = None,
+        page: int = 1,
+        page_size: int = 50,
     ) -> tuple[list[Notification], int]:
-        return await self.repo.list_user_notifications(user_id, is_read=is_read, notification_type=notification_type, page=page, page_size=page_size)
+        return await self.repo.list_user_notifications(
+            user_id, is_read=is_read, notification_type=notification_type, page=page, page_size=page_size
+        )
 
     async def get_unread_count(self, user_id: uuid.UUID) -> int:
         return await self.repo.get_unread_count(user_id)
@@ -182,7 +187,12 @@ class NotificationService:
         return prefs
 
     async def update_user_preference(
-        self, user_id: uuid.UUID, event_type: str, in_app_enabled: bool | None, email_enabled: bool | None, sms_enabled: bool | None
+        self,
+        user_id: uuid.UUID,
+        event_type: str,
+        in_app_enabled: bool | None,
+        email_enabled: bool | None,
+        sms_enabled: bool | None,
     ) -> NotificationPreference:
         return await self.repo.upsert_preference(
             user_id=user_id,

@@ -11,7 +11,6 @@ from sqlalchemy import select
 
 from app.core.database import async_session_factory
 from app.models.case import Case
-from app.models.user import User
 from app.services.notification_service import NotificationService
 from app.services.reminder_service import ScheduledReminderService
 from app.workflows.outbox import OutboxService
@@ -119,7 +118,12 @@ async def run_scheduled_reminders_loop(check_interval: float = 3600.0) -> None:
         await asyncio.sleep(check_interval)
 
 
+async def main() -> None:
+    await asyncio.gather(
+        run_scheduled_reminders_loop(),
+        run_outbox_processor_loop(),
+    )
+
+
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(run_scheduled_reminders_loop())
-    loop.run_until_complete(run_outbox_processor_loop())
+    asyncio.run(main())

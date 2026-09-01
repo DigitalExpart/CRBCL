@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
@@ -110,7 +110,9 @@ async def update_staffing_session(
     return res
 
 
-@router.post("/sessions/{session_id}/attendees", response_model=StaffingAttendeeResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/sessions/{session_id}/attendees", response_model=StaffingAttendeeResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_session_attendee(
     session_id: uuid.UUID,
     payload: StaffingAttendeeCreate,

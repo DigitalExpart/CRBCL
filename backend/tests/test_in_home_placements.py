@@ -1,6 +1,7 @@
 """Tests for In-Home Family Preservation Placements & Safety Monitoring."""
 
 import uuid
+
 import pytest
 from httpx import AsyncClient
 
@@ -21,7 +22,11 @@ async def test_in_home_placement_lifecycle(client: AsyncClient, admin_token: str
     case_res = await client.post(
         "/api/v1/cases",
         headers=headers,
-        json={"title": "Severight Family In-Home Support", "case_type": "Family Support", "primary_client_id": child_id},
+        json={
+            "title": "Severight Family In-Home Support",
+            "case_type": "Family Support",
+            "primary_client_id": child_id,
+        },
     )
     assert case_res.status_code == 201
     case_id = case_res.json()["id"]

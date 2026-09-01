@@ -39,9 +39,7 @@ class BackgroundCheckService:
                 detail=f"User does not have required permission: {permission_key}",
             )
 
-    async def create_background_check(
-        self, user: User, data: BackgroundCheckCreate
-    ) -> BackgroundCheck:
+    async def create_background_check(self, user: User, data: BackgroundCheckCreate) -> BackgroundCheck:
         await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_WRITE)
 
         check = BackgroundCheck(
@@ -120,9 +118,9 @@ class BackgroundCheckService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Background check record not found.")
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "subject_type" in update_fields and update_fields["subject_type"]:
+        if update_fields.get("subject_type"):
             update_fields["subject_type"] = update_fields["subject_type"].upper()
-        if "check_type" in update_fields and update_fields["check_type"]:
+        if update_fields.get("check_type"):
             update_fields["check_type"] = update_fields["check_type"].upper()
 
         for k, v in update_fields.items():

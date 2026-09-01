@@ -6,7 +6,6 @@ import abc
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any
 
 logger = logging.getLogger("crbcl.notifications.providers")
 
@@ -101,7 +100,9 @@ class ResendEmailProvider(EmailProvider):
 
         if not self.api_key:
             # Fallback to console if not configured in environment
-            logger.info("Resend API key not configured. Falling back to console dispatch.")
+            logger.info(
+                "Resend API key not configured. Simulated dispatch for %s: %s | %s", to_address, safe_subject, safe_body
+            )
             return DeliveryResult(success=True, status="SENT", provider="RESEND_SIMULATED")
 
         # In production with configured key:
@@ -126,6 +127,12 @@ class SendGridEmailProvider(EmailProvider):
         safe_body = sanitize_external_message(body_text)
 
         if not self.api_key:
+            logger.info(
+                "SendGrid API key not configured. Simulated dispatch for %s: %s | %s",
+                to_address,
+                safe_subject,
+                safe_body,
+            )
             return DeliveryResult(success=True, status="SENT", provider="SENDGRID_SIMULATED")
 
         return DeliveryResult(success=True, status="SENT", provider="SENDGRID")
@@ -178,7 +185,7 @@ class TwilioSmsProvider(SmsProvider):
     ) -> DeliveryResult:
         safe_body = sanitize_external_message(body)
         if not self.account_sid or not self.auth_token:
-            logger.info("Twilio credentials not configured. Falling back to console SMS dispatch.")
+            logger.info("Twilio credentials not configured. Simulated SMS dispatch for %s: %s", to_phone, safe_body)
             return DeliveryResult(success=True, status="SENT", provider="TWILIO_SIMULATED")
 
         return DeliveryResult(success=True, status="SENT", provider="TWILIO")

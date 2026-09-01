@@ -294,7 +294,11 @@ PERMISSIONS_DATA = [
     {"key": Permissions.ACTIVE_EFFORTS_WRITE, "name": "Record Active Efforts", "category": "placements"},
     {"key": Permissions.BACKGROUND_CHECK_READ, "name": "Read Background Checks", "category": "background_checks"},
     {"key": Permissions.BACKGROUND_CHECK_WRITE, "name": "Request Background Checks", "category": "background_checks"},
-    {"key": Permissions.BACKGROUND_CHECK_ADJUDICATE, "name": "Adjudicate Background Checks", "category": "background_checks"},
+    {
+        "key": Permissions.BACKGROUND_CHECK_ADJUDICATE,
+        "name": "Adjudicate Background Checks",
+        "category": "background_checks",
+    },
     {"key": Permissions.PLACEMENT_READ, "name": "Read Child Placements", "category": "placements"},
     {"key": Permissions.PLACEMENT_WRITE, "name": "Manage Child Placements & Respite", "category": "placements"},
     {"key": Permissions.PLACEMENT_DISCHARGE, "name": "Approve Placement Discharge", "category": "placements"},
@@ -314,24 +318,55 @@ PERMISSIONS_DATA = [
     {"key": Permissions.PLACEMENT_HOME_MEMBER_READ, "name": "Read Home Members", "category": "placement_homes"},
     {"key": Permissions.PLACEMENT_HOME_MEMBER_MANAGE, "name": "Manage Home Members", "category": "placement_homes"},
     {"key": Permissions.PLACEMENT_HOME_LICENSE_READ, "name": "Read Home Licenses", "category": "placement_homes"},
-    {"key": Permissions.PLACEMENT_HOME_LICENSE_MANAGE, "name": "Manage Home Licenses & Renewals", "category": "placement_homes"},
-    {"key": Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_READ, "name": "Read Home Background Checks", "category": "placement_homes"},
-    {"key": Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_MANAGE, "name": "Manage Home Background Checks", "category": "placement_homes"},
+    {
+        "key": Permissions.PLACEMENT_HOME_LICENSE_MANAGE,
+        "name": "Manage Home Licenses & Renewals",
+        "category": "placement_homes",
+    },
+    {
+        "key": Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_READ,
+        "name": "Read Home Background Checks",
+        "category": "placement_homes",
+    },
+    {
+        "key": Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_MANAGE,
+        "name": "Manage Home Background Checks",
+        "category": "placement_homes",
+    },
     {"key": Permissions.PLACEMENT_HOME_ASSESSMENT_READ, "name": "Read Home Assessments", "category": "placement_homes"},
-    {"key": Permissions.PLACEMENT_HOME_ASSESSMENT_CREATE, "name": "Conduct Home Assessments", "category": "placement_homes"},
-    {"key": Permissions.PLACEMENT_HOME_VISIT_READ, "name": "Read Home Visits & Inspections", "category": "placement_homes"},
-    {"key": Permissions.PLACEMENT_HOME_VISIT_CREATE, "name": "Schedule / Record Home Visits", "category": "placement_homes"},
+    {
+        "key": Permissions.PLACEMENT_HOME_ASSESSMENT_CREATE,
+        "name": "Conduct Home Assessments",
+        "category": "placement_homes",
+    },
+    {
+        "key": Permissions.PLACEMENT_HOME_VISIT_READ,
+        "name": "Read Home Visits & Inspections",
+        "category": "placement_homes",
+    },
+    {
+        "key": Permissions.PLACEMENT_HOME_VISIT_CREATE,
+        "name": "Schedule / Record Home Visits",
+        "category": "placement_homes",
+    },
     {"key": Permissions.PLACEMENT_HOME_VISIT_UPDATE, "name": "Update Home Visits", "category": "placement_homes"},
     {"key": Permissions.PLACEMENT_HOME_CONTACT_READ, "name": "Read Home Contact Logs", "category": "placement_homes"},
     {"key": Permissions.PLACEMENT_HOME_CONTACT_CREATE, "name": "Log Home Contacts", "category": "placement_homes"},
     {"key": Permissions.PLACEMENT_HOME_DOCUMENT_READ, "name": "Read Home Documents", "category": "placement_homes"},
     {"key": Permissions.PLACEMENT_HOME_DOCUMENT_MANAGE, "name": "Manage Home Documents", "category": "placement_homes"},
-    {"key": Permissions.PLACEMENT_HOME_CAPACITY_READ, "name": "Read Home Capacity & Occupancy", "category": "placement_homes"},
-    {"key": Permissions.PLACEMENT_HOME_CAPACITY_MANAGE, "name": "Manage Home Capacity Limits", "category": "placement_homes"},
+    {
+        "key": Permissions.PLACEMENT_HOME_CAPACITY_READ,
+        "name": "Read Home Capacity & Occupancy",
+        "category": "placement_homes",
+    },
+    {
+        "key": Permissions.PLACEMENT_HOME_CAPACITY_MANAGE,
+        "name": "Manage Home Capacity Limits",
+        "category": "placement_homes",
+    },
     {"key": Permissions.PLACEMENT_HOME_MAP_READ, "name": "View Placement Homes Map", "category": "placement_homes"},
     # Documents
     {"key": Permissions.DOCUMENT_READ, "name": "Read Documents", "category": "documents"},
-
     {"key": Permissions.DOCUMENT_UPLOAD, "name": "Upload Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_DELETE, "name": "Delete Documents", "category": "documents"},
     # Administration
@@ -751,7 +786,6 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
-
     "case_aide": [
         Permissions.CLIENT_READ,
         Permissions.CLIENT_SCHOOL_READ,

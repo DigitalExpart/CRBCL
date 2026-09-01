@@ -52,9 +52,7 @@ async def list_case_permanency_plans(
     page_size: int = Query(50, ge=1, le=100),
 ) -> PermanencyPlanListResponse:
     service = PermanencyService(db)
-    items, total = await service.list_permanency_plans_by_case(
-        current_user, case_id, page=page, page_size=page_size
-    )
+    items, total = await service.list_permanency_plans_by_case(current_user, case_id, page=page, page_size=page_size)
     return PermanencyPlanListResponse(
         items=[PermanencyPlanResponse.model_validate(i) for i in items],
         total=total,
@@ -110,9 +108,7 @@ async def list_case_visitation_plans(
     page_size: int = Query(50, ge=1, le=100),
 ) -> VisitationPlanListResponse:
     service = PermanencyService(db)
-    items, total = await service.list_visitation_plans_by_case(
-        current_user, case_id, page=page, page_size=page_size
-    )
+    items, total = await service.list_visitation_plans_by_case(current_user, case_id, page=page, page_size=page_size)
     return VisitationPlanListResponse(
         items=[VisitationPlanResponse.model_validate(i) for i in items],
         total=total,

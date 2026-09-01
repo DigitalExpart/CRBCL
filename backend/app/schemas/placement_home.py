@@ -12,7 +12,10 @@ from pydantic import BaseModel, ConfigDict, Field
 # ── Placement Home Member Schemas ───────────────────────────
 class PlacementHomeMemberBase(BaseModel):
     person_id: uuid.UUID
-    role: str = Field(default="PRIMARY_CAREGIVER", description="PRIMARY_CAREGIVER, SECONDARY_CAREGIVER, ADULT_HOUSEHOLD_MEMBER, YOUTH_HOUSEHOLD_MEMBER, OTHER")
+    role: str = Field(
+        default="PRIMARY_CAREGIVER",
+        description="PRIMARY_CAREGIVER, SECONDARY_CAREGIVER, ADULT_HOUSEHOLD_MEMBER, YOUTH_HOUSEHOLD_MEMBER, OTHER",
+    )
     start_date: date = Field(default_factory=date.today)
     end_date: date | None = None
     is_active: bool = True
@@ -175,9 +178,14 @@ class PlacementHomeContactLogRead(PlacementHomeContactLogBase):
 class PlacementHomeBase(BaseModel):
     name: str
     provider_id: uuid.UUID | None = None
-    home_type: str = Field(default="LICENSED_FOSTER", description="LICENSED_FOSTER, THERAPEUTIC, KINSHIP, RELATIVE, FACILITY")
+    home_type: str = Field(
+        default="LICENSED_FOSTER", description="LICENSED_FOSTER, THERAPEUTIC, KINSHIP, RELATIVE, FACILITY"
+    )
     status: str = Field(default="ACTIVE", description="ACTIVE, INACTIVE, ON_HOLD, CLOSED")
-    licensing_status: str = Field(default="UNLICENSED", description="UNLICENSED, APPLICATION, PENDING, ACTIVE, SUSPENDED, EXPIRED, REVOKED, CLOSED")
+    licensing_status: str = Field(
+        default="UNLICENSED",
+        description="UNLICENSED, APPLICATION, PENDING, ACTIVE, SUSPENDED, EXPIRED, REVOKED, CLOSED",
+    )
     total_capacity: int = Field(default=1, ge=0)
     address_line_1: str | None = None
     address_line_2: str | None = None

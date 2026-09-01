@@ -38,7 +38,9 @@ class StaffingSession(Base, AuditMixin, SoftDeleteMixin):
     # Relationships
     facilitator = relationship("User", foreign_keys=[facilitator_id], lazy="selectin")
     team = relationship("Team", foreign_keys=[team_id], lazy="selectin")
-    attendees = relationship("StaffingAttendee", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
+    attendees = relationship(
+        "StaffingAttendee", back_populates="session", cascade="all, delete-orphan", lazy="selectin"
+    )
     cases = relationship("StaffingCase", back_populates="session", cascade="all, delete-orphan", lazy="selectin")
 
     __table_args__ = (
@@ -68,9 +70,7 @@ class StaffingAttendee(Base):
     session = relationship("StaffingSession", back_populates="attendees")
     user = relationship("User", foreign_keys=[user_id], lazy="selectin")
 
-    __table_args__ = (
-        UniqueConstraint("session_id", "user_id", name="uq_staffing_attendee_session_user"),
-    )
+    __table_args__ = (UniqueConstraint("session_id", "user_id", name="uq_staffing_attendee_session_user"),)
 
 
 class StaffingCase(Base):
@@ -100,6 +100,4 @@ class StaffingCase(Base):
     case = relationship("Case", foreign_keys=[case_id], lazy="selectin")
     assigned_worker = relationship("User", foreign_keys=[assigned_worker_id], lazy="selectin")
 
-    __table_args__ = (
-        UniqueConstraint("session_id", "case_id", name="uq_staffing_case_session_case"),
-    )
+    __table_args__ = (UniqueConstraint("session_id", "case_id", name="uq_staffing_case_session_case"),)

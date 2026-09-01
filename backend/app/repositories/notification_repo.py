@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Any
 
-from sqlalchemy import and_, desc, func, select, update
+from sqlalchemy import and_, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.models.notification import (
     Notification,
@@ -49,10 +47,7 @@ class NotificationRepo:
         return notification
 
     async def get_by_id(self, notification_id: uuid.UUID) -> Notification | None:
-        stmt = (
-            select(Notification)
-            .where(Notification.id == notification_id)
-        )
+        stmt = select(Notification).where(Notification.id == notification_id)
         res = await self.db.execute(stmt)
         return res.scalar_one_or_none()
 
@@ -242,11 +237,7 @@ class NotificationRepo:
         stmt = select(NotificationDelivery)
         if conditions:
             stmt = stmt.where(and_(*conditions))
-        stmt = (
-            stmt.order_by(NotificationDelivery.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-        )
+        stmt = stmt.order_by(NotificationDelivery.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
         res = await self.db.execute(stmt)
         return list(res.scalars().all()), total
 
@@ -289,7 +280,9 @@ class NotificationRepo:
         return res.scalar_one_or_none()
 
     async def list_templates(self) -> list[NotificationTemplate]:
-        stmt = select(NotificationTemplate).order_by(NotificationTemplate.event_type.asc(), NotificationTemplate.channel.asc())
+        stmt = select(NotificationTemplate).order_by(
+            NotificationTemplate.event_type.asc(), NotificationTemplate.channel.asc()
+        )
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
 

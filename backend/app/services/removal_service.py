@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -130,11 +129,11 @@ class RemovalService:
         await self._require_perm(user.id, Permissions.REMOVAL_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "removal_type" in update_fields and update_fields["removal_type"]:
+        if update_fields.get("removal_type"):
             update_fields["removal_type"] = update_fields["removal_type"].upper()
-        if "authority_type" in update_fields and update_fields["authority_type"]:
+        if update_fields.get("authority_type"):
             update_fields["authority_type"] = update_fields["authority_type"].upper()
-        if "status" in update_fields and update_fields["status"]:
+        if update_fields.get("status"):
             update_fields["status"] = update_fields["status"].upper()
 
         for k, v in update_fields.items():

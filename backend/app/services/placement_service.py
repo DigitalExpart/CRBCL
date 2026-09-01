@@ -97,6 +97,7 @@ class PlacementService:
         # Concurrency & Capacity Protection for Placement Homes (ADR-018)
         if data.placement_home_id:
             from app.repositories.placement_home_repo import PlacementHomeRepository
+
             home_repo = PlacementHomeRepository(self.db)
             # Row lock placement_home to prevent overbooking races
             home = await home_repo.get_for_update(data.placement_home_id)
@@ -149,7 +150,6 @@ class PlacementService:
             updated_by=user.id,
         )
         created = await self.repo.create_placement_episode(placement)
-
 
         # Audit & Timeline
         await self.audit.log(
@@ -214,9 +214,9 @@ class PlacementService:
         await self._require_perm(user.id, Permissions.PLACEMENT_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "placement_type" in update_fields and update_fields["placement_type"]:
+        if update_fields.get("placement_type"):
             update_fields["placement_type"] = update_fields["placement_type"].upper()
-        if "status" in update_fields and update_fields["status"]:
+        if update_fields.get("status"):
             update_fields["status"] = update_fields["status"].upper()
 
         for k, v in update_fields.items():
@@ -250,9 +250,7 @@ class PlacementService:
 
         placement.status = "DISRUPTED"
         if reason:
-            placement.placement_notes = (
-                f"{placement.placement_notes or ''}\n[Disruption Reason]: {reason}"
-            ).strip()
+            placement.placement_notes = (f"{placement.placement_notes or ''}\n[Disruption Reason]: {reason}").strip()
         placement.updated_by = user.id
         placement.version += 1
 
@@ -320,9 +318,7 @@ class PlacementService:
         )
         return created
 
-    async def list_respite_episodes(
-        self, user: User, placement_id: uuid.UUID
-    ) -> list[RespiteEpisode]:
+    async def list_respite_episodes(self, user: User, placement_id: uuid.UUID) -> list[RespiteEpisode]:
         placement = await self.repo.get_placement_episode_by_id(placement_id)
         if not placement:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Placement episode not found.")
@@ -343,9 +339,9 @@ class PlacementService:
         await self._require_perm(user.id, Permissions.PLACEMENT_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "respite_type" in update_fields and update_fields["respite_type"]:
+        if update_fields.get("respite_type"):
             update_fields["respite_type"] = update_fields["respite_type"].upper()
-        if "status" in update_fields and update_fields["status"]:
+        if update_fields.get("status"):
             update_fields["status"] = update_fields["status"].upper()
 
         for k, v in update_fields.items():
@@ -525,9 +521,9 @@ class PlacementService:
         await self._require_perm(user.id, Permissions.PLACEMENT_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "supervision_level" in update_fields and update_fields["supervision_level"]:
+        if update_fields.get("supervision_level"):
             update_fields["supervision_level"] = update_fields["supervision_level"].upper()
-        if "safety_monitoring_frequency" in update_fields and update_fields["safety_monitoring_frequency"]:
+        if update_fields.get("safety_monitoring_frequency"):
             update_fields["safety_monitoring_frequency"] = update_fields["safety_monitoring_frequency"].upper()
 
         for k, v in update_fields.items():

@@ -55,11 +55,17 @@ class BackgroundCheck(Base, AuditMixin, SoftDeleteMixin):
     __tablename__ = "background_checks"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    subject_type: Mapped[str] = mapped_column(String(50), nullable=False)  # CLIENT, PERSON, PLACEMENT_PROVIDER, VOLUNTEER, STAFF, OTHER
+    subject_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # CLIENT, PERSON, PLACEMENT_PROVIDER, VOLUNTEER, STAFF, OTHER
     subject_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
     subject_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    check_type: Mapped[str] = mapped_column(String(50), nullable=False)  # CRIMINAL_RECORD, CHILD_ABUSE_REGISTRY, VULNERABLE_SECTOR, REFERENCE_CHECK
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="PENDING", index=True)  # PENDING, PASSED, FAILED, CONDITIONAL, EXPIRED
+    check_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # CRIMINAL_RECORD, CHILD_ABUSE_REGISTRY, VULNERABLE_SECTOR, REFERENCE_CHECK
+    status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="PENDING", index=True
+    )  # PENDING, PASSED, FAILED, CONDITIONAL, EXPIRED
     request_date: Mapped[date] = mapped_column(Date, nullable=False)
     completion_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     expiry_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
@@ -93,9 +99,15 @@ class InHomePlacement(Base, AuditMixin, SoftDeleteMixin):
     caregiver_relationship: Mapped[str | None] = mapped_column(String(100), nullable=True)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="ACTIVE", index=True)  # ACTIVE, ENDED, ESCALATED_TO_REMOVAL
-    supervision_level: Mapped[str] = mapped_column(String(50), nullable=False, default="STANDARD")  # MINIMAL, STANDARD, INTENSIVE
-    safety_monitoring_frequency: Mapped[str] = mapped_column(String(50), nullable=False, default="WEEKLY")  # DAILY, WEEKLY, BIWEEKLY, MONTHLY
+    status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="ACTIVE", index=True
+    )  # ACTIVE, ENDED, ESCALATED_TO_REMOVAL
+    supervision_level: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="STANDARD"
+    )  # MINIMAL, STANDARD, INTENSIVE
+    safety_monitoring_frequency: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="WEEKLY"
+    )  # DAILY, WEEKLY, BIWEEKLY, MONTHLY
     support_services_provided: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSONB, nullable=True)
     closure_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -119,8 +131,12 @@ class RemovalEpisode(Base, AuditMixin, SoftDeleteMixin):
     )
     removal_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     removal_time: Mapped[time | None] = mapped_column(Time, nullable=True)
-    removal_type: Mapped[str] = mapped_column(String(50), nullable=False)  # VOLUNTARY, EMERGENCY_ORDER, COURT_APPREHENSION, TEMPORARY_CUSTODY
-    authority_type: Mapped[str] = mapped_column(String(50), nullable=False)  # CHILD_WELFARE_WARRANT, CONSENT_AGREEMENT, POLICE_ASSISTANCE, COURT_ORDER
+    removal_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # VOLUNTARY, EMERGENCY_ORDER, COURT_APPREHENSION, TEMPORARY_CUSTODY
+    authority_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # CHILD_WELFARE_WARRANT, CONSENT_AGREEMENT, POLICE_ASSISTANCE, COURT_ORDER
     legal_authority_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
     reason_for_removal: Mapped[str] = mapped_column(Text, nullable=False)
     immediate_safety_threat: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -153,13 +169,17 @@ class PlacementEpisode(Base, AuditMixin, SoftDeleteMixin):
     placement_home_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("placement_homes.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    placement_type: Mapped[str] = mapped_column(String(50), nullable=False)  # KINSHIP, CUSTOMARY_CARE, FOSTER_HOME, GROUP_HOME, INDEPENDENT_LIVING, OTHER
+    placement_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # KINSHIP, CUSTOMARY_CARE, FOSTER_HOME, GROUP_HOME, INDEPENDENT_LIVING, OTHER
     provider_name: Mapped[str] = mapped_column(String(255), nullable=False)
     provider_contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
     provider_address: Mapped[str | None] = mapped_column(String(255), nullable=True)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="ACTIVE", index=True)  # ACTIVE, DISRUPTED, PLANNED_DISCHARGE, TRANSFERRED, COMPLETED
+    status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="ACTIVE", index=True
+    )  # ACTIVE, DISRUPTED, PLANNED_DISCHARGE, TRANSFERRED, COMPLETED
     primary_caregiver_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     per_diem_rate: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     cultural_plan_in_place: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -170,8 +190,9 @@ class PlacementEpisode(Base, AuditMixin, SoftDeleteMixin):
     removal_episode = relationship("RemovalEpisode", back_populates="placements")
     placement_home = relationship("PlacementHome", back_populates="placements")
     respite_episodes = relationship("RespiteEpisode", back_populates="placement_episode", cascade="all, delete-orphan")
-    discharge_episode = relationship("DischargeEpisode", back_populates="placement_episode", uselist=False, cascade="all, delete-orphan")
-
+    discharge_episode = relationship(
+        "DischargeEpisode", back_populates="placement_episode", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class RespiteEpisode(Base, AuditMixin, SoftDeleteMixin):
@@ -188,7 +209,9 @@ class RespiteEpisode(Base, AuditMixin, SoftDeleteMixin):
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="SCHEDULED")  # SCHEDULED, ACTIVE, COMPLETED, CANCELLED
+    status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="SCHEDULED"
+    )  # SCHEDULED, ACTIVE, COMPLETED, CANCELLED
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     placement_episode = relationship("PlacementEpisode", back_populates="respite_episodes")
@@ -201,10 +224,16 @@ class DischargeEpisode(Base, AuditMixin, SoftDeleteMixin):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     placement_episode_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("placement_episodes.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+        UUID(as_uuid=True),
+        ForeignKey("placement_episodes.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
     )
     discharge_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
-    discharge_type: Mapped[str] = mapped_column(String(50), nullable=False)  # REUNIFICATION, CUSTOMARY_ADOPTION, PERMANENT_KINSHIP, AGING_OUT, TRANSFER, OTHER
+    discharge_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # REUNIFICATION, CUSTOMARY_ADOPTION, PERMANENT_KINSHIP, AGING_OUT, TRANSFER, OTHER
     destination_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     destination_relationship: Mapped[str | None] = mapped_column(String(100), nullable=True)
     post_discharge_supervision_plan: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -231,10 +260,14 @@ class PermanencyPlan(Base, AuditMixin, SoftDeleteMixin):
     child_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    primary_goal: Mapped[str] = mapped_column(String(50), nullable=False)  # REUNIFICATION, CUSTOMARY_CARE, KINSHIP_LEGAL_CUSTODY, ADOPTION, INDEPENDENT_LIVING, OTHER
+    primary_goal: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # REUNIFICATION, CUSTOMARY_CARE, KINSHIP_LEGAL_CUSTODY, ADOPTION, INDEPENDENT_LIVING, OTHER
     concurrent_goal: Mapped[str | None] = mapped_column(String(50), nullable=True)
     target_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="DRAFT", index=True)  # DRAFT, ACTIVE, ACHIEVED, MODIFIED, CLOSED
+    status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="DRAFT", index=True
+    )  # DRAFT, ACTIVE, ACHIEVED, MODIFIED, CLOSED
     cultural_heritage_strategy: Mapped[str | None] = mapped_column(Text, nullable=True)
     sibling_co_placement_strategy: Mapped[str | None] = mapped_column(Text, nullable=True)
     review_frequency_months: Mapped[int] = mapped_column(Integer, nullable=False, default=6)
@@ -266,13 +299,19 @@ class VisitationPlan(Base, AuditMixin, SoftDeleteMixin):
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="CASCADE"), nullable=False, index=True
     )
     participant_names: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSONB, nullable=True)
-    frequency: Mapped[str] = mapped_column(String(50), nullable=False, default="WEEKLY")  # DAILY, WEEKLY, BIWEEKLY, MONTHLY, SPECIAL_OCCASIONS
+    frequency: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="WEEKLY"
+    )  # DAILY, WEEKLY, BIWEEKLY, MONTHLY, SPECIAL_OCCASIONS
     duration_hours: Mapped[Decimal | None] = mapped_column(Numeric(4, 2), nullable=True)
     supervision_required: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    supervisor_type: Mapped[str] = mapped_column(String(50), nullable=False, default="CASE_WORKER")  # CASE_WORKER, FAMILY_SUPPORT_WORKER, UNMONITORED, THIRD_PARTY
+    supervisor_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="CASE_WORKER"
+    )  # CASE_WORKER, FAMILY_SUPPORT_WORKER, UNMONITORED, THIRD_PARTY
     location: Mapped[str | None] = mapped_column(String(255), nullable=True)
     conditions: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="ACTIVE", index=True)  # ACTIVE, SUSPENDED, MODIFIED, TERMINATED
+    status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="ACTIVE", index=True
+    )  # ACTIVE, SUSPENDED, MODIFIED, TERMINATED
     effective_from: Mapped[date] = mapped_column(Date, nullable=False)
     effective_to: Mapped[date | None] = mapped_column(Date, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -293,7 +332,9 @@ class CourtEvent(Base, AuditMixin, SoftDeleteMixin):
     child_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    hearing_type: Mapped[str] = mapped_column(String(50), nullable=False)  # INITIAL_APPEARANCE, PROTECTION_HEARING, TEMPORARY_CUSTODY_REVIEW, PERMANENCY_HEARING, STATUS_REVIEW, BAND_REPRESENTATION_HEARING, OTHER
+    hearing_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # INITIAL_APPEARANCE, PROTECTION_HEARING, TEMPORARY_CUSTODY_REVIEW, PERMANENCY_HEARING, STATUS_REVIEW, BAND_REPRESENTATION_HEARING, OTHER
     court_docket_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     court_location: Mapped[str | None] = mapped_column(String(255), nullable=True)
     judge_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -304,7 +345,9 @@ class CourtEvent(Base, AuditMixin, SoftDeleteMixin):
     legal_counsel_info: Mapped[str | None] = mapped_column(Text, nullable=True)
     band_representative_present: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     next_court_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="SCHEDULED", index=True)  # SCHEDULED, COMPLETED, ADJOURNED, CANCELLED
+    status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="SCHEDULED", index=True
+    )  # SCHEDULED, COMPLETED, ADJOURNED, CANCELLED
 
     case = relationship("Case", backref="court_events")
     child = relationship("Person", foreign_keys=[child_id])

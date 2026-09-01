@@ -41,7 +41,6 @@ def _sanitize_dict(data: dict[str, Any] | None) -> dict[str, Any] | None:
     return sanitized
 
 
-
 class AuditService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -79,7 +78,6 @@ class AuditService:
         return event
 
     log = log_event
-
 
     async def log_access(
         self,

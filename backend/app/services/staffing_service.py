@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from fastapi import HTTPException, status
@@ -52,7 +52,9 @@ class StaffingService:
         if current_user:
             has_perm = await self.perm_service.user_has_permission(current_user.id, Permissions.STAFFING_CREATE)
             if not has_perm:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks staffing.create permission.")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks staffing.create permission."
+                )
 
         session = await self.repo.create_session(
             session_date=session_date,
@@ -204,7 +206,9 @@ class StaffingService:
         if current_user:
             has_perm = await self.perm_service.user_has_permission(current_user.id, Permissions.STAFFING_UPDATE)
             if not has_perm:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks staffing.update permission.")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks staffing.update permission."
+                )
 
         session = await self.repo.update_session(
             session_id=session_id,
@@ -228,12 +232,19 @@ class StaffingService:
             if "status" in update_data:
                 cal_updates["status"] = session.status
             if cal_updates:
-                await self.cal_repo.update(cal_evt.id, cal_updates, updated_by=current_user.id if current_user else None)
+                await self.cal_repo.update(
+                    cal_evt.id, cal_updates, updated_by=current_user.id if current_user else None
+                )
 
         return await self.get_session(session.id, current_user)
 
     async def add_attendee(
-        self, session_id: uuid.UUID, user_id: uuid.UUID, status_val: str = "PENDING", notes: str | None = None, current_user: User | None = None
+        self,
+        session_id: uuid.UUID,
+        user_id: uuid.UUID,
+        status_val: str = "PENDING",
+        notes: str | None = None,
+        current_user: User | None = None,
     ) -> StaffingAttendee:
         session = await self.repo.get_by_id(session_id)
         if not session:
@@ -278,7 +289,9 @@ class StaffingService:
 
         sc = await self.repo.update_case_review(session_id, case_id, update_data)
         if not sc:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case is not attached to this staffing session.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Case is not attached to this staffing session."
+            )
         return sc
 
     async def complete_session(
@@ -288,7 +301,9 @@ class StaffingService:
         if current_user:
             has_perm = await self.perm_service.user_has_permission(current_user.id, Permissions.STAFFING_COMPLETE)
             if not has_perm:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks staffing.complete permission.")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Lacks staffing.complete permission."
+                )
 
         session = await self.repo.get_by_id(session_id)
         if not session:
@@ -308,11 +323,15 @@ class StaffingService:
         # Update calendar event status
         cal_evt = await self.cal_repo.get_by_source("staffing_session", session.id)
         if cal_evt:
-            await self.cal_repo.update(cal_evt.id, {"status": "COMPLETED"}, updated_by=current_user.id if current_user else None)
+            await self.cal_repo.update(
+                cal_evt.id, {"status": "COMPLETED"}, updated_by=current_user.id if current_user else None
+            )
 
         return await self.get_session(session.id, current_user)
 
-    async def get_case_buckets(self, team_id: uuid.UUID | None = None, current_user: User | None = None) -> StaffingCaseBucketsResponse:
+    async def get_case_buckets(
+        self, team_id: uuid.UUID | None = None, current_user: User | None = None
+    ) -> StaffingCaseBucketsResponse:
         """Retrieve automated server-side case triage buckets."""
         raw_buckets = await self.repo.get_triage_buckets(team_id=team_id)
 

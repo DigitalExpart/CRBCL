@@ -124,9 +124,10 @@ async def test_capacity_released_on_discharge(
         "post_discharge_supervision_plan": "Bi-weekly wellness check-ins for 6 months.",
         "notes": "Reunited safely with biological parents under family safety plan.",
     }
-    d_res = await client.post(f"/api/v1/placements/{placement_id}/discharge", headers=sup_headers, json=discharge_payload)
+    d_res = await client.post(
+        f"/api/v1/placements/{placement_id}/discharge", headers=sup_headers, json=discharge_payload
+    )
     assert d_res.status_code == 201, d_res.text
-
 
     # Verify home occupancy is now 0 and available beds is restored to 1
     detail_after = await client.get(f"/api/v1/placement-homes/{home.id}", headers=headers)
@@ -212,7 +213,9 @@ async def test_placement_history_case_privacy_redaction(
     case_open = Case(case_number=f"CASE-OPEN-{uuid.uuid4().hex[:4]}", title="Stone Family", status="OPEN")
 
     child_restricted = Person(first_name="Kylie", last_name="Confidential", date_of_birth=date(2016, 7, 7))
-    case_restricted = Case(case_number=f"CASE-RESTR-{uuid.uuid4().hex[:4]}", title="Confidential High Profile", status="OPEN")
+    case_restricted = Case(
+        case_number=f"CASE-RESTR-{uuid.uuid4().hex[:4]}", title="Confidential High Profile", status="OPEN"
+    )
 
     db_session.add_all([home, child_open, case_open, child_restricted, case_restricted])
     await db_session.flush()

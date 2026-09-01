@@ -6,12 +6,10 @@ import uuid
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import and_, asc, case, desc, func, or_, select
+from sqlalchemy import and_, case, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.case import Case
-from app.models.person import Person
 from app.models.placement import PlacementEpisode
 from app.models.placement_home import (
     PlacementHome,
@@ -49,7 +47,6 @@ class PlacementHomeRepository:
         )
         result = await self.session.execute(query)
         return result.scalars().first()
-
 
     async def get_for_update(self, home_id: uuid.UUID) -> PlacementHome | None:
         """Acquire a row-level lock (SELECT ... FOR UPDATE) on the placement home to ensure atomic capacity checks."""
@@ -161,9 +158,7 @@ class PlacementHomeRepository:
             stmt = stmt.where(PlacementHome.community.ilike(f"%{filters.community}%"))
 
         if filters.available_only:
-            stmt = stmt.where(
-                PlacementHome.total_capacity > func.coalesce(occupancy_subq.c.occupied_count, 0)
-            )
+            stmt = stmt.where(PlacementHome.total_capacity > func.coalesce(occupancy_subq.c.occupied_count, 0))
 
         # Count total matching
         count_stmt = select(func.count()).select_from(stmt.subquery())
@@ -180,22 +175,24 @@ class PlacementHomeRepository:
         items = []
         for home, occupied_count in rows:
             avail = max(0, home.total_capacity - occupied_count)
-            items.append({
-                "id": home.id,
-                "home_code": home.home_code,
-                "name": home.name,
-                "home_type": home.home_type,
-                "status": home.status,
-                "licensing_status": home.licensing_status,
-                "total_capacity": home.total_capacity,
-                "occupied_beds": occupied_count,
-                "available_beds": avail,
-                "community": home.community,
-                "city": home.city,
-                "primary_caregiver_name": home.primary_caregiver_name,
-                "is_archived": home.is_archived,
-                "created_at": home.created_at,
-            })
+            items.append(
+                {
+                    "id": home.id,
+                    "home_code": home.home_code,
+                    "name": home.name,
+                    "home_type": home.home_type,
+                    "status": home.status,
+                    "licensing_status": home.licensing_status,
+                    "total_capacity": home.total_capacity,
+                    "occupied_beds": occupied_count,
+                    "available_beds": avail,
+                    "community": home.community,
+                    "city": home.city,
+                    "primary_caregiver_name": home.primary_caregiver_name,
+                    "is_archived": home.is_archived,
+                    "created_at": home.created_at,
+                }
+            )
 
         return items, total
 
@@ -233,21 +230,23 @@ class PlacementHomeRepository:
 
         markers = []
         for home, occupied_count in rows:
-            markers.append({
-                "id": home.id,
-                "home_code": home.home_code,
-                "name": home.name,
-                "home_type": home.home_type,
-                "status": home.status,
-                "licensing_status": home.licensing_status,
-                "total_capacity": home.total_capacity,
-                "occupied_beds": occupied_count,
-                "available_beds": max(0, home.total_capacity - occupied_count),
-                "community": home.community,
-                "city": home.city,
-                "latitude": home.latitude,
-                "longitude": home.longitude,
-            })
+            markers.append(
+                {
+                    "id": home.id,
+                    "home_code": home.home_code,
+                    "name": home.name,
+                    "home_type": home.home_type,
+                    "status": home.status,
+                    "licensing_status": home.licensing_status,
+                    "total_capacity": home.total_capacity,
+                    "occupied_beds": occupied_count,
+                    "available_beds": max(0, home.total_capacity - occupied_count),
+                    "community": home.community,
+                    "city": home.city,
+                    "latitude": home.latitude,
+                    "longitude": home.longitude,
+                }
+            )
         return markers
 
     async def get_metrics(self) -> dict[str, Any]:
@@ -262,7 +261,9 @@ class PlacementHomeRepository:
                 func.count(PlacementHome.id).label("total_homes"),
                 func.count(case((PlacementHome.status == "ACTIVE", 1))).label("active_homes"),
                 func.count(case((PlacementHome.licensing_status == "ACTIVE", 1))).label("licensed_homes"),
-                func.coalesce(func.sum(case((PlacementHome.is_archived.is_(False), PlacementHome.total_capacity))), 0).label("total_beds"),
+                func.coalesce(
+                    func.sum(case((PlacementHome.is_archived.is_(False), PlacementHome.total_capacity))), 0
+                ).label("total_beds"),
             ).where(
                 PlacementHome.deleted_at.is_(None),
             )
@@ -313,9 +314,41 @@ class PlacementHomeRepository:
         # 4. Licensing alerts
         lic_res = await self.session.execute(
             select(
-                func.count(case((and_(PlacementHomeLicense.status == "ACTIVE", PlacementHomeLicense.expiry_date <= d90, PlacementHomeLicense.expiry_date > today), 1))).label("exp_90"),
-                func.count(case((and_(PlacementHomeLicense.status == "ACTIVE", PlacementHomeLicense.expiry_date <= d30, PlacementHomeLicense.expiry_date > today), 1))).label("exp_30"),
-                func.count(case((or_(PlacementHomeLicense.status == "EXPIRED", and_(PlacementHomeLicense.status == "ACTIVE", PlacementHomeLicense.expiry_date < today)), 1))).label("expired"),
+                func.count(
+                    case(
+                        (
+                            and_(
+                                PlacementHomeLicense.status == "ACTIVE",
+                                PlacementHomeLicense.expiry_date <= d90,
+                                PlacementHomeLicense.expiry_date > today,
+                            ),
+                            1,
+                        )
+                    )
+                ).label("exp_90"),
+                func.count(
+                    case(
+                        (
+                            and_(
+                                PlacementHomeLicense.status == "ACTIVE",
+                                PlacementHomeLicense.expiry_date <= d30,
+                                PlacementHomeLicense.expiry_date > today,
+                            ),
+                            1,
+                        )
+                    )
+                ).label("exp_30"),
+                func.count(
+                    case(
+                        (
+                            or_(
+                                PlacementHomeLicense.status == "EXPIRED",
+                                and_(PlacementHomeLicense.status == "ACTIVE", PlacementHomeLicense.expiry_date < today),
+                            ),
+                            1,
+                        )
+                    )
+                ).label("expired"),
             ).where(
                 PlacementHomeLicense.deleted_at.is_(None),
             )

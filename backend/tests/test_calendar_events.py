@@ -150,7 +150,10 @@ async def test_court_event_calendar_synchronization(
     # Query My Schedule to verify synchronized court calendar event
     sched_res = await client.get(
         "/api/v1/calendar/my-schedule",
-        params={"start_at": datetime.now(UTC).isoformat(), "end_at": (datetime.now(UTC) + timedelta(days=30)).isoformat()},
+        params={
+            "start_at": datetime.now(UTC).isoformat(),
+            "end_at": (datetime.now(UTC) + timedelta(days=30)).isoformat(),
+        },
         headers=headers,
     )
     assert sched_res.status_code == 200
@@ -201,7 +204,10 @@ async def test_case_note_next_appointment_calendar_synchronization(
     # Query schedule to find the follow-up event
     sched_res = await client.get(
         "/api/v1/calendar/my-schedule",
-        params={"start_at": datetime.now(UTC).isoformat(), "end_at": (datetime.now(UTC) + timedelta(days=14)).isoformat()},
+        params={
+            "start_at": datetime.now(UTC).isoformat(),
+            "end_at": (datetime.now(UTC) + timedelta(days=14)).isoformat(),
+        },
         headers=headers,
     )
     assert sched_res.status_code == 200

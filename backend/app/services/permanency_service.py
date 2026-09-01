@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -131,11 +130,11 @@ class PermanencyService:
         await self._require_perm(user.id, Permissions.PERMANENCY_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "primary_goal" in update_fields and update_fields["primary_goal"]:
+        if update_fields.get("primary_goal"):
             update_fields["primary_goal"] = update_fields["primary_goal"].upper()
-        if "concurrent_goal" in update_fields and update_fields["concurrent_goal"]:
+        if update_fields.get("concurrent_goal"):
             update_fields["concurrent_goal"] = update_fields["concurrent_goal"].upper()
-        if "status" in update_fields and update_fields["status"]:
+        if update_fields.get("status"):
             update_fields["status"] = update_fields["status"].upper()
 
         for k, v in update_fields.items():
@@ -235,11 +234,11 @@ class PermanencyService:
         await self._require_perm(user.id, Permissions.VISITATION_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
-        if "frequency" in update_fields and update_fields["frequency"]:
+        if update_fields.get("frequency"):
             update_fields["frequency"] = update_fields["frequency"].upper()
-        if "supervisor_type" in update_fields and update_fields["supervisor_type"]:
+        if update_fields.get("supervisor_type"):
             update_fields["supervisor_type"] = update_fields["supervisor_type"].upper()
-        if "status" in update_fields and update_fields["status"]:
+        if update_fields.get("status"):
             update_fields["status"] = update_fields["status"].upper()
 
         for k, v in update_fields.items():

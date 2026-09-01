@@ -47,9 +47,7 @@ async def list_case_removals(
     page_size: int = Query(50, ge=1, le=100),
 ) -> RemovalEpisodeListResponse:
     service = RemovalService(db)
-    items, total = await service.list_removal_episodes_by_case(
-        current_user, case_id, page=page, page_size=page_size
-    )
+    items, total = await service.list_removal_episodes_by_case(current_user, case_id, page=page, page_size=page_size)
     return RemovalEpisodeListResponse(
         items=[RemovalEpisodeResponse.model_validate(i) for i in items],
         total=total,

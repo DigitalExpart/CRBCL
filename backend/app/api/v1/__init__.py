@@ -6,6 +6,7 @@ from app.api.v1.active_efforts import router as active_efforts_router
 from app.api.v1.assessment_templates import router as assessment_templates_router
 from app.api.v1.assessments import router as assessments_router
 from app.api.v1.background_checks import router as background_checks_router
+from app.api.v1.calendar import router as calendar_router
 from app.api.v1.case_notes import router as case_notes_router
 from app.api.v1.cases import router as cases_router
 from app.api.v1.clients import router as clients_router
@@ -14,6 +15,9 @@ from app.api.v1.families import router as families_router
 from app.api.v1.health import router as health_router
 from app.api.v1.households import router as households_router
 from app.api.v1.lookups import router as lookups_router
+from app.api.v1.notification_preferences import router as notification_preferences_router
+from app.api.v1.notification_templates import router as notification_templates_router
+from app.api.v1.notifications import router as notifications_router
 from app.api.v1.permanency_plans import router as permanency_plans_router
 from app.api.v1.placement_homes import router as placement_homes_router
 from app.api.v1.placements import router as placements_router
@@ -22,10 +26,6 @@ from app.api.v1.providers import router as providers_router
 from app.api.v1.referrals import router as referrals_router
 from app.api.v1.removals import router as removals_router
 from app.api.v1.schools import router as schools_router
-from app.api.v1.calendar import router as calendar_router
-from app.api.v1.notification_preferences import router as notification_preferences_router
-from app.api.v1.notification_templates import router as notification_templates_router
-from app.api.v1.notifications import router as notifications_router
 from app.api.v1.staffing import router as staffing_router
 from app.api.v1.teams import router as teams_router
 from app.api.v1.users import router as users_router
@@ -62,4 +62,3 @@ api_v1_router.include_router(staffing_router)
 api_v1_router.include_router(notifications_router)
 api_v1_router.include_router(notification_preferences_router)
 api_v1_router.include_router(notification_templates_router)
-

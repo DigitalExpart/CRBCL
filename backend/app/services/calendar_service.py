@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, datetime, time, timedelta
 from typing import Any
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.calendar import CalendarEvent, CalendarRecurrenceRule
-from app.models.case_management import CaseRestriction
-from app.models.placement import CourtEvent, VisitationPlan
+from app.models.calendar import CalendarEvent
+from app.models.placement import CourtEvent
 from app.models.user import User
 from app.permissions.constants import Permissions
 from app.permissions.service import PermissionService
@@ -57,12 +55,11 @@ class CalendarService:
                 detail="Event end time must be greater than or equal to start time.",
             )
 
-        if case_id and current_user:
-            if await self.perm_service.is_user_restricted_from_case(current_user.id, case_id):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Access denied: Case restriction active.",
-                )
+        if case_id and current_user and await self.perm_service.is_user_restricted_from_case(current_user.id, case_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: Case restriction active.",
+            )
 
         event = await self.repo.create(
             event_type=event_type,

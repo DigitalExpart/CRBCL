@@ -17,6 +17,10 @@ from app.models.assessment import (  # noqa: F401
     AssessmentUnlockEvent,
 )
 from app.models.audit import AccessEvent, AuditEvent  # noqa: F401
+from app.models.calendar import (  # noqa: F401
+    CalendarEvent,
+    CalendarRecurrenceRule,
+)
 from app.models.case import Case  # noqa: F401
 from app.models.case_management import (  # noqa: F401
     CaseAssignment,
@@ -46,6 +50,12 @@ from app.models.medical import (  # noqa: F401
     ClientMedicalProfile,
     ClientMedication,
 )
+from app.models.notification import (  # noqa: F401
+    Notification,
+    NotificationDelivery,
+    NotificationPreference,
+    NotificationTemplate,
+)
 from app.models.outbox import OutboxEvent  # noqa: F401
 from app.models.person import (  # noqa: F401
     Person,
@@ -56,6 +66,25 @@ from app.models.person import (  # noqa: F401
     PersonMerge,
     PersonPhysicalDescription,
     PersonStrength,
+)
+from app.models.placement import (  # noqa: F401
+    ActiveEffort,
+    BackgroundCheck,
+    CourtEvent,
+    DischargeEpisode,
+    InHomePlacement,
+    PermanencyPlan,
+    PlacementEpisode,
+    RemovalEpisode,
+    RespiteEpisode,
+    VisitationPlan,
+)
+from app.models.placement_home import (  # noqa: F401
+    PlacementHome,
+    PlacementHomeContactLog,
+    PlacementHomeLicense,
+    PlacementHomeMember,
+    PlacementHomeVisit,
 )
 from app.models.plan import (  # noqa: F401
     GoalProgressUpdate,
@@ -98,43 +127,12 @@ from app.models.school import (  # noqa: F401
     ClientSchoolEnrolment,
     School,
 )
-from app.models.placement import (  # noqa: F401
-    ActiveEffort,
-    BackgroundCheck,
-    CourtEvent,
-    DischargeEpisode,
-    InHomePlacement,
-    PermanencyPlan,
-    PlacementEpisode,
-    RemovalEpisode,
-    RespiteEpisode,
-    VisitationPlan,
-)
-from app.models.placement_home import (  # noqa: F401
-    PlacementHome,
-    PlacementHomeContactLog,
-    PlacementHomeLicense,
-    PlacementHomeMember,
-    PlacementHomeVisit,
-)
-from app.models.calendar import (  # noqa: F401
-    CalendarEvent,
-    CalendarRecurrenceRule,
-)
 from app.models.staffing import (  # noqa: F401
     StaffingAttendee,
     StaffingCase,
     StaffingSession,
 )
-from app.models.notification import (  # noqa: F401
-    Notification,
-    NotificationDelivery,
-    NotificationPreference,
-    NotificationTemplate,
-)
 from app.models.team import Team, TeamMembership, UserTeamAccess  # noqa: F401
 from app.models.terminology import TerminologyKey, TerminologyTranslation  # noqa: F401
 from app.models.timeline import TimelineEvent  # noqa: F401
 from app.models.user import EmailVerificationCode, Session, User, UserPreference  # noqa: F401
-
-

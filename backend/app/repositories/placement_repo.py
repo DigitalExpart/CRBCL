@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
-from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -37,10 +35,7 @@ class PlacementRepository:
         return effort
 
     async def get_active_effort_by_id(self, effort_id: uuid.UUID) -> ActiveEffort | None:
-        stmt = (
-            select(ActiveEffort)
-            .where(ActiveEffort.id == effort_id, ActiveEffort.deleted_at.is_(None))
-        )
+        stmt = select(ActiveEffort).where(ActiveEffort.id == effort_id, ActiveEffort.deleted_at.is_(None))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -79,10 +74,7 @@ class PlacementRepository:
         return check
 
     async def get_background_check_by_id(self, check_id: uuid.UUID) -> BackgroundCheck | None:
-        stmt = (
-            select(BackgroundCheck)
-            .where(BackgroundCheck.id == check_id, BackgroundCheck.deleted_at.is_(None))
-        )
+        stmt = select(BackgroundCheck).where(BackgroundCheck.id == check_id, BackgroundCheck.deleted_at.is_(None))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -126,21 +118,15 @@ class PlacementRepository:
         return placement
 
     async def get_in_home_placement_by_id(self, placement_id: uuid.UUID) -> InHomePlacement | None:
-        stmt = (
-            select(InHomePlacement)
-            .where(InHomePlacement.id == placement_id, InHomePlacement.deleted_at.is_(None))
-        )
+        stmt = select(InHomePlacement).where(InHomePlacement.id == placement_id, InHomePlacement.deleted_at.is_(None))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_active_in_home_placement_for_child(self, child_id: uuid.UUID) -> InHomePlacement | None:
-        stmt = (
-            select(InHomePlacement)
-            .where(
-                InHomePlacement.child_id == child_id,
-                InHomePlacement.status == "ACTIVE",
-                InHomePlacement.deleted_at.is_(None),
-            )
+        stmt = select(InHomePlacement).where(
+            InHomePlacement.child_id == child_id,
+            InHomePlacement.status == "ACTIVE",
+            InHomePlacement.deleted_at.is_(None),
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -234,13 +220,10 @@ class PlacementRepository:
         return result.scalar_one_or_none()
 
     async def get_active_placement_for_child(self, child_id: uuid.UUID) -> PlacementEpisode | None:
-        stmt = (
-            select(PlacementEpisode)
-            .where(
-                PlacementEpisode.child_id == child_id,
-                PlacementEpisode.status.in_(["ACTIVE", "DISRUPTED"]),
-                PlacementEpisode.deleted_at.is_(None),
-            )
+        stmt = select(PlacementEpisode).where(
+            PlacementEpisode.child_id == child_id,
+            PlacementEpisode.status.in_(["ACTIVE", "DISRUPTED"]),
+            PlacementEpisode.deleted_at.is_(None),
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -284,16 +267,11 @@ class PlacementRepository:
         return respite
 
     async def get_respite_episode_by_id(self, respite_id: uuid.UUID) -> RespiteEpisode | None:
-        stmt = (
-            select(RespiteEpisode)
-            .where(RespiteEpisode.id == respite_id, RespiteEpisode.deleted_at.is_(None))
-        )
+        stmt = select(RespiteEpisode).where(RespiteEpisode.id == respite_id, RespiteEpisode.deleted_at.is_(None))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def list_respite_episodes_by_placement(
-        self, placement_episode_id: uuid.UUID
-    ) -> list[RespiteEpisode]:
+    async def list_respite_episodes_by_placement(self, placement_episode_id: uuid.UUID) -> list[RespiteEpisode]:
         stmt = (
             select(RespiteEpisode)
             .where(
@@ -312,20 +290,16 @@ class PlacementRepository:
         return discharge
 
     async def get_discharge_episode_by_id(self, discharge_id: uuid.UUID) -> DischargeEpisode | None:
-        stmt = (
-            select(DischargeEpisode)
-            .where(DischargeEpisode.id == discharge_id, DischargeEpisode.deleted_at.is_(None))
+        stmt = select(DischargeEpisode).where(
+            DischargeEpisode.id == discharge_id, DischargeEpisode.deleted_at.is_(None)
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_discharge_by_placement_id(self, placement_episode_id: uuid.UUID) -> DischargeEpisode | None:
-        stmt = (
-            select(DischargeEpisode)
-            .where(
-                DischargeEpisode.placement_episode_id == placement_episode_id,
-                DischargeEpisode.deleted_at.is_(None),
-            )
+        stmt = select(DischargeEpisode).where(
+            DischargeEpisode.placement_episode_id == placement_episode_id,
+            DischargeEpisode.deleted_at.is_(None),
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -337,10 +311,7 @@ class PlacementRepository:
         return plan
 
     async def get_permanency_plan_by_id(self, plan_id: uuid.UUID) -> PermanencyPlan | None:
-        stmt = (
-            select(PermanencyPlan)
-            .where(PermanencyPlan.id == plan_id, PermanencyPlan.deleted_at.is_(None))
-        )
+        stmt = select(PermanencyPlan).where(PermanencyPlan.id == plan_id, PermanencyPlan.deleted_at.is_(None))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -378,10 +349,7 @@ class PlacementRepository:
         return plan
 
     async def get_visitation_plan_by_id(self, plan_id: uuid.UUID) -> VisitationPlan | None:
-        stmt = (
-            select(VisitationPlan)
-            .where(VisitationPlan.id == plan_id, VisitationPlan.deleted_at.is_(None))
-        )
+        stmt = select(VisitationPlan).where(VisitationPlan.id == plan_id, VisitationPlan.deleted_at.is_(None))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -419,10 +387,7 @@ class PlacementRepository:
         return event
 
     async def get_court_event_by_id(self, event_id: uuid.UUID) -> CourtEvent | None:
-        stmt = (
-            select(CourtEvent)
-            .where(CourtEvent.id == event_id, CourtEvent.deleted_at.is_(None))
-        )
+        stmt = select(CourtEvent).where(CourtEvent.id == event_id, CourtEvent.deleted_at.is_(None))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

@@ -47,9 +47,7 @@ async def list_case_court_events(
     page_size: int = Query(50, ge=1, le=100),
 ) -> CourtEventListResponse:
     service = CourtEventService(db)
-    items, total = await service.list_court_events_by_case(
-        current_user, case_id, page=page, page_size=page_size
-    )
+    items, total = await service.list_court_events_by_case(current_user, case_id, page=page, page_size=page_size)
     return CourtEventListResponse(
         items=[CourtEventResponse.model_validate(i) for i in items],
         total=total,

@@ -56,7 +56,9 @@ class CalendarEvent(Base, AuditMixin, SoftDeleteMixin):
     person = relationship("Person", foreign_keys=[person_id], lazy="selectin")
     team = relationship("Team", foreign_keys=[team_id], lazy="selectin")
     assigned_user = relationship("User", foreign_keys=[assigned_user_id], lazy="selectin")
-    recurrence_rule = relationship("CalendarRecurrenceRule", back_populates="calendar_event", uselist=False, cascade="all, delete-orphan")
+    recurrence_rule = relationship(
+        "CalendarRecurrenceRule", back_populates="calendar_event", uselist=False, cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         CheckConstraint("end_at >= start_at", name="ck_calendar_events_end_after_start"),
@@ -75,7 +77,9 @@ class CalendarRecurrenceRule(Base):
     calendar_event_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("calendar_events.id", ondelete="CASCADE"), nullable=False, unique=True
     )
-    frequency: Mapped[str] = mapped_column(String(20), default="WEEKLY", nullable=False)  # DAILY, WEEKLY, BIWEEKLY, MONTHLY
+    frequency: Mapped[str] = mapped_column(
+        String(20), default="WEEKLY", nullable=False
+    )  # DAILY, WEEKLY, BIWEEKLY, MONTHLY
     interval: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     by_weekday: Mapped[str | None] = mapped_column(String(50), nullable=True)  # Comma-separated: "MO,WE,FR"
     until_date: Mapped[date | None] = mapped_column(Date, nullable=True)

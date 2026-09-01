@@ -60,9 +60,7 @@ async def list_case_placements(
     page_size: int = Query(50, ge=1, le=100),
 ) -> PlacementEpisodeListResponse:
     service = PlacementService(db)
-    items, total = await service.list_placement_episodes_by_case(
-        current_user, case_id, page=page, page_size=page_size
-    )
+    items, total = await service.list_placement_episodes_by_case(current_user, case_id, page=page, page_size=page_size)
     return PlacementEpisodeListResponse(
         items=[PlacementEpisodeResponse.model_validate(i) for i in items],
         total=total,
@@ -190,9 +188,7 @@ async def list_case_in_home_placements(
     page_size: int = Query(50, ge=1, le=100),
 ) -> InHomePlacementListResponse:
     service = PlacementService(db)
-    items, total = await service.list_in_home_placements_by_case(
-        current_user, case_id, page=page, page_size=page_size
-    )
+    items, total = await service.list_in_home_placements_by_case(current_user, case_id, page=page, page_size=page_size)
     return InHomePlacementListResponse(
         items=[InHomePlacementResponse.model_validate(i) for i in items],
         total=total,

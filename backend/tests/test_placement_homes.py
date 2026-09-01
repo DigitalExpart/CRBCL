@@ -185,7 +185,9 @@ async def test_placement_home_licensing_and_renewal_history(
         "max_capacity": 3,
         "conditions": "Full standard license granted.",
     }
-    renew_res = await client.post(f"/api/v1/placement-homes/{home.id}/licenses/renew", headers=headers, json=renew_payload)
+    renew_res = await client.post(
+        f"/api/v1/placement-homes/{home.id}/licenses/renew", headers=headers, json=renew_payload
+    )
     assert renew_res.status_code == 201, renew_res.text
     lic_b_data = renew_res.json()
     assert lic_b_data["license_number"] == "LIC-2026-002"
@@ -200,7 +202,7 @@ async def test_placement_home_licensing_and_renewal_history(
 
     all_licenses = home_detail["licenses"]
     assert len(all_licenses) == 2
-    lic_a_retrieved = next(l for l in all_licenses if l["id"] == lic_a_id)
+    lic_a_retrieved = next(lic for lic in all_licenses if lic["id"] == lic_a_id)
     assert lic_a_retrieved["status"] == "EXPIRED"
     assert lic_a_retrieved["license_number"] == "LIC-2025-001"
 

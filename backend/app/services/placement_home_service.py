@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
 from app.models.case_management import CaseRestriction
-from app.models.placement import BackgroundCheck, PlacementEpisode
+from app.models.placement import BackgroundCheck
 from app.models.placement_home import (
     PlacementHome,
     PlacementHomeContactLog,
@@ -25,17 +25,13 @@ from app.schemas.placement_home import (
     HomeBackgroundCheckSummary,
     PlacementHistoryItemRead,
     PlacementHomeContactLogCreate,
-    PlacementHomeContactLogUpdate,
     PlacementHomeCreate,
-    PlacementHomeFilter,
     PlacementHomeLicenseCreate,
     PlacementHomeLicenseRenew,
-    PlacementHomeLicenseUpdate,
     PlacementHomeMemberCreate,
     PlacementHomeMemberUpdate,
     PlacementHomeUpdate,
     PlacementHomeVisitCreate,
-    PlacementHomeVisitUpdate,
 )
 from app.workflows.outbox import OutboxService
 from app.workflows.timeline import TimelineService
@@ -124,11 +120,11 @@ class PlacementHomeService:
 
         # Identify current active license (sorted newest first)
         licenses_list = sorted(
-            [l for l in home.licenses if l.deleted_at is None],
-            key=lambda l: (l.effective_date or date.min, l.created_at or datetime.min),
+            [lic for lic in home.licenses if lic.deleted_at is None],
+            key=lambda lic: (lic.effective_date or date.min, lic.created_at or datetime.min),
             reverse=True,
         )
-        current_lic = next((l for l in licenses_list if l.status == "ACTIVE"), None)
+        current_lic = next((lic for lic in licenses_list if lic.status == "ACTIVE"), None)
 
         return {
             "id": home.id,
@@ -184,7 +180,9 @@ class PlacementHomeService:
                     "id": v.id,
                     "placement_home_id": v.placement_home_id,
                     "worker_id": v.worker_id,
-                    "worker_name": (v.worker.display_name or v.worker.full_name or v.worker.email) if v.worker else None,
+                    "worker_name": (v.worker.display_name or v.worker.full_name or v.worker.email)
+                    if v.worker
+                    else None,
                     "visit_date": v.visit_date,
                     "visit_type": v.visit_type,
                     "purpose": v.purpose,
@@ -206,7 +204,9 @@ class PlacementHomeService:
                     "person_id": c.person_id,
                     "person_name": f"{c.person.first_name} {c.person.last_name}" if c.person else None,
                     "worker_id": c.worker_id,
-                    "worker_name": (c.worker.display_name or c.worker.full_name or c.worker.email) if c.worker else None,
+                    "worker_name": (c.worker.display_name or c.worker.full_name or c.worker.email)
+                    if c.worker
+                    else None,
                     "contact_type": c.contact_type,
                     "contact_date": c.contact_date,
                     "duration_minutes": c.duration_minutes,
@@ -220,7 +220,6 @@ class PlacementHomeService:
                 if c.deleted_at is None
             ],
         }
-
 
     async def update_home(self, home_id: uuid.UUID, payload: PlacementHomeUpdate, user_id: uuid.UUID) -> PlacementHome:
         """Update placement home fields."""
@@ -610,9 +609,7 @@ class PlacementHomeService:
                     )
                 )
             else:
-                child_name = (
-                    f"{ep.child.first_name} {ep.child.last_name}" if ep.child else "Unknown Child"
-                )
+                child_name = f"{ep.child.first_name} {ep.child.last_name}" if ep.child else "Unknown Child"
                 case_num = ep.case.case_number if ep.case else None
                 items.append(
                     PlacementHistoryItemRead(

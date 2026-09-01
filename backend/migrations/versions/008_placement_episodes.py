@@ -22,7 +22,9 @@ def upgrade() -> None:
     op.create_table(
         "active_efforts",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("effort_type", sa.String(length=100), nullable=False),
         sa.Column("description", sa.Text(), nullable=False),
         sa.Column("service_category", sa.String(length=100), nullable=True),
@@ -31,9 +33,15 @@ def upgrade() -> None:
         sa.Column("outcome", sa.String(length=50), nullable=False, server_default="ONGOING"),
         sa.Column("barriers_encountered", sa.Text(), nullable=True),
         sa.Column("remedial_action", sa.Text(), nullable=True),
-        sa.Column("worker_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "worker_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -59,10 +67,19 @@ def upgrade() -> None:
         sa.Column("clearance_reference_number", sa.String(length=100), nullable=True),
         sa.Column("risk_assessment_notes", sa.Text(), nullable=True),
         sa.Column("is_eligible_for_placement", sa.Boolean(), nullable=False, server_default=sa.text("false")),
-        sa.Column("adjudicated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "adjudicated_by",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("adjudicated_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -77,9 +94,18 @@ def upgrade() -> None:
     op.create_table(
         "in_home_placements",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("primary_caregiver_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "primary_caregiver_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("persons.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("caregiver_relationship", sa.String(length=100), nullable=True),
         sa.Column("start_date", sa.Date(), nullable=False),
         sa.Column("end_date", sa.Date(), nullable=True),
@@ -89,8 +115,12 @@ def upgrade() -> None:
         sa.Column("support_services_provided", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("closure_reason", sa.String(length=255), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -105,8 +135,12 @@ def upgrade() -> None:
     op.create_table(
         "removal_episodes",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("removal_date", sa.Date(), nullable=False),
         sa.Column("removal_time", sa.Time(), nullable=True),
         sa.Column("removal_type", sa.String(length=50), nullable=False),
@@ -119,8 +153,12 @@ def upgrade() -> None:
         sa.Column("child_condition_at_removal", sa.Text(), nullable=True),
         sa.Column("belongings_inventoried", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("status", sa.String(length=50), nullable=False, server_default="COMPLETED"),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -135,9 +173,18 @@ def upgrade() -> None:
     op.create_table(
         "placement_episodes",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("removal_episode_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("removal_episodes.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "removal_episode_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("removal_episodes.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("placement_type", sa.String(length=50), nullable=False),
         sa.Column("provider_name", sa.String(length=255), nullable=False),
         sa.Column("provider_contact", sa.String(length=255), nullable=True),
@@ -149,8 +196,12 @@ def upgrade() -> None:
         sa.Column("per_diem_rate", sa.Numeric(precision=10, scale=2), nullable=True),
         sa.Column("cultural_plan_in_place", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("placement_notes", sa.Text(), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -166,7 +217,12 @@ def upgrade() -> None:
     op.create_table(
         "respite_episodes",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("placement_episode_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("placement_episodes.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "placement_episode_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("placement_episodes.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("respite_provider_name", sa.String(length=255), nullable=False),
         sa.Column("respite_type", sa.String(length=50), nullable=False, server_default="PLANNED"),
         sa.Column("start_date", sa.Date(), nullable=False),
@@ -174,8 +230,12 @@ def upgrade() -> None:
         sa.Column("reason", sa.Text(), nullable=True),
         sa.Column("status", sa.String(length=50), nullable=False, server_default="SCHEDULED"),
         sa.Column("notes", sa.Text(), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -189,18 +249,30 @@ def upgrade() -> None:
     op.create_table(
         "discharge_episodes",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("placement_episode_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("placement_episodes.id", ondelete="CASCADE"), nullable=False, unique=True),
+        sa.Column(
+            "placement_episode_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("placement_episodes.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        ),
         sa.Column("discharge_date", sa.Date(), nullable=False),
         sa.Column("discharge_type", sa.String(length=50), nullable=False),
         sa.Column("destination_name", sa.String(length=255), nullable=True),
         sa.Column("destination_relationship", sa.String(length=100), nullable=True),
         sa.Column("post_discharge_supervision_plan", sa.Text(), nullable=True),
         sa.Column("discharge_readiness_assessed", sa.Boolean(), nullable=False, server_default=sa.text("true")),
-        sa.Column("approved_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "approved_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("approved_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -214,8 +286,12 @@ def upgrade() -> None:
     op.create_table(
         "permanency_plans",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("primary_goal", sa.String(length=50), nullable=False),
         sa.Column("concurrent_goal", sa.String(length=50), nullable=True),
         sa.Column("target_date", sa.Date(), nullable=True),
@@ -224,11 +300,22 @@ def upgrade() -> None:
         sa.Column("sibling_co_placement_strategy", sa.Text(), nullable=True),
         sa.Column("review_frequency_months", sa.Integer(), nullable=False, server_default="6"),
         sa.Column("next_review_date", sa.Date(), nullable=True),
-        sa.Column("established_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("approved_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "established_by",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+        sa.Column(
+            "approved_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("notes", sa.Text(), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -243,8 +330,12 @@ def upgrade() -> None:
     op.create_table(
         "visitation_plans",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("participant_names", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("frequency", sa.String(length=50), nullable=False, server_default="WEEKLY"),
         sa.Column("duration_hours", sa.Numeric(precision=4, scale=2), nullable=True),
@@ -256,8 +347,12 @@ def upgrade() -> None:
         sa.Column("effective_from", sa.Date(), nullable=False),
         sa.Column("effective_to", sa.Date(), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -272,8 +367,12 @@ def upgrade() -> None:
     op.create_table(
         "court_events",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "case_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
+        ),
+        sa.Column(
+            "child_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("persons.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("hearing_type", sa.String(length=50), nullable=False),
         sa.Column("court_docket_number", sa.String(length=100), nullable=True),
         sa.Column("court_location", sa.String(length=255), nullable=True),
@@ -286,8 +385,12 @@ def upgrade() -> None:
         sa.Column("band_representative_present", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("next_court_date", sa.Date(), nullable=True),
         sa.Column("status", sa.String(length=50), nullable=False, server_default="SCHEDULED"),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "created_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
+        sa.Column(
+            "updated_by", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),

@@ -66,7 +66,9 @@ class BackgroundCheckCreate(BaseModel):
     subject_type: str = Field(..., description="CLIENT, PERSON, PLACEMENT_PROVIDER, VOLUNTEER, STAFF, OTHER")
     subject_id: uuid.UUID | None = None
     subject_name: str = Field(..., min_length=1, max_length=255)
-    check_type: str = Field(..., description="CRIMINAL_RECORD, CHILD_ABUSE_REGISTRY, VULNERABLE_SECTOR, REFERENCE_CHECK")
+    check_type: str = Field(
+        ..., description="CRIMINAL_RECORD, CHILD_ABUSE_REGISTRY, VULNERABLE_SECTOR, REFERENCE_CHECK"
+    )
     request_date: date
     conducted_by_agency: str | None = None
     clearance_reference_number: str | None = None
@@ -186,7 +188,9 @@ class RemovalEpisodeCreate(BaseModel):
     removal_date: date
     removal_time: time | None = None
     removal_type: str = Field(..., description="VOLUNTARY, EMERGENCY_ORDER, COURT_APPREHENSION, TEMPORARY_CUSTODY")
-    authority_type: str = Field(..., description="CHILD_WELFARE_WARRANT, CONSENT_AGREEMENT, POLICE_ASSISTANCE, COURT_ORDER")
+    authority_type: str = Field(
+        ..., description="CHILD_WELFARE_WARRANT, CONSENT_AGREEMENT, POLICE_ASSISTANCE, COURT_ORDER"
+    )
     legal_authority_reference: str | None = None
     reason_for_removal: str = Field(..., min_length=1)
     immediate_safety_threat: str | None = None
@@ -246,7 +250,9 @@ class PlacementEpisodeCreate(BaseModel):
     child_id: uuid.UUID
     removal_episode_id: uuid.UUID | None = None
     placement_home_id: uuid.UUID | None = None
-    placement_type: str = Field(..., description="KINSHIP, CUSTOMARY_CARE, FOSTER_HOME, GROUP_HOME, INDEPENDENT_LIVING, OTHER")
+    placement_type: str = Field(
+        ..., description="KINSHIP, CUSTOMARY_CARE, FOSTER_HOME, GROUP_HOME, INDEPENDENT_LIVING, OTHER"
+    )
     provider_name: str | None = None
     provider_contact: str | None = None
     provider_address: str | None = None
@@ -350,7 +356,9 @@ class RespiteEpisodeListResponse(BaseModel):
 # ── Discharge Episode Schemas ────────────────────────────────────────
 class DischargeEpisodeCreate(BaseModel):
     discharge_date: date
-    discharge_type: str = Field(..., description="REUNIFICATION, CUSTOMARY_ADOPTION, PERMANENT_KINSHIP, AGING_OUT, TRANSFER, OTHER")
+    discharge_type: str = Field(
+        ..., description="REUNIFICATION, CUSTOMARY_ADOPTION, PERMANENT_KINSHIP, AGING_OUT, TRANSFER, OTHER"
+    )
     destination_name: str | None = None
     destination_relationship: str | None = None
     post_discharge_supervision_plan: str | None = None
@@ -382,7 +390,9 @@ class DischargeEpisodeResponse(BaseModel):
 # ── Permanency Plan Schemas ──────────────────────────────────────────
 class PermanencyPlanCreate(BaseModel):
     child_id: uuid.UUID
-    primary_goal: str = Field(..., description="REUNIFICATION, CUSTOMARY_CARE, KINSHIP_LEGAL_CUSTODY, ADOPTION, INDEPENDENT_LIVING, OTHER")
+    primary_goal: str = Field(
+        ..., description="REUNIFICATION, CUSTOMARY_CARE, KINSHIP_LEGAL_CUSTODY, ADOPTION, INDEPENDENT_LIVING, OTHER"
+    )
     concurrent_goal: str | None = None
     target_date: date | None = None
     cultural_heritage_strategy: str | None = None
@@ -440,7 +450,9 @@ class VisitationPlanCreate(BaseModel):
     frequency: str = Field("WEEKLY", description="DAILY, WEEKLY, BIWEEKLY, MONTHLY, SPECIAL_OCCASIONS")
     duration_hours: Decimal | None = None
     supervision_required: bool = True
-    supervisor_type: str = Field("CASE_WORKER", description="CASE_WORKER, FAMILY_SUPPORT_WORKER, UNMONITORED, THIRD_PARTY")
+    supervisor_type: str = Field(
+        "CASE_WORKER", description="CASE_WORKER, FAMILY_SUPPORT_WORKER, UNMONITORED, THIRD_PARTY"
+    )
     location: str | None = None
     conditions: str | None = None
     effective_from: date
@@ -494,7 +506,10 @@ class VisitationPlanListResponse(BaseModel):
 # ── Court Event Schemas ──────────────────────────────────────────────
 class CourtEventCreate(BaseModel):
     child_id: uuid.UUID | None = None
-    hearing_type: str = Field(..., description="INITIAL_APPEARANCE, PROTECTION_HEARING, TEMPORARY_CUSTODY_REVIEW, PERMANENCY_HEARING, STATUS_REVIEW, BAND_REPRESENTATION_HEARING, OTHER")
+    hearing_type: str = Field(
+        ...,
+        description="INITIAL_APPEARANCE, PROTECTION_HEARING, TEMPORARY_CUSTODY_REVIEW, PERMANENCY_HEARING, STATUS_REVIEW, BAND_REPRESENTATION_HEARING, OTHER",
+    )
     court_docket_number: str | None = None
     court_location: str | None = None
     judge_name: str | None = None

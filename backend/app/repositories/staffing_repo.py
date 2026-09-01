@@ -6,14 +6,13 @@ import uuid
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.case import Case
 from app.models.case_note import CaseNote
 from app.models.staffing import StaffingAttendee, StaffingCase, StaffingSession
-from app.models.user import User
 
 
 class StaffingRepo:
@@ -148,7 +147,9 @@ class StaffingRepo:
         await self.db.flush()
         return session
 
-    async def add_attendee(self, session_id: uuid.UUID, user_id: uuid.UUID, status: str = "PENDING", notes: str | None = None) -> StaffingAttendee:
+    async def add_attendee(
+        self, session_id: uuid.UUID, user_id: uuid.UUID, status: str = "PENDING", notes: str | None = None
+    ) -> StaffingAttendee:
         # Check if already added
         stmt = select(StaffingAttendee).where(
             StaffingAttendee.session_id == session_id,
@@ -260,11 +261,7 @@ class StaffingRepo:
         if team_id:
             case_conditions.append(Case.assigned_team_id == team_id)
 
-        stmt = (
-            select(Case)
-            .where(and_(*case_conditions))
-            .order_by(Case.created_at.desc())
-        )
+        stmt = select(Case).where(and_(*case_conditions)).order_by(Case.created_at.desc())
         res = await self.db.execute(stmt)
         active_cases = list(res.scalars().all())
 
@@ -278,9 +275,8 @@ class StaffingRepo:
             days_since = (now - last_staffed).days if last_staffed else None
 
             # Check case notes
-            note_stmt = (
-                select(func.max(CaseNote.created_at))
-                .where(CaseNote.case_id == c.id, CaseNote.deleted_at.is_(None))
+            note_stmt = select(func.max(CaseNote.created_at)).where(
+                CaseNote.case_id == c.id, CaseNote.deleted_at.is_(None)
             )
             note_res = await self.db.execute(note_stmt)
             last_note = note_res.scalar_one_or_none()
@@ -319,7 +315,9 @@ class StaffingRepo:
                 open_12_mos.append(item)
 
             # Bucket 3: High Risk
-            if getattr(c, "risk_level", None) in ("High", "Critical", "HIGH", "CRITICAL") or getattr(c, "is_high_risk", False):
+            if getattr(c, "risk_level", None) in ("High", "Critical", "HIGH", "CRITICAL") or getattr(
+                c, "is_high_risk", False
+            ):
                 high_risk.append(item)
 
             # Bucket 4: Missing Recent Note (no note in 30 days)
