@@ -95,188 +95,11 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     """Seed baseline permissions and roles into the test database."""
     # Create Permissions
     perms = {}
-    for p_key in [
-        # Phase 3 Intake Permissions
-        Permissions.INTAKE_READ,
-        Permissions.INTAKE_CREATE,
-        Permissions.INTAKE_UPDATE,
-        Permissions.INTAKE_DELETE,
-        Permissions.INTAKE_ASSIGN,
-        Permissions.INTAKE_SUBMIT,
-        Permissions.INTAKE_APPROVE,
-        Permissions.INTAKE_RETURN,
-        Permissions.INTAKE_REPORTER_READ,
-        Permissions.INTAKE_REPORTER_WRITE,
-        Permissions.INTAKE_DECISION_READ,
-        Permissions.INTAKE_DECISION_WRITE,
-        Permissions.INTAKE_HISTORY_READ,
-        Permissions.INTAKE_LINK_READ,
-        Permissions.INTAKE_LINK_WRITE,
-        # Phase 1 & 2 Permissions
-        Permissions.CLIENT_READ,
-        Permissions.CLIENT_CREATE,
-        Permissions.CLIENT_UPDATE,
-        Permissions.CLIENT_IDENTIFIERS_READ,
-        Permissions.CLIENT_IDENTIFIERS_WRITE,
-        Permissions.CLIENT_MEDICAL_READ,
-        Permissions.CLIENT_MEDICAL_WRITE,
-        Permissions.CLIENT_SCHOOL_READ,
-        Permissions.CLIENT_SCHOOL_WRITE,
-        Permissions.CLIENT_CULTURAL_READ,
-        Permissions.CLIENT_CULTURAL_WRITE,
-        Permissions.CLIENT_DOCUMENTS_READ,
-        Permissions.CLIENT_DOCUMENTS_WRITE,
-        Permissions.FAMILY_READ,
-        Permissions.FAMILY_CREATE,
-        Permissions.FAMILY_UPDATE,
-        Permissions.FAMILY_RELATIONSHIPS_READ,
-        Permissions.FAMILY_RELATIONSHIPS_WRITE,
-        Permissions.HOUSEHOLD_READ,
-        Permissions.HOUSEHOLD_WRITE,
-        Permissions.PROVIDER_READ,
-        Permissions.PROVIDER_WRITE,
-        Permissions.SCHOOL_READ,
-        Permissions.SCHOOL_WRITE,
-        Permissions.CASE_READ,
-        Permissions.CASE_CREATE,
-        Permissions.CASE_UPDATE,
-        Permissions.CASE_DELETE,
-        Permissions.CASE_ASSIGN,
-        Permissions.CASE_NOTE_READ,
-        Permissions.CASE_NOTE_CREATE,
-        Permissions.CASE_NOTE_UPDATE,
-        # Phase 4 Case Management & Notes Permissions
-        Permissions.CASE_CLOSE,
-        Permissions.CASE_REOPEN,
-        Permissions.CASE_PEOPLE_READ,
-        Permissions.CASE_PEOPLE_WRITE,
-        Permissions.CASE_ASSIGNMENT_READ,
-        Permissions.CASE_ASSIGNMENT_WRITE,
-        Permissions.CASE_EXTERNAL_WORKER_READ,
-        Permissions.CASE_EXTERNAL_WORKER_WRITE,
-        Permissions.CASE_SOURCE_READ,
-        Permissions.CASE_SOURCE_WRITE,
-        Permissions.CASE_LINK_READ,
-        Permissions.CASE_LINK_WRITE,
-        Permissions.CASE_RESTRICTION_READ,
-        Permissions.CASE_RESTRICTION_MANAGE,
-        Permissions.CASE_TRANSFER_READ,
-        Permissions.CASE_TRANSFER_CREATE,
-        Permissions.CASE_TRANSFER_APPROVE,
-        Permissions.CASE_NOTE_COMPLETE,
-        Permissions.CASE_NOTE_LOCK,
-        Permissions.CASE_NOTE_UNLOCK,
-        Permissions.CASE_NOTE_ADDENDUM,
-        Permissions.CASE_NOTE_EXPORT,
-        # Phase 5 Assessment Permissions
-        Permissions.ASSESSMENT_READ,
-        Permissions.ASSESSMENT_CREATE,
-        Permissions.ASSESSMENT_UPDATE,
-        Permissions.ASSESSMENT_COMPLETE,
-        Permissions.ASSESSMENT_LOCK,
-        Permissions.ASSESSMENT_UNLOCK,
-        Permissions.ASSESSMENT_REASSIGN,
-        Permissions.ASSESSMENT_PRINT,
-        Permissions.ASSESSMENT_COMPARE,
-        Permissions.ASSESSMENT_HOME_READ,
-        Permissions.ASSESSMENT_HOME_WRITE,
-        Permissions.ASSESSMENT_THREAT_READ,
-        Permissions.ASSESSMENT_THREAT_WRITE,
-        Permissions.ASSESSMENT_AIEI_READ,
-        Permissions.ASSESSMENT_AIEI_WRITE,
-        Permissions.ASSESSMENT_TEMPLATE_READ,
-        Permissions.ASSESSMENT_TEMPLATE_MANAGE,
-        # Phase 6 Plan Permissions
-        Permissions.PLAN_READ,
-        Permissions.PLAN_CREATE,
-        Permissions.PLAN_UPDATE,
-        Permissions.PLAN_DELETE,
-        Permissions.PLAN_SUBMIT,
-        Permissions.PLAN_APPROVE,
-        Permissions.PLAN_RETURN,
-        Permissions.PLAN_FINALIZE,
-        Permissions.PLAN_LOCK,
-        Permissions.PLAN_UNLOCK,
-        Permissions.PLAN_CLONE,
-        Permissions.PLAN_PRINT,
-        Permissions.PLAN_SAFETY_READ,
-        Permissions.PLAN_SAFETY_WRITE,
-        Permissions.PLAN_CASE_READ,
-        Permissions.PLAN_CASE_WRITE,
-        Permissions.PLAN_GOAL_CREATE,
-        Permissions.PLAN_GOAL_UPDATE,
-        Permissions.PLAN_GOAL_COMPLETE,
-        Permissions.PLAN_ACTIVITY_CREATE,
-        Permissions.PLAN_ACTIVITY_UPDATE,
-        Permissions.PLAN_ACTIVITY_COMPLETE,
-        Permissions.PLAN_SIGNATURE_READ,
-        Permissions.PLAN_SIGNATURE_CAPTURE,
-        # Phase 7 Placement Domain Permissions
-        Permissions.ACTIVE_EFFORTS_READ,
-        Permissions.ACTIVE_EFFORTS_WRITE,
-        Permissions.BACKGROUND_CHECK_READ,
-        Permissions.BACKGROUND_CHECK_WRITE,
-        Permissions.BACKGROUND_CHECK_ADJUDICATE,
-        Permissions.PLACEMENT_READ,
-        Permissions.PLACEMENT_WRITE,
-        Permissions.PLACEMENT_DISCHARGE,
-        Permissions.REMOVAL_READ,
-        Permissions.REMOVAL_WRITE,
-        Permissions.PERMANENCY_READ,
-        Permissions.PERMANENCY_WRITE,
-        Permissions.VISITATION_READ,
-        Permissions.VISITATION_WRITE,
-        Permissions.COURT_READ,
-        Permissions.COURT_WRITE,
-        # Phase 8 Placement Homes & Facilities
-        Permissions.PLACEMENT_HOME_READ,
-        Permissions.PLACEMENT_HOME_CREATE,
-        Permissions.PLACEMENT_HOME_UPDATE,
-        Permissions.PLACEMENT_HOME_ARCHIVE,
-        Permissions.PLACEMENT_HOME_MEMBER_READ,
-        Permissions.PLACEMENT_HOME_MEMBER_MANAGE,
-        Permissions.PLACEMENT_HOME_LICENSE_READ,
-        Permissions.PLACEMENT_HOME_LICENSE_MANAGE,
-        Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_READ,
-        Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_MANAGE,
-        Permissions.PLACEMENT_HOME_ASSESSMENT_READ,
-        Permissions.PLACEMENT_HOME_ASSESSMENT_CREATE,
-        Permissions.PLACEMENT_HOME_VISIT_READ,
-        Permissions.PLACEMENT_HOME_VISIT_CREATE,
-        Permissions.PLACEMENT_HOME_VISIT_UPDATE,
-        Permissions.PLACEMENT_HOME_CONTACT_READ,
-        Permissions.PLACEMENT_HOME_CONTACT_CREATE,
-        Permissions.PLACEMENT_HOME_DOCUMENT_READ,
-        Permissions.PLACEMENT_HOME_DOCUMENT_MANAGE,
-        Permissions.PLACEMENT_HOME_CAPACITY_READ,
-        Permissions.PLACEMENT_HOME_CAPACITY_MANAGE,
-        Permissions.PLACEMENT_HOME_MAP_READ,
-        # Phase 9 Scheduling, Staffing & Notifications
-        Permissions.CALENDAR_READ_OWN,
-        Permissions.CALENDAR_READ_TEAM,
-        Permissions.CALENDAR_WRITE,
-        Permissions.STAFFING_READ,
-        Permissions.STAFFING_CREATE,
-        Permissions.STAFFING_UPDATE,
-        Permissions.STAFFING_COMPLETE,
-        Permissions.NOTIFICATION_READ,
-        Permissions.NOTIFICATION_PREFERENCES_UPDATE,
-        Permissions.NOTIFICATION_TEMPLATE_READ,
-        Permissions.NOTIFICATION_TEMPLATE_MANAGE,
-        Permissions.NOTIFICATION_DELIVERY_READ,
-        Permissions.NOTIFICATION_DELIVERY_RETRY,
-        # Admin & System
-        Permissions.ADMIN_USERS_MANAGE,
-        Permissions.ADMIN_ROLES_MANAGE,
-        Permissions.ADMIN_TEAMS_MANAGE,
-        Permissions.ADMIN_CONFIGURATION_MANAGE,
-        Permissions.AUDIT_READ,
-        Permissions.TIMELINE_READ,
-    ]:
-        p = Permission(key=p_key, name=p_key, category="test")
-
+    for p_key in Permissions:
+        p = Permission(key=p_key.value, name=p_key.value, category="test")
         db_session.add(p)
         perms[p_key] = p
+        perms[p_key.value] = p
     await db_session.flush()
 
     # Create Executive Director Role
@@ -431,7 +254,41 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.STAFFING_READ,
         Permissions.NOTIFICATION_READ,
         Permissions.NOTIFICATION_PREFERENCES_UPDATE,
+        # Phase 10 Caseworker
+        Permissions.FINANCE_REQUEST_READ,
+        Permissions.FINANCE_REQUEST_CREATE,
+        Permissions.FINANCE_REQUEST_UPDATE,
+        Permissions.FINANCE_REQUEST_SUBMIT,
+        # Phase 11 Caseworker
+        Permissions.REPORT_READ,
+        Permissions.REPORT_CREATE,
+        Permissions.REPORT_SAVE,
+        Permissions.REPORT_EXPORT,
+        Permissions.REPORT_CHILD_PASSPORT,
+        Permissions.REPORT_PARENT_PASSPORT,
+        Permissions.QA_READ,
+        Permissions.QA_AUDIT_CREATE,
+        Permissions.QA_AUDIT_COMPLETE,
+        Permissions.DASHBOARD_CUSTOMIZE,
+        # Phase 12 Caseworker Fleet
+        Permissions.FLEET_READ,
+        Permissions.FLEET_VEHICLE_READ,
+        Permissions.FLEET_VEHICLE_CREATE,
+        Permissions.FLEET_VEHICLE_UPDATE,
+        Permissions.FLEET_VEHICLE_ARCHIVE,
+        Permissions.FLEET_TRIP_READ,
+        Permissions.FLEET_TRIP_CHECKOUT,
+        Permissions.FLEET_TRIP_CHECKIN,
+        Permissions.FLEET_MAINTENANCE_READ,
+        Permissions.FLEET_MAINTENANCE_MANAGE,
+        Permissions.FLEET_INSURANCE_READ,
+        Permissions.FLEET_INSURANCE_MANAGE,
+        Permissions.FLEET_LOCATION_READ,
+        Permissions.FLEET_LOCATION_CAPTURE,
+        Permissions.FLEET_GEOFENCE_READ,
     ]:
+
+
         rp = RolePermission(role_id=caseworker_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
 
@@ -592,8 +449,53 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.STAFFING_COMPLETE,
         Permissions.NOTIFICATION_READ,
         Permissions.NOTIFICATION_PREFERENCES_UPDATE,
+        # Phase 10 Supervisor
+        Permissions.FINANCE_REQUEST_READ,
+        Permissions.FINANCE_REQUEST_CREATE,
+        Permissions.FINANCE_REQUEST_UPDATE,
+        Permissions.FINANCE_REQUEST_SUBMIT,
+        Permissions.FINANCE_REQUEST_APPROVE,
+        Permissions.FINANCE_REQUEST_RETURN,
+        Permissions.FINANCE_REQUEST_DENY,
+        Permissions.FINANCE_BUDGET_READ,
+        Permissions.FINANCE_INVOICE_READ,
+        Permissions.FINANCE_LEDGER_READ,
     ]:
         rp = RolePermission(role_id=supervisor_role.id, permission_id=perms[p_key].id)
+        db_session.add(rp)
+
+    # Create Finance Staff Role
+    finance_role = Role(key="finance_staff", name="Finance Staff", is_system=True)
+    db_session.add(finance_role)
+    await db_session.flush()
+
+    for p_key in [
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_IDENTIFIERS_READ,
+        Permissions.PROVIDER_READ,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.FINANCE_REQUEST_READ,
+        Permissions.FINANCE_REQUEST_CREATE,
+        Permissions.FINANCE_REQUEST_UPDATE,
+        Permissions.FINANCE_REQUEST_SUBMIT,
+        Permissions.FINANCE_REQUEST_APPROVE,
+        Permissions.FINANCE_REQUEST_RETURN,
+        Permissions.FINANCE_REQUEST_DENY,
+        Permissions.FINANCE_BUDGET_READ,
+        Permissions.FINANCE_BUDGET_MANAGE,
+        Permissions.FINANCE_RATE_READ,
+        Permissions.FINANCE_RATE_MANAGE,
+        Permissions.FINANCE_INVOICE_READ,
+        Permissions.FINANCE_INVOICE_GENERATE,
+        Permissions.FINANCE_INVOICE_REVIEW,
+        Permissions.FINANCE_INVOICE_FINALIZE,
+        Permissions.FINANCE_INVOICE_VOID,
+        Permissions.FINANCE_LEDGER_READ,
+        Permissions.FINANCE_EXPORT,
+        Permissions.NOTIFICATION_READ,
+    ]:
+        rp = RolePermission(role_id=finance_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
 
     # IT Admin gets ONLY system admin
@@ -622,6 +524,7 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
             "executive_director": ed_role,
             "caseworker": caseworker_role,
             "supervisor": supervisor_role,
+            "finance_staff": finance_role,
             "it_admin": it_admin_role,
         },
         "team": team,
@@ -735,6 +638,32 @@ async def seed_templates(db_session: AsyncSession):
 
     await seed_assessment_templates(db_session)
     await db_session.commit()
+
+
+@pytest.fixture
+async def finance_user(db_session: AsyncSession, seed_roles_and_permissions):
+    """Create an active Finance Staff user with token."""
+    user = User(
+        email="finance@crbcl.ca",
+        email_normalized="finance@crbcl.ca",
+        password_hash=hash_password("password123"),
+        full_name="Frank Finance",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["finance_staff"].id)
+    db_session.add(ur)
+
+    tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)
+    db_session.add(tm)
+
+    await db_session.commit()
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
 
 
 @pytest.fixture

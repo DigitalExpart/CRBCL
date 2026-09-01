@@ -43,6 +43,27 @@ from app.models.client import Client  # noqa: F401
 from app.models.config import LookupList, LookupValue, SystemConfig  # noqa: F401
 from app.models.document import Document, DocumentAccessEvent, DocumentLink, DocumentVersion  # noqa: F401
 from app.models.family import Family  # noqa: F401
+from app.models.finance import (  # noqa: F401
+    BillingRate,
+    BudgetLine,
+    FundingSource,
+    Invoice,
+    InvoiceItem,
+    ServiceRequest,
+    ServiceRequestApproval,
+    ServiceRequestItem,
+)
+from app.models.fleet import (  # noqa: F401
+    FleetGeofence,
+    FleetGeofenceEvent,
+    Vehicle,
+    VehicleAssignment,
+    VehicleInsurancePolicy,
+    VehicleLocation,
+    VehicleMaintenance,
+    VehicleTelematicsLink,
+    VehicleTrip,
+)
 from app.models.idempotency import IdempotencyKey  # noqa: F401
 from app.models.medical import (  # noqa: F401
     ClientAllergy,
@@ -122,6 +143,17 @@ from app.models.relationship import (  # noqa: F401
     Household,
     HouseholdMembership,
 )
+from app.models.reporting_qa import (  # noqa: F401
+    DashboardWidget,
+    QAAudit,
+    QAAuditResult,
+    QAAuditTemplate,
+    QAAuditTemplateItem,
+    QAAuditTemplateVersion,
+    ReportRun,
+    SavedReport,
+    UserDashboardWidget,
+)
 from app.models.role import Permission, Role, RolePermission, UserRole  # noqa: F401
 from app.models.school import (  # noqa: F401
     ClientSchoolEnrolment,
@@ -136,3 +168,4 @@ from app.models.team import Team, TeamMembership, UserTeamAccess  # noqa: F401
 from app.models.terminology import TerminologyKey, TerminologyTranslation  # noqa: F401
 from app.models.timeline import TimelineEvent  # noqa: F401
 from app.models.user import EmailVerificationCode, Session, User, UserPreference  # noqa: F401
+

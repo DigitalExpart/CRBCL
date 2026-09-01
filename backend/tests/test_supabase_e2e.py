@@ -455,6 +455,171 @@ async def test_supabase_live_integration():
         assert unlock_resp.json()["status"] in ("COMPLETED", "IN_PROGRESS")
         print("[LIVE SUPABASE] 28. Director unlocked assessment with mandatory justification")
 
+        # 27. Phase 10: Create Funding Source & Program Budget Line
+        fs_code = f"ISC-{uuid.uuid4().hex[:6].upper()}"
+        fs_resp = await client.post(
+            "/api/v1/finance/funding-sources",
+            headers=headers,
+            json={
+                "code": fs_code,
+                "name": "Indigenous Services Canada Child & Family Agreement",
+                "source_type": "FEDERAL_ISC",
+                "currency": "CAD",
+            },
+        )
+        assert fs_resp.status_code == 201
+        fs_id = fs_resp.json()["id"]
+
+        bl_code = f"BL-{uuid.uuid4().hex[:6].upper()}"
+        bl_resp = await client.post(
+            "/api/v1/finance/budget-lines",
+            headers=headers,
+            json={
+                "funding_source_id": fs_id,
+                "code": bl_code,
+                "name": "Family Kinship Support Allocation",
+                "program_category": "PREVENTION",
+                "fiscal_year": "2025-2026",
+                "allocated_amount": "50000.00",
+            },
+        )
+        assert bl_resp.status_code == 201
+        bl_id = bl_resp.json()["id"]
+        print(f"[LIVE SUPABASE] 29. Created Funding Source ({fs_code}) & Budget Line ({bl_code})")
+
+        # 28. Phase 10: Create Purchase Order Request with Authoritative Decimal Totals
+        po_payload = {
+            "case_id": resulting_case_id,
+            "request_type": "PURCHASE_ORDER",
+            "title": "Kinship Groceries and Emergency Winter Clothing",
+            "vendor_name": "Treaty 4 General Store",
+            "tax_rate": "0.05",
+            "currency": "CAD",
+            "items": [
+                {
+                    "description": "Family Grocery Care Package",
+                    "quantity": "2.00",
+                    "unit_price": "150.00",
+                    "budget_line_id": bl_id,
+                },
+                {
+                    "description": "Winter Coats and Boots for Placed Children",
+                    "quantity": "1.00",
+                    "unit_price": "225.50",
+                    "budget_line_id": bl_id,
+                },
+            ],
+        }
+        po_resp = await client.post(
+            "/api/v1/finance/requests",
+            headers=headers,
+            json=po_payload,
+        )
+        assert po_resp.status_code == 201
+        po_data = po_resp.json()
+        po_id = po_data["id"]
+        # Subtotal = 300.00 + 225.50 = 525.50; Tax = 525.50 * 0.05 = 26.28; Total = 551.78
+        assert po_data["subtotal"] == "525.50"
+        assert po_data["tax_amount"] == "26.28"
+        assert po_data["total_amount"] == "551.78"
+        print(
+            f"[LIVE SUPABASE] 30. Created Purchase Order {po_data['request_number']} with total CAD {po_data['total_amount']}"
+        )
+
+        # 29. Phase 10: Submit Purchase Order for Approval
+        submit_resp = await client.post(
+            f"/api/v1/finance/requests/{po_id}/submit",
+            headers=headers,
+        )
+        assert submit_resp.status_code == 200
+        assert submit_resp.json()["status"] == "PENDING_APPROVAL"
+        print("[LIVE SUPABASE] 31. Submitted Purchase Order into Approval Workflow")
+
+        # 30. Phase 10: Create Versioned Placement Billing Rate
+        rate_resp = await client.post(
+            "/api/v1/finance/rates",
+            headers=headers,
+            json={
+                "home_type": "FOSTER_HOME",
+                "age_min": 0,
+                "age_max": 17,
+                "daily_rate": "72.50",
+                "effective_from": "2026-01-01",
+                "is_active": True,
+            },
+        )
+        assert rate_resp.status_code == 201
+        print("[LIVE SUPABASE] 32. Created Versioned Placement Billing Rate Schedule ($72.50/day)")
+
+        # 31. Phase 10: Create Placement Episode for Billing Test
+        # Create Placement Home
+        home_code = f"HOME-{uuid.uuid4().hex[:6]}"
+        home_resp = await client.post(
+            "/api/v1/placement-homes",
+            headers=headers,
+            json={
+                "home_code": home_code,
+                "name": "Live Supabase Healing Lodge",
+                "home_type": "FOSTER_HOME",
+                "status": "ACTIVE",
+                "licensing_status": "ACTIVE",
+                "total_capacity": 4,
+                "address_line_1": "101 Treaty Ave",
+                "city": "Regina",
+                "province": "Saskatchewan",
+                "postal_code": "S4P 3Y2",
+                "primary_caregiver_name": "Mary Elder",
+                "phone": "306-555-9988",
+            },
+        )
+        assert home_resp.status_code == 201
+        live_home_id = home_resp.json()["id"]
+
+        # Create active Placement Episode from Jan 10, 2026
+        ep_resp = await client.post(
+            f"/api/v1/cases/{resulting_case_id}/placements",
+            headers=headers,
+            json={
+                "child_id": person_id,
+                "placement_home_id": live_home_id,
+                "placement_type": "FOSTER_HOME",
+                "start_date": "2026-01-10",
+                "status": "ACTIVE",
+            },
+        )
+        assert ep_resp.status_code == 201
+        print(f"[LIVE SUPABASE] 33. Created Placement Home ({home_code}) and Placement Episode")
+
+        # 32. Phase 10: Generate Placement Billing Statement
+        inv_gen_resp = await client.post(
+            "/api/v1/finance/invoices/generate",
+            headers=headers,
+            json={
+                "placement_home_id": live_home_id,
+                "billing_period_start": "2026-01-01",
+                "billing_period_end": "2026-01-31",
+            },
+        )
+        assert inv_gen_resp.status_code == 201
+        inv_data = inv_gen_resp.json()
+        inv_id = inv_data["id"]
+        # Billable days = (31 - 10) + 1 = 22 days @ 72.50 = 1595.00
+        assert len(inv_data["items"]) == 1
+        assert inv_data["items"][0]["billable_days"] == 22
+        assert inv_data["total_amount"] == "1595.00"
+        print(
+            f"[LIVE SUPABASE] 34. Generated Draft Invoice {inv_data['invoice_number']} for CAD {inv_data['total_amount']}"
+        )
+
+        # 33. Phase 10: Finalize Invoice (Immutability Lock ADR-025)
+        finalize_resp = await client.post(
+            f"/api/v1/finance/invoices/{inv_id}/finalize",
+            headers=headers,
+        )
+        assert finalize_resp.status_code == 200
+        assert finalize_resp.json()["status"] == "FINALIZED"
+        print("[LIVE SUPABASE] 35. Finalized and Locked Invoice Calculation Snapshot (ADR-025)")
+
         print("\n================================================================================")
-        print(">>> ALL 28 STEPS OF LIVE SUPABASE POSTGRESQL VERIFICATION PASSED SUCCESSFULLY! <<<")
+        print(">>> ALL 35 STEPS OF LIVE SUPABASE POSTGRESQL VERIFICATION PASSED SUCCESSFULLY! <<<")
         print("================================================================================\n")

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -40,6 +41,34 @@ import TeamSchedule from '@/pages/TeamSchedule';
 import StaffingFacilitator from '@/pages/StaffingFacilitator';
 import StaffingSessionDetail from '@/pages/StaffingSessionDetail';
 import Notifications from '@/pages/Notifications';
+
+// Phase 10 Finance & Placement Billing (Lazy Loaded for Bundle Optimization)
+const FinanceDashboard = lazy(() => import('@/pages/FinanceDashboard'));
+const FinanceRequests = lazy(() => import('@/pages/FinanceRequests'));
+const FinanceRequestNew = lazy(() => import('@/pages/FinanceRequestNew'));
+const FinanceRequestDetail = lazy(() => import('@/pages/FinanceRequestDetail'));
+const FinanceInvoices = lazy(() => import('@/pages/FinanceInvoices'));
+const FinanceInvoiceDetail = lazy(() => import('@/pages/FinanceInvoiceDetail'));
+const FinanceRates = lazy(() => import('@/pages/FinanceRates'));
+const FinanceBudgetLines = lazy(() => import('@/pages/FinanceBudgetLines'));
+const FinanceLedger = lazy(() => import('@/pages/FinanceLedger'));
+
+// Phase 11 Reporting, Quality Assurance & Passports
+const ReportsHub = lazy(() => import('@/pages/ReportsHub'));
+const ReportBuilder = lazy(() => import('@/pages/ReportBuilder'));
+const ChildPassport = lazy(() => import('@/pages/ChildPassport'));
+const ParentPassport = lazy(() => import('@/pages/ParentPassport'));
+const QADashboard = lazy(() => import('@/pages/QADashboard'));
+const QAAuditsList = lazy(() => import('@/pages/QAAuditsList'));
+const QAAuditNew = lazy(() => import('@/pages/QAAuditNew'));
+
+// Phase 12 Fleet Management & Vehicle Operations
+const FleetDashboard = lazy(() => import('@/pages/FleetDashboard'));
+const VehiclesList = lazy(() => import('@/pages/VehiclesList'));
+const VehicleDetail = lazy(() => import('@/pages/VehicleDetail'));
+const FleetMaintenance = lazy(() => import('@/pages/FleetMaintenance'));
+
+
 
 // Pages
 import Dashboard from '@/pages/Dashboard';
@@ -86,53 +115,90 @@ const AuthenticatedApp = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-sm text-muted-foreground">
+          <div className="w-8 h-8 border-3 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+          Loading financial module...
+        </div>
+      }
+    >
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/intake" element={<IntakeList />} />
-          <Route path="/intake/new" element={<NewIntake />} />
-          <Route path="/intake/approvals" element={<SupervisorApprovalQueue />} />
-          <Route path="/intake/:id" element={<IntakeDetail />} />
-          <Route path="/intake/:id/decision" element={<IntakeDecision />} />
-          <Route path="/cases" element={<Cases />} />
-          <Route path="/cases/:id" element={<CaseDetail />} />
-          <Route path="/placement-homes" element={<PlacementHomesList />} />
-          <Route path="/placement-homes/:id" element={<PlacementHomeDetail />} />
-          <Route path="/schedule" element={<MySchedule />} />
-          <Route path="/schedule/team" element={<TeamSchedule />} />
-          <Route path="/staffing" element={<StaffingFacilitator />} />
-          <Route path="/staffing/:id" element={<StaffingSessionDetail />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/assessments/:id" element={<AssessmentDetail />} />
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/intake" element={<IntakeList />} />
+            <Route path="/intake/new" element={<NewIntake />} />
+            <Route path="/intake/approvals" element={<SupervisorApprovalQueue />} />
+            <Route path="/intake/:id" element={<IntakeDetail />} />
+            <Route path="/intake/:id/decision" element={<IntakeDecision />} />
+            <Route path="/cases" element={<Cases />} />
+            <Route path="/cases/:id" element={<CaseDetail />} />
+            <Route path="/placement-homes" element={<PlacementHomesList />} />
+            <Route path="/placement-homes/:id" element={<PlacementHomeDetail />} />
+            <Route path="/schedule" element={<MySchedule />} />
+            <Route path="/schedule/team" element={<TeamSchedule />} />
+            <Route path="/staffing" element={<StaffingFacilitator />} />
+            <Route path="/staffing/:id" element={<StaffingSessionDetail />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/assessments/:id" element={<AssessmentDetail />} />
 
-          <Route path="/plans/:id" element={<PlanDetail />} />
-          <Route path="/plans/:id/edit" element={<PlanEditor />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/clients/:id" element={<ClientDetail />} />
-          <Route path="/families" element={<Families />} />
-          <Route path="/families/:id" element={<FamilyDetail />} />
-          <Route path="/programs" element={<Programs />} />
-          <Route path="/employees" element={<Employees />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/funding" element={<Funding />} />
-          <Route path="/donations" element={<Donations />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/incidents" element={<Incidents />} />
-          <Route path="/ask-red-bear" element={<AskRedBear />} />
-          <Route path="/teams" element={<Teams />} />
-          <Route path="/teams/:id" element={<TeamDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+            {/* Phase 10 Finance & Placement Billing Routes */}
+            <Route path="/finance" element={<FinanceDashboard />} />
+            <Route path="/finance/requests" element={<FinanceRequests />} />
+            <Route path="/finance/requests/new" element={<FinanceRequestNew />} />
+            <Route path="/finance/requests/:id" element={<FinanceRequestDetail />} />
+            <Route path="/finance/invoices" element={<FinanceInvoices />} />
+            <Route path="/finance/invoices/:id" element={<FinanceInvoiceDetail />} />
+            <Route path="/finance/rates" element={<FinanceRates />} />
+            <Route path="/finance/budget-lines" element={<FinanceBudgetLines />} />
+            <Route path="/finance/ledger" element={<FinanceLedger />} />
+
+            {/* Phase 11 Reporting, Quality Assurance & Passports Routes */}
+            <Route path="/reports" element={<ReportsHub />} />
+            <Route path="/reports/builder" element={<ReportBuilder />} />
+            <Route path="/passports/child/:id" element={<ChildPassport />} />
+            <Route path="/passports/parent/:id" element={<ParentPassport />} />
+            <Route path="/qa" element={<QADashboard />} />
+            <Route path="/qa/audits" element={<QAAuditsList />} />
+            <Route path="/qa/audits/new" element={<QAAuditNew />} />
+
+            {/* Phase 12 Fleet Management */}
+            <Route path="/fleet" element={<FleetDashboard />} />
+            <Route path="/fleet/vehicles" element={<VehiclesList />} />
+            <Route path="/fleet/vehicles/:id" element={<VehicleDetail />} />
+            <Route path="/fleet/maintenance" element={<FleetMaintenance />} />
+
+
+
+            <Route path="/plans/:id" element={<PlanDetail />} />
+            <Route path="/plans/:id/edit" element={<PlanEditor />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:id" element={<ClientDetail />} />
+            <Route path="/families" element={<Families />} />
+            <Route path="/families/:id" element={<FamilyDetail />} />
+            <Route path="/programs" element={<Programs />} />
+            <Route path="/employees" element={<Employees />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/funding" element={<Funding />} />
+            <Route path="/donations" element={<Donations />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/incidents" element={<Incidents />} />
+            <Route path="/ask-red-bear" element={<AskRedBear />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/teams/:id" element={<TeamDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 

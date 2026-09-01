@@ -5,8 +5,9 @@ import {
   Calendar, DollarSign, Gift, FileText, AlertTriangle,
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
   Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home,
-  CalendarDays, Bell, UserCheck
+  CalendarDays, Bell, UserCheck, Receipt, BarChart3, CheckSquare, Truck
 } from "lucide-react";
+
 import { api } from "@/api";
 
 
@@ -20,6 +21,15 @@ const navItems = [
   { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
   { label: "Cases", icon: FolderOpen, path: "/cases" },
   { label: "Placement Homes", icon: Home, path: "/placement-homes" },
+  { label: "Finance & Billing", icon: DollarSign, path: "/finance" },
+  { label: "Reporting & Hub", icon: BarChart3, path: "/reports" },
+  { label: "Quality Assurance", icon: CheckSquare, path: "/qa" },
+  { label: "Fleet & Vehicles", icon: Truck, path: "/fleet" },
+  { label: "Purchase Orders", icon: FileText, path: "/finance/requests" },
+
+
+  { label: "Placement Invoices", icon: Receipt, path: "/finance/invoices" },
+  { label: "Financial Ledger", icon: BookOpen, path: "/finance/ledger" },
   { label: "Clients", icon: Users, path: "/clients" },
   { label: "Families", icon: Heart, path: "/families" },
   { label: "Notifications", icon: Bell, path: "/notifications" },

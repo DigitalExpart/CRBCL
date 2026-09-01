@@ -61,3 +61,12 @@ def require_team_access() -> Callable:
         return user
 
     return team_checker
+
+
+async def get_current_user_permissions(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> set[str]:
+    """Return set of permission keys possessed by current user."""
+    perm_service = PermissionService(db)
+    return await perm_service.get_user_permissions(user.id)

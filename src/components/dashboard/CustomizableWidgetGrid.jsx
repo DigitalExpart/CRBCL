@@ -1,0 +1,276 @@
+import React, { useEffect, useState } from 'react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { reportingApi } from '@/api/reporting';
+import {
+  LayoutGrid,
+  Plus,
+  Trash2,
+  GripVertical,
+  Check,
+  FolderOpen,
+  Users,
+  Inbox,
+  Clock,
+  FileX,
+  AlertTriangle,
+  ClipboardCheck,
+  DollarSign,
+  Briefcase,
+  X,
+} from 'lucide-react';
+
+const WIDGET_ICONS = {
+  active_cases: FolderOpen,
+  children_out_of_home: Users,
+  new_intakes: Inbox,
+  pending_approvals: Clock,
+  cases_without_recent_notes: FileX,
+  cases_over_12_months: AlertTriangle,
+  audits_due: ClipboardCheck,
+  financial_summary: DollarSign,
+  my_assigned_cases: Briefcase,
+};
+
+export default function CustomizableWidgetGrid() {
+  const [layout, setLayout] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showCustomizeModal, setShowCustomizeModal] = useState(false);
+  const [availableWidgets, setAvailableWidgets] = useState([]);
+  const [activeWidgets, setActiveWidgets] = useState([]);
+
+  useEffect(() => {
+    loadUserLayout();
+  }, []);
+
+  const loadUserLayout = async () => {
+    setLoading(true);
+    try {
+      const res = await reportingApi.getUserDashboardLayout();
+      setLayout(res.data);
+      if (res.data) {
+        setAvailableWidgets(res.data.available_widgets || []);
+        const active = (res.data.active_widgets || [])
+          .filter((w) => w.is_visible)
+          .sort((a, b) => a.position_index - b.position_index);
+        setActiveWidgets(active);
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard layout', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    const items = Array.from(activeWidgets);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Update position indices
+    const updated = items.map((item, idx) => ({
+      ...item,
+      position_index: idx,
+    }));
+    setActiveWidgets(updated);
+    saveLayout(updated);
+  };
+
+  const saveLayout = async (widgetsList) => {
+    try {
+      const payload = {
+        widgets: widgetsList.map((w, idx) => ({
+          widget_key: w.widget_key,
+          position_index: idx,
+          is_visible: true,
+        })),
+      };
+      await reportingApi.saveUserDashboardLayout(payload);
+    } catch (err) {
+      console.error('Failed to persist dashboard layout', err);
+    }
+  };
+
+  const toggleWidgetVisibility = (widgetKey) => {
+    const isCurrentlyActive = activeWidgets.some((w) => w.widget_key === widgetKey);
+    let updated;
+    if (isCurrentlyActive) {
+      updated = activeWidgets.filter((w) => w.widget_key !== widgetKey);
+    } else {
+      const target = availableWidgets.find((w) => w.widget_key === widgetKey);
+      if (target) {
+        updated = [
+          ...activeWidgets,
+          {
+            widget_key: target.widget_key,
+            title: target.title,
+            category: target.category,
+            position_index: activeWidgets.length,
+            is_visible: true,
+            value: 0,
+          },
+        ];
+      } else {
+        return;
+      }
+    }
+    setActiveWidgets(updated);
+    saveLayout(updated);
+  };
+
+  if (loading) {
+    return <div className="p-4 text-center text-xs text-muted-foreground">Loading customizable dashboard...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header bar for widget customization */}
+      <div className="flex items-center justify-between bg-card border border-border rounded-xl p-3 px-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="w-4 h-4 text-primary" />
+          <span className="text-xs font-semibold text-foreground">Custom User Widget Grid</span>
+          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-medium">
+            Drag to Reorder
+          </span>
+        </div>
+        <button
+          onClick={() => setShowCustomizeModal(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" /> Customize Widgets
+        </button>
+      </div>
+
+      {/* Drag and Drop Grid Context */}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="user-widgets-droppable" direction="horizontal">
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            >
+              {activeWidgets.map((widget, index) => {
+                const Icon = WIDGET_ICONS[widget.widget_key] || FolderOpen;
+                return (
+                  <Draggable key={widget.widget_key} draggableId={widget.widget_key} index={index}>
+                    {(dragProvided, snapshot) => (
+                      <div
+                        ref={dragProvided.innerRef}
+                        {...dragProvided.draggableProps}
+                        className={`p-4 bg-card border rounded-xl shadow-sm space-y-2 transition-all ${
+                          snapshot.isDragging
+                            ? 'border-primary ring-2 ring-primary/20 shadow-lg scale-105 z-50 bg-background'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div
+                              {...dragProvided.dragHandleProps}
+                              className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-0.5"
+                            >
+                              <GripVertical className="w-4 h-4" />
+                            </div>
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              {widget.title}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => toggleWidgetVisibility(widget.widget_key)}
+                            className="text-muted-foreground hover:text-destructive p-1 transition-colors"
+                            title="Remove Widget"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1">
+                          <div className="text-2xl font-extrabold text-foreground">
+                            {widget.value !== undefined ? widget.value : '—'}
+                          </div>
+                          <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                            <Icon className="w-5 h-5" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                );
+              })}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+
+      {/* Customize Widgets Modal */}
+      {showCustomizeModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl max-w-lg w-full p-6 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Customize Dashboard Widgets</h3>
+                <p className="text-xs text-muted-foreground">
+                  Select which role-authorized widgets to display on your personal layout.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCustomizeModal(false)}
+                className="p-1 text-muted-foreground hover:text-foreground rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+              {availableWidgets.map((w) => {
+                const isSelected = activeWidgets.some((act) => act.widget_key === w.widget_key);
+                const Icon = WIDGET_ICONS[w.widget_key] || FolderOpen;
+                return (
+                  <div
+                    key={w.widget_key}
+                    onClick={() => toggleWidgetVisibility(w.widget_key)}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${
+                      isSelected
+                        ? 'border-primary bg-primary/5 text-foreground'
+                        : 'border-border text-muted-foreground hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">{w.title}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase">{w.category}</div>
+                      </div>
+                    </div>
+                    {isSelected ? (
+                      <span className="px-2.5 py-1 bg-primary text-primary-foreground rounded-full text-xs font-semibold flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" /> Added
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 border border-border text-muted-foreground rounded-full text-xs font-medium hover:text-foreground">
+                        + Add Widget
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="border-t border-border pt-4 text-right">
+              <button
+                onClick={() => setShowCustomizeModal(false)}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
