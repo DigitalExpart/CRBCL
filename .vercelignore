@@ -1,0 +1,5 @@
+backend/
+.venv/
+.github/
+docs/
+infrastructure/
