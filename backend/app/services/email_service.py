@@ -167,10 +167,9 @@ class EmailService:
         return "console"
 
     async def _send_via_resend(self, to_email: str, subject: str, html: str, text: str) -> bool:
-        """Dispatch email via Resend REST API."""
         from_addr = self.settings.smtp_from_email
-        if not from_addr or "crbcl.ca" in from_addr:
-            from_addr = "onboarding@resend.dev"
+        if not from_addr:
+            from_addr = "noreply@genserver.online"
 
         from_header = f"{self.settings.smtp_from_name} <{from_addr}>"
 
