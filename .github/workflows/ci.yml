@@ -95,3 +95,33 @@ jobs:
         run: |
           cd backend
           pytest -v
+
+  deploy-vercel:
+    name: Deploy Vercel Production
+    needs: [frontend, backend]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger Vercel Deploy Hook (If Configured)
+        run: |
+          if [ -n "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "Triggering Vercel Deploy Hook..."
+            curl -X POST "$VERCEL_DEPLOY_HOOK_URL"
+          else
+            echo "VERCEL_DEPLOY_HOOK_URL not set in secrets; Vercel GitHub integration handles deployment."
+          fi
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+
+      - name: Deploy via Vercel CLI (If Token Configured)
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "Deploying via Vercel CLI to Production..."
+            npx vercel --prod --token="$VERCEL_TOKEN" --yes
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
