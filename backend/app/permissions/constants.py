@@ -87,6 +87,20 @@ class Permissions(StrEnum):
     VOLUNTEER_RECORD_MANAGE = "volunteer.record.manage"
     VOLUNTEER_HOURS_MANAGE = "volunteer.hours.manage"
 
+    # Sprint B — Clinical Notes, Terminology, Communications & Legacy Modules
+    CLINICAL_NOTE_READ = "clinical.note.read"
+    CLINICAL_NOTE_CREATE = "clinical.note.create"
+    CLINICAL_NOTE_LOCK = "clinical.note.lock"
+    CLINICAL_NOTE_EXPORT = "clinical.note.export"
+
+    TERMINOLOGY_MANAGE = "terminology.manage"
+    COMMUNICATIONS_APPROVE = "communications.approve"
+
+    PROGRAM_MANAGE = "program.manage"
+    GRANT_MANAGE = "grant.manage"
+    INCIDENT_MANAGE = "incident.manage"
+    APPOINTMENT_MANAGE = "appointment.manage"
+
     # Core Case permissions (Phase 4)
     CASE_READ = "case.read"
     CASE_CREATE = "case.create"

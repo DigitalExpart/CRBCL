@@ -42,8 +42,9 @@ const navItems = [
   { label: "Volunteers", icon: UserCheck, path: "/volunteers" },
   { label: "Funding", icon: DollarSign, path: "/funding" },
   { label: "Donations", icon: Gift, path: "/donations" },
-  { label: "Documents", icon: FileText, path: "/documents" },
+  { label: "Clinical Notes", icon: FileText, path: "/clinical-notes" },
   { label: "Incidents", icon: AlertTriangle, path: "/incidents" },
+  { label: "Cultural Terminology", icon: BookOpen, path: "/admin/terminology" },
   { label: "Ask Red Bear", icon: MessageCircle, path: "/ask-red-bear" },
   { label: "Admin Dashboard", icon: Shield, path: "/admin", adminOnly: true },
 ];

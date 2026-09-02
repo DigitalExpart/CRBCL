@@ -11,6 +11,7 @@ from app.api.v1.calendar import router as calendar_router
 from app.api.v1.case_notes import router as case_notes_router
 from app.api.v1.cases import router as cases_router
 from app.api.v1.clients import router as clients_router
+from app.api.v1.clinical_notes import router as clinical_notes_router
 from app.api.v1.communications import router as communications_router
 from app.api.v1.court_events import router as court_events_router
 from app.api.v1.dashboard import router as dashboard_router
@@ -37,6 +38,7 @@ from app.api.v1.referrals import router as referrals_router
 from app.api.v1.removals import router as removals_router
 from app.api.v1.reporting import router as reporting_router
 from app.api.v1.schools import router as schools_router
+from app.api.v1.sprint_b_legacy import router as sprint_b_legacy_router
 from app.api.v1.staffing import router as staffing_router
 from app.api.v1.sync import router as sync_router
 from app.api.v1.teams import router as teams_router
@@ -47,6 +49,8 @@ api_v1_router = APIRouter(prefix="/api/v1")
 
 # Mount sub-routers
 api_v1_router.include_router(health_router)
+api_v1_router.include_router(clinical_notes_router)
+api_v1_router.include_router(sprint_b_legacy_router)
 api_v1_router.include_router(sync_router, prefix="/sync", tags=["Sync"])
 api_v1_router.include_router(auth_router)
 api_v1_router.include_router(referrals_router)

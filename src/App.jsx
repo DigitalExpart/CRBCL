@@ -79,6 +79,10 @@ const Facilities = lazy(() => import('@/pages/Facilities'));
 const ITAssets = lazy(() => import('@/pages/ITAssets'));
 const Volunteers = lazy(() => import('@/pages/Volunteers'));
 
+// Completion Sprint B — Clinical Notes & Terminology Pages
+const ClinicalNotes = lazy(() => import('@/pages/ClinicalNotes'));
+const AdminTerminology = lazy(() => import('@/pages/AdminTerminology'));
+
 
 
 // Pages
@@ -211,6 +215,8 @@ const AuthenticatedApp = () => {
             <Route path="/donations" element={<Donations />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/incidents" element={<Incidents />} />
+            <Route path="/clinical-notes" element={<ClinicalNotes />} />
+            <Route path="/admin/terminology" element={<AdminTerminology />} />
             <Route path="/ask-red-bear" element={<AskRedBear />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/teams/:id" element={<TeamDashboard />} />

@@ -186,6 +186,14 @@ from app.models.school import (  # noqa: F401
     ClientSchoolEnrolment,
     School,
 )
+from app.models.sprint_b_models import (  # noqa: F401
+    Appointment,
+    ClinicalNote,
+    ClinicalNoteAddendum,
+    FundingGrant,
+    Incident,
+    Program,
+)
 from app.models.staffing import (  # noqa: F401
     StaffingAttendee,
     StaffingCase,

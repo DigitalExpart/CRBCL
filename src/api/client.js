@@ -79,6 +79,14 @@ const NATIVE_ENDPOINT_MAP = {
   donations: '/api/v1/org-ops/donations',
   volunteer: '/api/v1/org-ops/volunteers',
   volunteers: '/api/v1/org-ops/volunteers',
+  program: '/api/v1/programs',
+  programs: '/api/v1/programs',
+  grant: '/api/v1/grants',
+  grants: '/api/v1/grants',
+  incident: '/api/v1/incidents',
+  incidents: '/api/v1/incidents',
+  appointment: '/api/v1/appointments',
+  appointments: '/api/v1/appointments',
 };
 
 // Entity service implementation with native FastAPI v1 routing & fail-closed safety
