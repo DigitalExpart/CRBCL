@@ -73,6 +73,12 @@ const AdminIntegrations = lazy(() => import('@/pages/AdminIntegrations'));
 const OCRReview = lazy(() => import('@/pages/OCRReview'));
 const CommunicationsHub = lazy(() => import('@/pages/CommunicationsHub'));
 
+// Completion Sprint A — Organizational Operations Pages
+const Housing = lazy(() => import('@/pages/Housing'));
+const Facilities = lazy(() => import('@/pages/Facilities'));
+const ITAssets = lazy(() => import('@/pages/ITAssets'));
+const Volunteers = lazy(() => import('@/pages/Volunteers'));
+
 
 
 // Pages
@@ -183,6 +189,12 @@ const AuthenticatedApp = () => {
             <Route path="/admin/integrations" element={<AdminIntegrations />} />
             <Route path="/ocr/review" element={<OCRReview />} />
             <Route path="/communications" element={<CommunicationsHub />} />
+
+            {/* Completion Sprint A — Organizational Operations */}
+            <Route path="/housing" element={<Housing />} />
+            <Route path="/facilities" element={<Facilities />} />
+            <Route path="/assets" element={<ITAssets />} />
+            <Route path="/volunteers" element={<Volunteers />} />
 
 
 

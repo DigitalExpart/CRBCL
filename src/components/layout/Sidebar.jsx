@@ -36,6 +36,10 @@ const navItems = [
 
   { label: "Programs", icon: BookOpen, path: "/programs" },
   { label: "HR & Staff", icon: UserCog, path: "/employees" },
+  { label: "Housing Units", icon: Home, path: "/housing" },
+  { label: "Facilities", icon: LayoutGrid, path: "/facilities" },
+  { label: "IT Assets", icon: Shield, path: "/assets" },
+  { label: "Volunteers", icon: UserCheck, path: "/volunteers" },
   { label: "Funding", icon: DollarSign, path: "/funding" },
   { label: "Donations", icon: Gift, path: "/donations" },
   { label: "Documents", icon: FileText, path: "/documents" },

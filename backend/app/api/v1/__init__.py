@@ -25,6 +25,7 @@ from app.api.v1.notification_preferences import router as notification_preferenc
 from app.api.v1.notification_templates import router as notification_templates_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.ocr import router as ocr_router
+from app.api.v1.org_ops import router as org_ops_router
 from app.api.v1.passports import router as passports_router
 from app.api.v1.permanency_plans import router as permanency_plans_router
 from app.api.v1.placement_homes import router as placement_homes_router
@@ -84,3 +85,4 @@ api_v1_router.include_router(integrations_router)
 api_v1_router.include_router(ocr_router)
 api_v1_router.include_router(ask_red_bear_router)
 api_v1_router.include_router(communications_router)
+api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])

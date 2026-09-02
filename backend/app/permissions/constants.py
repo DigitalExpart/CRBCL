@@ -59,6 +59,34 @@ class Permissions(StrEnum):
     SCHOOL_READ = "school.read"
     SCHOOL_WRITE = "school.write"
 
+    # Sprint A — Organizational Operations Permissions
+    HR_EMPLOYEE_READ = "hr.employee.read"
+    HR_EMPLOYEE_CREATE = "hr.employee.create"
+    HR_EMPLOYEE_UPDATE = "hr.employee.update"
+    HR_EMPLOYEE_ARCHIVE = "hr.employee.archive"
+    HR_CERTIFICATION_READ = "hr.certification.read"
+    HR_CERTIFICATION_MANAGE = "hr.certification.manage"
+
+    HOUSING_UNIT_READ = "housing.unit.read"
+    HOUSING_UNIT_MANAGE = "housing.unit.manage"
+    HOUSING_OCCUPANCY_MANAGE = "housing.occupancy.manage"
+
+    FACILITIES_READ = "facilities.facility.read"
+    FACILITIES_MANAGE = "facilities.facility.manage"
+    FACILITIES_WORKORDER_MANAGE = "facilities.workorder.manage"
+
+    ASSET_ITEM_READ = "asset.item.read"
+    ASSET_ITEM_MANAGE = "asset.item.manage"
+    ASSET_ASSIGNMENT_MANAGE = "asset.assignment.manage"
+
+    DONATION_DONOR_READ = "donation.donor.read"
+    DONATION_DONOR_MANAGE = "donation.donor.manage"
+    DONATION_RECORD_MANAGE = "donation.record.manage"
+
+    VOLUNTEER_RECORD_READ = "volunteer.record.read"
+    VOLUNTEER_RECORD_MANAGE = "volunteer.record.manage"
+    VOLUNTEER_HOURS_MANAGE = "volunteer.hours.manage"
+
     # Core Case permissions (Phase 4)
     CASE_READ = "case.read"
     CASE_CREATE = "case.create"

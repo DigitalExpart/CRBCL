@@ -86,6 +86,24 @@ from app.models.notification import (  # noqa: F401
     NotificationPreference,
     NotificationTemplate,
 )
+from app.models.org_ops import (  # noqa: F401
+    AssetAssignment,
+    Donation,
+    Donor,
+    Employee,
+    EmployeeCertification,
+    Facility,
+    FacilityInspection,
+    FacilityWorkOrder,
+    FundraisingCampaign,
+    HousingOccupancy,
+    HousingUnit,
+    ITAsset,
+    Volunteer,
+    VolunteerApplication,
+    VolunteerAssignment,
+    VolunteerHour,
+)
 from app.models.outbox import OutboxEvent  # noqa: F401
 from app.models.person import (  # noqa: F401
     Person,
