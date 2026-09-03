@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     # ── Frontend ─────────────────────────────────────────────
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "https://genserver.online"
 
     # ── Session / Auth ───────────────────────────────────────
     session_secret: str = "CHANGE-ME-generate-a-64-char-random-string"
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     refresh_token_ttl: int = Field(default=604800, description="Refresh token TTL in seconds (default 7 days)")
 
     # ── CORS ─────────────────────────────────────────────────
-    cors_allowed_origins: str = "http://localhost:5173"
+    cors_allowed_origins: str = "https://genserver.online,https://www.genserver.online,https://crbcl-sofware.vercel.app,http://localhost:5173"
 
     @property
     def cors_origins_list(self) -> list[str]:

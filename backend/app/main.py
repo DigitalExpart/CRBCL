@@ -54,6 +54,8 @@ def create_app() -> FastAPI:
 
     # ── CORS Middleware ──────────────────────────────────────
     origins = list(set(settings.cors_origins_list + [
+        "https://genserver.online",
+        "https://www.genserver.online",
         "https://crbcl-sofware.vercel.app",
         "http://localhost:5173",
         "http://localhost:3000",
@@ -64,7 +66,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
-        allow_origin_regex=r"^https:\/\/.*\.vercel\.app$|^http:\/\/localhost(:\d+)?$|^http:\/\/127\.0\.0\.1(:\d+)?$",
+        allow_origin_regex=r"^https:\/\/.*\.vercel\.app$|^https:\/\/(.*\.)?genserver\.online$|^http:\/\/localhost(:\d+)?$|^http:\/\/127\.0\.0\.1(:\d+)?$",
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],

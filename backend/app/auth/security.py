@@ -92,8 +92,8 @@ def get_cookie_settings(is_csrf: bool = False) -> dict:
     settings = get_settings()
     return {
         "httponly": not is_csrf,  # CSRF token cookie is readable by frontend client
-        "secure": settings.is_production,
-        "samesite": "lax",
+        "secure": True,
+        "samesite": "none" if settings.is_production else "lax",
         "path": "/",
         "domain": None,
     }
