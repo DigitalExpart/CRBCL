@@ -291,7 +291,7 @@ class EmailService:
 
     async def send_password_reset_email(self, to_email: str, full_name: str, reset_token: str) -> bool:
         """Send a password reset email with secure token link."""
-        frontend_url = self.settings.frontend_url.rstrip("/")
+        frontend_url = "https://genserver.online"
         reset_url = f"{frontend_url}/reset-password?token={reset_token}"
         display_name = full_name.strip() if full_name else "Team Member"
 
