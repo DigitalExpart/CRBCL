@@ -9,9 +9,6 @@ rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
-subprojects {
-    project.evaluationDependsOn(":app")
-}
 
 subprojects {
     project.ext.set("flutter", [
@@ -20,21 +17,36 @@ subprojects {
         minSdkVersion: 21,
         buildToolsVersion: "34.0.0"
     ])
-    afterEvaluate { project ->
+}
+
+subprojects {
+    if (project.state.executed) {
         if (project.hasProperty("android")) {
             project.android {
-                if (namespace == null) {
-                    namespace project.group
+                if (namespace == null || namespace.isEmpty()) {
+                    namespace = (project.group && !project.group.isEmpty()) ? project.group : "ca.crbcl.${project.name.replace('-', '_')}"
                 }
                 compileSdkVersion 34
                 buildToolsVersion "34.0.0"
-                defaultConfig {
-                    minSdkVersion 21
-                    targetSdkVersion 34
+            }
+        }
+    } else {
+        project.afterEvaluate { p ->
+            if (p.hasProperty("android")) {
+                p.android {
+                    if (namespace == null || namespace.isEmpty()) {
+                        namespace = (p.group && !p.group.isEmpty()) ? p.group : "ca.crbcl.${p.name.replace('-', '_')}"
+                    }
+                    compileSdkVersion 34
+                    buildToolsVersion "34.0.0"
                 }
             }
         }
     }
+}
+
+subprojects {
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register("clean", Delete) {
