@@ -14,6 +14,12 @@ subprojects {
 }
 
 subprojects {
+    project.ext.set("flutter", [
+        compileSdkVersion: 34,
+        targetSdkVersion: 34,
+        minSdkVersion: 21,
+        buildToolsVersion: "34.0.0"
+    ])
     afterEvaluate { project ->
         if (project.hasProperty("android")) {
             project.android {
