@@ -17,6 +17,7 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
+    refresh_token: str | None = None
     user: UserInfo
 
 
@@ -49,6 +50,7 @@ class VerifyOtpResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
+    refresh_token: str | None = None
     user: UserInfo
 
 
@@ -56,10 +58,17 @@ class ResendOtpRequest(BaseModel):
     email: EmailStr
 
 
+class RefreshRequest(BaseModel):
+    refresh_token: str | None = Field(default=None, alias="refreshToken")
+
+    model_config = {"populate_by_name": True}
+
+
 class RefreshResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
+    refresh_token: str | None = None
 
 
 class ForgotPasswordRequest(BaseModel):

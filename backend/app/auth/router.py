@@ -11,6 +11,7 @@ from app.auth.schemas import (
     LoginRequest,
     LoginResponse,
     MessageResponse,
+    RefreshRequest,
     RefreshResponse,
     RegisterRequest,
     RegisterResponse,
@@ -124,6 +125,7 @@ async def login(
     settings = get_settings()
     return LoginResponse(
         access_token=access_token,
+        refresh_token=refresh_token,
         expires_in=settings.access_token_ttl,
         user=_build_user_info(user),
     )
@@ -132,17 +134,19 @@ async def login(
 @router.post("/refresh", response_model=RefreshResponse)
 async def refresh(
     response: Response,
+    body: RefreshRequest | None = None,
     db: AsyncSession = Depends(get_db),
     crbcl_refresh_token: str | None = Cookie(default=None),
 ):
-    if not crbcl_refresh_token:
+    token_to_check = (body.refresh_token if body and body.refresh_token else None) or crbcl_refresh_token
+    if not token_to_check:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": {"code": "NO_REFRESH_TOKEN", "message": "No refresh token provided"}},
         )
 
     auth = AuthService(db)
-    result = await auth.refresh_session(crbcl_refresh_token)
+    result = await auth.refresh_session(token_to_check)
     if not result:
         _clear_auth_cookies(response)
         raise HTTPException(
@@ -157,7 +161,11 @@ async def refresh(
     _set_auth_cookies(response, access_token, new_refresh_token, csrf_token)
 
     settings = get_settings()
-    return RefreshResponse(access_token=access_token, expires_in=settings.access_token_ttl)
+    return RefreshResponse(
+        access_token=access_token,
+        refresh_token=new_refresh_token,
+        expires_in=settings.access_token_ttl,
+    )
 
 
 @router.post("/logout", response_model=MessageResponse)

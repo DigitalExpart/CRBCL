@@ -414,6 +414,7 @@ class AuthService {
       }
       const data = await res.json();
       this.setToken(data.access_token || data.token || 'crbcl_token');
+      if (data.refresh_token) localStorage.setItem('crbcl_refresh_token', data.refresh_token);
       if (data.user) StorageManager.set(USER_KEY, data.user);
       return data;
     } catch (err) {
@@ -547,15 +548,21 @@ class AuthService {
   async refreshToken() {
     try {
       const url = this.apiClient.baseURL ? `${this.apiClient.baseURL}/api/v1/auth/refresh` : '/api/v1/auth/refresh';
+      const savedRefreshToken = localStorage.getItem('crbcl_refresh_token');
       const res = await fetch(url, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'X-App-Id': this.apiClient.appId },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Id': this.apiClient.appId,
+        },
+        body: JSON.stringify({ refresh_token: savedRefreshToken }),
       });
       if (res.ok) {
         const data = await res.json();
         if (data.access_token) {
           this.setToken(data.access_token);
+          if (data.refresh_token) localStorage.setItem('crbcl_refresh_token', data.refresh_token);
           return data.access_token;
         }
       }

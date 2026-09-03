@@ -52,7 +52,12 @@ export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {
       if (onSaved) onSaved();
       onOpenChange(false);
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || "Failed to update user role.");
+      const detailMsg = err.response?.data?.detail?.error?.message || err.response?.data?.detail || err.message;
+      if (err.response?.status === 401 || (typeof detailMsg === "string" && detailMsg.toLowerCase().includes("token"))) {
+        setError("Your session has expired. Please refresh the page or sign in again to save role changes.");
+      } else {
+        setError(typeof detailMsg === "string" ? detailMsg : "Failed to update user role.");
+      }
     } finally {
       setLoading(false);
     }
