@@ -21,7 +21,9 @@ class UserUpdate(BaseModel):
     display_name: str | None = None
     phone: str | None = None
     is_active: bool | None = None
+    role: str | None = None
     role_keys: list[str] | None = None
+    team_access: list[str] | None = None
     team_ids: list[uuid.UUID] | None = None
 
 

@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 
     # ── Session / Auth ───────────────────────────────────────
     session_secret: str = "CHANGE-ME-generate-a-64-char-random-string"
-    access_token_ttl: int = Field(default=900, description="Access token TTL in seconds (default 15 min)")
+    access_token_ttl: int = Field(default=86400, description="Access token TTL in seconds (default 24h)")
     refresh_token_ttl: int = Field(default=604800, description="Refresh token TTL in seconds (default 7 days)")
 
     # ── CORS ─────────────────────────────────────────────────

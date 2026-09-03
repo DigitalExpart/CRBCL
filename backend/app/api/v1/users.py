@@ -163,28 +163,26 @@ async def update_user(
             detail={"error": {"code": "USER_NOT_FOUND", "message": "User not found"}},
         )
 
-    update_fields = payload.model_dump(exclude_unset=True, exclude={"role_keys", "team_ids"})
+    update_fields = payload.model_dump(exclude_unset=True, exclude={"role", "role_keys", "team_access", "team_ids"})
     update_fields["updated_by"] = user.id
 
     if update_fields:
-        await repo.update(target, **update_fields)
+        await repo.update(user_id, **update_fields)
 
-    if payload.role_keys is not None:
-        await repo.assign_roles(target.id, payload.role_keys, assigned_by=user.id)
+    # Determine role keys from role_keys or role
+    role_keys = payload.role_keys
+    if role_keys is None and payload.role:
+        if payload.role == "admin":
+            role_keys = ["executive_director", "it_admin"]
+        else:
+            role_keys = [payload.role]
+
+    if role_keys is not None:
+        await repo.assign_roles(user_id, role_keys, assigned_by=user.id)
 
     if payload.team_ids is not None:
-        await repo.assign_teams(target.id, payload.team_ids, assigned_by=user.id)
-
-    audit_service = AuditService(db)
-    await audit_service.log_event(
-        event_type="USER_UPDATED",
-        user_id=user.id,
-        entity_type="user",
-        entity_id=target.id,
-        after_data=payload.model_dump(exclude_unset=True),
-        ip_address=request.client.host if request.client else None,
-    )
+        await repo.assign_teams(user_id, payload.team_ids, assigned_by=user.id)
 
     await db.commit()
-    fresh = await repo.get_with_roles_and_teams(target.id)
+    fresh = await repo.get_with_roles_and_teams(user_id)
     return _build_user_response(fresh)

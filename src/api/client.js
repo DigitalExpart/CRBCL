@@ -544,12 +544,28 @@ class AuthService {
     return await res.json();
   }
 
-  async logout(redirectUrl = null) {
+  async refreshToken() {
     try {
-      await this.apiClient.fetch('/api/v1/auth/logout', { method: 'POST' });
+      const url = this.apiClient.baseURL ? `${this.apiClient.baseURL}/api/v1/auth/refresh` : '/api/v1/auth/refresh';
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-App-Id': this.apiClient.appId },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.access_token) {
+          this.setToken(data.access_token);
+          return data.access_token;
+        }
+      }
     } catch (e) {
-      console.warn('Logout API error:', e);
+      console.warn('Token refresh failed:', e);
     }
+    return null;
+  }
+
+  logout(redirectUrl = '/login') {
     this.setToken(null);
     StorageManager.remove(USER_KEY);
     if (redirectUrl) {
@@ -625,7 +641,7 @@ export class ApiClient {
   }
 
   async fetch(endpoint, options = {}) {
-    const token = this.auth.getToken();
+    let token = this.auth.getToken();
     const csrfToken = this._getCsrfToken();
 
     const headers = {
@@ -640,11 +656,26 @@ export class ApiClient {
     }
 
     const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
-    return fetch(url, {
+    let res = await fetch(url, {
       credentials: 'include',
       ...options,
       headers,
     });
+
+    // If 401 Unauthorized and not an auth route, try transparent refresh
+    if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/register')) {
+      const newToken = await this.auth.refreshToken();
+      if (newToken) {
+        headers['Authorization'] = `Bearer ${newToken}`;
+        res = await fetch(url, {
+          credentials: 'include',
+          ...options,
+          headers,
+        });
+      }
+    }
+
+    return res;
   }
 
   async get(endpoint, options = {}) {

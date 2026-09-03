@@ -7,15 +7,28 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/api";
 import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
 
+const ROLES = [
+  { key: "caseworker", label: "Caseworker — Standard Case Files" },
+  { key: "supervisor", label: "Supervisor — Approval & Reviews" },
+  { key: "director_manager", label: "Director / Manager — Operational Oversight" },
+  { key: "executive_director", label: "Executive Director — Full Administrator" },
+  { key: "case_aide", label: "Case Aide — Support Worker" },
+  { key: "finance_staff", label: "Finance Staff — Billing & Invoices" },
+  { key: "cultural_worker", label: "Cultural Worker — Programs & Elders" },
+  { key: "clinical_staff", label: "Clinical Staff — Medical & Therapy" },
+  { key: "it_admin", label: "IT Administrator — Security & Config" },
+];
+
 export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("caseworker");
   const [teamAccess, setTeamAccess] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (user) {
-      setRole(user.role || "user");
+      const userRole = (user.roles && user.roles[0]) || user.role || "caseworker";
+      setRole(userRole);
       setTeamAccess(user.team_access || []);
       setError("");
     }
@@ -25,7 +38,11 @@ export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {
     setLoading(true);
     setError("");
     try {
-      await api.entities.User.update(user.id, { role, team_access: teamAccess });
+      await api.patch(`/users/${user.id}`, {
+        role,
+        role_keys: [role],
+        team_access: teamAccess,
+      });
       if (onSaved) onSaved();
       onOpenChange(false);
     } catch (err) {
@@ -39,21 +56,24 @@ export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
+          <DialogTitle>Edit User Roles & Access</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1">
             <Label className="text-muted-foreground">User</Label>
             <p className="text-sm font-medium">{user?.full_name || user?.email}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
+            <p className="text-xs text-muted-foreground font-mono">{user?.email}</p>
           </div>
           <div className="space-y-2">
-            <Label>Role</Label>
+            <Label>Assigned Role</Label>
             <Select value={role} onValueChange={setRole} disabled={loading}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">User — Standard access</SelectItem>
-                <SelectItem value="admin">Admin — Full access</SelectItem>
+                {ROLES.map((r) => (
+                  <SelectItem key={r.key} value={r.key}>
+                    {r.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
