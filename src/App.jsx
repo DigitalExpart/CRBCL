@@ -14,6 +14,7 @@ import AdminLogin from '@/pages/AdminLogin';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import Profile from '@/pages/Profile';
 
 // Layout
 import AppLayout from '@/components/layout/AppLayout';
@@ -150,6 +151,7 @@ const AuthenticatedApp = () => {
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/admin/login" replace />} />}>
           <Route element={<AppLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/profile" element={<Profile />} />
             <Route path="/admin/integrations" element={<AdminIntegrations />} />
             <Route path="/admin/terminology" element={<AdminTerminology />} />
           </Route>
@@ -159,6 +161,7 @@ const AuthenticatedApp = () => {
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/intake" element={<IntakeList />} />
             <Route path="/intake/new" element={<NewIntake />} />
             <Route path="/intake/approvals" element={<SupervisorApprovalQueue />} />

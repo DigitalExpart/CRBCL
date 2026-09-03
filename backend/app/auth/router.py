@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
 from app.auth.schemas import (
+    ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
     LoginResponse,
@@ -17,6 +18,7 @@ from app.auth.schemas import (
     RegisterResponse,
     ResendOtpRequest,
     ResetPasswordRequest,
+    UpdateProfileRequest,
     UserInfo,
     VerifyOtpRequest,
     VerifyOtpResponse,
@@ -27,6 +29,7 @@ from app.auth.security import (
     generate_csrf_token,
     get_cookie_settings,
     hash_password,
+    verify_password,
 )
 from app.auth.service import AuthService
 from app.core.config import get_settings
@@ -94,6 +97,13 @@ def _build_user_info(user: User) -> UserInfo:
             except Exception:
                 team_access = []
 
+    # Check preferences for avatar_url
+    avatar_url = None
+    if hasattr(user, "preferences") and user.preferences:
+        avatar_pref = next((p for p in user.preferences if p.key == "avatar_url"), None)
+        if avatar_pref and avatar_pref.value:
+            avatar_url = avatar_pref.value
+
     if not team_access and (
         "admin.users.manage" in permissions
         or any(r in roles for r in ["executive_director", "it_admin", "director_manager", "admin"])
@@ -105,6 +115,8 @@ def _build_user_info(user: User) -> UserInfo:
         email=user.email,
         full_name=user.full_name,
         display_name=user.display_name,
+        phone=user.phone,
+        avatar_url=avatar_url,
         is_active=user.is_active,
         roles=roles,
         permissions=sorted(permissions),
@@ -207,6 +219,65 @@ async def logout(
 @router.get("/me", response_model=UserInfo)
 async def me(user: User = Depends(get_current_user)):
     return _build_user_info(user)
+
+
+@router.patch("/me", response_model=UserInfo)
+async def update_profile(
+    body: UpdateProfileRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if body.full_name is not None:
+        user.full_name = body.full_name.strip()
+    if body.display_name is not None:
+        user.display_name = body.display_name.strip() or None
+    if body.phone is not None:
+        user.phone = body.phone.strip() or None
+
+    if body.avatar_url is not None:
+        from sqlalchemy import select
+        from app.models.user import UserPreference
+
+        pref_res = await db.execute(
+            select(UserPreference).where(
+                UserPreference.user_id == user.id,
+                UserPreference.key == "avatar_url",
+            )
+        )
+        pref = pref_res.scalars().first()
+        if pref:
+            pref.value = body.avatar_url
+        else:
+            pref = UserPreference(user_id=user.id, key="avatar_url", value=body.avatar_url)
+            db.add(pref)
+
+    await db.commit()
+    auth = AuthService(db)
+    fresh_user = await auth.get_user_by_id(user.id)
+    return _build_user_info(fresh_user or user)
+
+
+@router.post("/change-password", response_model=MessageResponse)
+async def change_password(
+    body: ChangePasswordRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not verify_password(body.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your current password is incorrect. Please verify and try again.",
+        )
+
+    user.password_hash = hash_password(body.new_password)
+    user.failed_login_count = 0
+    user.locked_until = None
+    await db.commit()
+
+    return MessageResponse(
+        success=True,
+        message="Your password has been changed successfully.",
+    )
 
 
 @router.post("/register", response_model=RegisterResponse)

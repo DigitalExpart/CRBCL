@@ -545,6 +545,49 @@ class AuthService {
     return await res.json();
   }
 
+  async updateProfile(profileData) {
+    const res = await this.apiClient.fetch('/api/v1/auth/me', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileData),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        err?.detail?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Failed to update profile';
+      throw new Error(msg);
+    }
+    const updated = await res.json();
+    StorageManager.set(USER_KEY, updated);
+    return updated;
+  }
+
+  async changePassword({ currentPassword, newPassword }) {
+    const res = await this.apiClient.fetch('/api/v1/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        err?.detail?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Failed to change password';
+      throw new Error(msg);
+    }
+    return await res.json();
+  }
+
   async refreshToken() {
     try {
       const url = this.apiClient.baseURL ? `${this.apiClient.baseURL}/api/v1/auth/refresh` : '/api/v1/auth/refresh';

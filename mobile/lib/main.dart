@@ -3,6 +3,7 @@ import 'screens/login_screen.dart';
 import 'screens/field_dashboard.dart';
 import 'screens/case_list_screen.dart';
 import 'screens/note_draft_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
   runApp(const CrbclMobileApp());
@@ -25,6 +26,7 @@ class CrbclMobileApp extends StatelessWidget {
         '/dashboard': (context) => const FieldDashboardScreen(),
         '/cases': (context) => const CaseListScreen(),
         '/note-draft': (context) => const NoteDraftScreen(),
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }

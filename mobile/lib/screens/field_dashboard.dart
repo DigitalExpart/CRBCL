@@ -10,7 +10,13 @@ class FieldDashboardScreen extends StatelessWidget {
         title: const Text('Field Worker Dashboard'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: 'My Profile',
+            onPressed: () => Navigator.pushNamed(context, '/profile'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
             onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
           ),
         ],

@@ -92,6 +92,8 @@ class UserInfo(BaseModel):
     email: str
     full_name: str
     display_name: str | None = None
+    phone: str | None = None
+    avatar_url: str | None = None
     is_active: bool
     roles: list[str] = []
     permissions: list[str] = []
@@ -99,3 +101,20 @@ class UserInfo(BaseModel):
     created_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+
+class UpdateProfileRequest(BaseModel):
+    full_name: str | None = Field(default=None, max_length=255, alias="fullName")
+    display_name: str | None = Field(default=None, max_length=255, alias="displayName")
+    phone: str | None = Field(default=None, max_length=50)
+    avatar_url: str | None = Field(default=None, alias="avatarUrl")
+
+    model_config = {"populate_by_name": True}
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(alias="currentPassword")
+    new_password: str = Field(min_length=8, max_length=128, alias="newPassword")
+
+    model_config = {"populate_by_name": True}
+

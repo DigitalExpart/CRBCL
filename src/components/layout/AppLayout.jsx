@@ -2,6 +2,7 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import UserNav from "./UserNav";
 
 export default function AppLayout() {
   return (
@@ -14,8 +15,10 @@ export default function AppLayout() {
               Chief Red Bear Children's Lodge • Family Wellness Platform
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell />
+            <div className="h-5 w-px bg-border/60" />
+            <UserNav />
           </div>
         </header>
 
