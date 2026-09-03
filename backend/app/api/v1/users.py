@@ -21,7 +21,27 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 
 def _build_user_response(user: User) -> UserResponse:
+    import json
+
     roles = [ur.role.key for ur in user.roles if ur.role and ur.role.is_active]
+
+    # Check preferences for persisted team_access
+    team_access = []
+    if hasattr(user, "preferences") and user.preferences:
+        pref = next((p for p in user.preferences if p.key == "team_access"), None)
+        if pref and pref.value:
+            try:
+                loaded = json.loads(pref.value)
+                if isinstance(loaded, list):
+                    team_access = [str(x) for x in loaded]
+            except Exception:
+                team_access = []
+
+    if not team_access and any(
+        r in roles for r in ["executive_director", "it_admin", "director_manager", "admin"]
+    ):
+        team_access = ["all"]
+
     return UserResponse(
         id=user.id,
         email=user.email,
@@ -31,7 +51,7 @@ def _build_user_response(user: User) -> UserResponse:
         is_active=user.is_active,
         is_verified=user.is_verified,
         roles=roles,
-        team_access=["all"] if "admin.users.manage" in roles or "admin" in roles else [],
+        team_access=team_access,
         created_at=user.created_at,
         updated_at=user.updated_at,
     )
@@ -179,6 +199,25 @@ async def update_user(
 
     if role_keys is not None:
         await repo.assign_roles(user_id, role_keys, assigned_by=user.id)
+
+    if payload.team_access is not None:
+        import json
+        from sqlalchemy import select
+        from app.models.user import UserPreference
+
+        pref_res = await db.execute(
+            select(UserPreference).where(
+                UserPreference.user_id == user_id,
+                UserPreference.key == "team_access",
+            )
+        )
+        pref = pref_res.scalars().first()
+        raw_val = json.dumps(payload.team_access)
+        if pref:
+            pref.value = raw_val
+        else:
+            pref = UserPreference(user_id=user_id, key="team_access", value=raw_val)
+            db.add(pref)
 
     if payload.team_ids is not None:
         await repo.assign_teams(user_id, payload.team_ids, assigned_by=user.id)

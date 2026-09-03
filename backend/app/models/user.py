@@ -42,7 +42,7 @@ class User(Base, AuditMixin, SoftDeleteMixin):
     # Relationships
     roles: Mapped[list[UserRole]] = relationship("UserRole", back_populates="user", lazy="selectin")
     sessions: Mapped[list[Session]] = relationship("Session", back_populates="user", lazy="noload")
-    preferences: Mapped[list[UserPreference]] = relationship("UserPreference", back_populates="user", lazy="noload")
+    preferences: Mapped[list[UserPreference]] = relationship("UserPreference", back_populates="user", lazy="selectin")
 
     __table_args__ = (Index("ix_users_email_normalized", "email_normalized"),)
 

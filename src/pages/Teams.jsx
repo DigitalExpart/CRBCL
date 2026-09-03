@@ -49,10 +49,17 @@ export default function Teams() {
     );
   }
 
-  const isAdmin = user?.role === "admin";
-  const access = user?.team_access || [];
-  const hasAll = access.includes("all");
-  const canAccess = (teamId) => isAdmin || hasAll || access.includes(String(teamId));
+  const userRoles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+  const isAdmin = 
+    user?.role === "admin" ||
+    user?.role === "executive_director" ||
+    userRoles.some((r) =>
+      ["admin", "executive_director", "director_manager", "it_admin"].includes(String(r).toLowerCase())
+    );
+  const rawAccess = user?.team_access || [];
+  const access = Array.isArray(rawAccess) ? rawAccess : [];
+  const hasAll = isAdmin || access.map((a) => String(a).toLowerCase()).includes("all");
+  const canAccess = (teamId) => hasAll || access.map(String).includes(String(teamId));
 
   return (
     <div className="space-y-6">

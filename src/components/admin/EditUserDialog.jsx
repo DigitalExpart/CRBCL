@@ -45,9 +45,22 @@ export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {
         role_keys: [role],
         team_access: teamAccess,
       });
+      try {
+        const stored = localStorage.getItem("crbcl_current_user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && (parsed.id === user.id || parsed.email === user.email)) {
+            parsed.role = role;
+            parsed.roles = [role];
+            parsed.team_access = teamAccess;
+            localStorage.setItem("crbcl_current_user", JSON.stringify(parsed));
+          }
+        }
+      } catch (e) {}
+
       toast({
-        title: "Role Updated",
-        description: `User role has been successfully updated to ${role.replace("_", " ")}.`,
+        title: "Role & Teams Updated",
+        description: `User role and team access have been successfully updated.`,
       });
       if (onSaved) onSaved();
       onOpenChange(false);

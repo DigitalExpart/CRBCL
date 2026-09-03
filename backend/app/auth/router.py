@@ -72,6 +72,8 @@ def _clear_auth_cookies(response: Response) -> None:
 
 
 def _build_user_info(user: User) -> UserInfo:
+    import json
+
     roles = [ur.role.key for ur in user.roles if ur.role and ur.role.is_active]
     permissions = set()
     for ur in user.roles:
@@ -79,6 +81,25 @@ def _build_user_info(user: User) -> UserInfo:
             for rp in ur.role.permissions:
                 if rp.permission and rp.permission.is_active:
                     permissions.add(rp.permission.key)
+
+    # Check preferences for persisted team_access
+    team_access = []
+    if hasattr(user, "preferences") and user.preferences:
+        pref = next((p for p in user.preferences if p.key == "team_access"), None)
+        if pref and pref.value:
+            try:
+                loaded = json.loads(pref.value)
+                if isinstance(loaded, list):
+                    team_access = [str(x) for x in loaded]
+            except Exception:
+                team_access = []
+
+    if not team_access and (
+        "admin.users.manage" in permissions
+        or any(r in roles for r in ["executive_director", "it_admin", "director_manager", "admin"])
+    ):
+        team_access = ["all"]
+
     return UserInfo(
         id=user.id,
         email=user.email,
@@ -87,7 +108,7 @@ def _build_user_info(user: User) -> UserInfo:
         is_active=user.is_active,
         roles=roles,
         permissions=sorted(permissions),
-        team_access=["all"] if "admin.users.manage" in permissions else [],
+        team_access=team_access,
         created_at=user.created_at,
     )
 
