@@ -638,6 +638,69 @@ export class ApiClient {
       headers,
     });
   }
+
+  async get(endpoint, options = {}) {
+    const res = await this.fetch(endpoint, { method: 'GET', ...options });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async post(endpoint, data = {}, options = {}) {
+    const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
+    const res = await this.fetch(endpoint, {
+      method: 'POST',
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+      body: isFormData ? data : JSON.stringify(data),
+      ...options,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async put(endpoint, data = {}, options = {}) {
+    const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
+    const res = await this.fetch(endpoint, {
+      method: 'PUT',
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+      body: isFormData ? data : JSON.stringify(data),
+      ...options,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async patch(endpoint, data = {}, options = {}) {
+    const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
+    const res = await this.fetch(endpoint, {
+      method: 'PATCH',
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+      body: isFormData ? data : JSON.stringify(data),
+      ...options,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async delete(endpoint, options = {}) {
+    const res = await this.fetch(endpoint, { method: 'DELETE', ...options });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
 }
 
 // Create and export singleton instance

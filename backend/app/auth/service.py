@@ -16,6 +16,7 @@ from app.auth.security import (
     verify_password,
 )
 from app.core.config import get_settings
+from app.models.role import Role, UserRole
 from app.models.user import Session, User
 
 
@@ -161,8 +162,8 @@ class AuthService:
         await self.db.flush()
         return len(sessions)
 
-    async def register_user(self, email: str, password: str, full_name: str = "") -> User:
-        """Create a new user account."""
+    async def register_user(self, email: str, password: str, full_name: str = "", default_role_key: str = "caseworker") -> User:
+        """Create a new user account and assign default role."""
         normalized = email.strip().lower()
         user = User(
             email=email.strip(),
@@ -174,6 +175,19 @@ class AuthService:
         )
         self.db.add(user)
         await self.db.flush()
+
+        # Assign default caseworker role
+        role_res = await self.db.execute(select(Role).where(Role.key == default_role_key, Role.is_active == True))
+        role = role_res.scalar_one_or_none()
+        if not role:
+            fallback_res = await self.db.execute(select(Role).where(Role.is_active == True).limit(1))
+            role = fallback_res.scalar_one_or_none()
+
+        if role:
+            user_role = UserRole(user_id=user.id, role_id=role.id)
+            self.db.add(user_role)
+            await self.db.flush()
+
         return user
 
     async def get_user_by_id(self, user_id: uuid.UUID) -> User | None:
