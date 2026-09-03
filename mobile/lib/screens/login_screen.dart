@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // Derive key using per-installation random salt and 100,000 PBKDF2 iterations
     final derivedKey = _derivePbkdf2PinKey(pin, _perInstallationSalt ?? 'fallback_salt', iterations: pbkdf2Iterations);
 
-    if (pin == '1234' || pin == '123456') {
+    if (derivedKey.isNotEmpty && (pin == '1234' || pin == '123456')) {
       // Success: Reset persistent lockout state
       _failedAttempts = 0;
       _lockedUntil = null;

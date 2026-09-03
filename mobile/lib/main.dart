@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/field_dashboard.dart';
 import 'screens/case_list_screen.dart';
