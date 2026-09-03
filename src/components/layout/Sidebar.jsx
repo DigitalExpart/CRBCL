@@ -11,9 +11,11 @@ import {
 import { api } from "@/api";
 
 
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { label: "Admin Portal", icon: Shield, path: "/admin", adminOnly: true },
+const getNavItems = (isAdminUser) => [
+  isAdminUser 
+    ? { label: "Director's Dashboard", icon: LayoutDashboard, path: "/admin" }
+    : { label: "Staff Dashboard", icon: LayoutDashboard, path: "/" },
+  ...(isAdminUser ? [{ label: "Executive Admin Portal", icon: Shield, path: "/admin" }] : []),
   { label: "Intake & Referrals", icon: Inbox, path: "/intake" },
   { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
   { label: "My Schedule", icon: Calendar, path: "/schedule" },
@@ -91,12 +93,12 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto scrollbar-thin">
-        {navItems.filter((item) => !item.adminOnly || isAdmin).map((item) => {
+        {getNavItems(isAdmin).map((item) => {
           const isActive = location.pathname === item.path || 
             (item.path !== "/" && location.pathname.startsWith(item.path));
           return (
             <Link
-              key={item.path}
+              key={`${item.label}-${item.path}`}
               to={item.path}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group

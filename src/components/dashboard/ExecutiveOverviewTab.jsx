@@ -9,7 +9,6 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell
 } from "recharts";
 import StatCard from "@/components/shared/StatCard";
-import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import IntakeWidgets from "@/components/dashboard/IntakeWidgets";
 import TransferQueueWidget from "@/components/dashboard/TransferQueueWidget";
@@ -18,26 +17,9 @@ import CustomizableWidgetGrid from "@/components/dashboard/CustomizableWidgetGri
 
 const CHART_COLORS = ["hsl(4,60%,38%)", "hsl(36,70%,52%)", "hsl(152,45%,35%)", "hsl(220,50%,45%)", "hsl(280,45%,45%)"];
 
-
-export default function Dashboard() {
+export default function ExecutiveOverviewTab() {
   const [stats, setStats] = useState({ cases: [], clients: [], families: [], programs: [], donations: [], funding: [], incidents: [], appointments: [] });
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.auth.me().then((u) => {
-      const roles = Array.isArray(u?.roles) ? u.roles : [];
-      const hasAdmin = 
-        u?.role === "admin" ||
-        u?.role === "executive_director" ||
-        roles.includes("executive_director") ||
-        roles.includes("it_admin") ||
-        roles.includes("admin") ||
-        roles.includes("director_manager");
-      if (hasAdmin) {
-        window.location.replace("/admin");
-      }
-    }).catch(() => {});
-  }, []);
 
   useEffect(() => {
     async function load() {
@@ -64,7 +46,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
+      <div className="flex items-center justify-center h-[40vh]">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
@@ -93,17 +75,11 @@ export default function Dashboard() {
     capacity: p.capacity || 0,
   }));
 
-  const recentCases = stats.cases.slice(0, 5);
   const upcomingAppointments = stats.appointments.filter(a => a.status === "Scheduled").slice(0, 5);
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Family Wellness Platform" 
-        subtitle="Staff Caseload, Services & Operational Overview — Chief Red Bear Children's Lodge"
-      />
-
-      {/* KPI Cards */}
+      {/* Executive KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Active Cases" value={activeCases} icon={FolderOpen} color="primary" change={8} changeLabel="vs last month" />
         <StatCard title="Clients Served" value={activeClients} icon={Users} color="blue" change={12} changeLabel="vs last month" />
@@ -118,9 +94,8 @@ export default function Dashboard() {
         <StatCard title="Open Incidents" value={openIncidents} icon={AlertTriangle} color={openIncidents > 0 ? "warning" : "success"} />
       </div>
 
-      {/* Drag & Drop Customizable User Widget Grid (Phase 11) */}
+      {/* Drag & Drop Customizable User Widget Grid */}
       <CustomizableWidgetGrid />
-
 
       {/* Front-Door Intake & Referrals Widget */}
       <IntakeWidgets />
@@ -217,67 +192,24 @@ export default function Dashboard() {
           {upcomingAppointments.length > 0 ? (
             <div className="space-y-3">
               {upcomingAppointments.map(a => (
-                <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-4 h-4 text-primary" />
+                <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{a.title || "Appointment"}</p>
+                      <p className="text-xs text-muted-foreground">{a.appointment_date || "Upcoming"} • {a.location || "Office"}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
-                    <p className="text-xs text-muted-foreground">{a.date} • {a.time || "TBD"} • {a.client_name || "—"}</p>
-                  </div>
-                  <StatusBadge status={a.status} />
+                  <StatusBadge status={a.status || "Scheduled"} />
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-12">No upcoming appointments</p>
+            <p className="text-sm text-muted-foreground text-center py-12">No appointments scheduled</p>
           )}
         </div>
-      </div>
-
-      {/* Recent Cases */}
-      <div className="bg-card rounded-xl border border-border p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <FolderOpen className="w-4 h-4 text-primary" /> Recent Cases
-          </h3>
-          <Link to="/cases" className="text-xs text-primary hover:underline flex items-center gap-1">
-            View All <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-        {recentCases.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="pb-2 text-xs font-medium text-muted-foreground">Case</th>
-                  <th className="pb-2 text-xs font-medium text-muted-foreground hidden sm:table-cell">Type</th>
-                  <th className="pb-2 text-xs font-medium text-muted-foreground">Status</th>
-                  <th className="pb-2 text-xs font-medium text-muted-foreground hidden md:table-cell">Priority</th>
-                  <th className="pb-2 text-xs font-medium text-muted-foreground hidden lg:table-cell">Worker</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentCases.map(c => (
-                  <tr key={c.id} className="border-b border-border/50 last:border-0">
-                    <td className="py-2.5">
-                      <Link to={`/cases/${c.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
-                        {c.title}
-                      </Link>
-                      {c.case_number && <p className="text-xs text-muted-foreground">{c.case_number}</p>}
-                    </td>
-                    <td className="py-2.5 text-muted-foreground hidden sm:table-cell">{c.case_type}</td>
-                    <td className="py-2.5"><StatusBadge status={c.status} /></td>
-                    <td className="py-2.5 hidden md:table-cell"><StatusBadge status={c.priority} /></td>
-                    <td className="py-2.5 text-muted-foreground hidden lg:table-cell">{c.assigned_worker_name || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-8">No cases yet. <Link to="/cases" className="text-primary hover:underline">Create your first case</Link>.</p>
-        )}
       </div>
     </div>
   );
