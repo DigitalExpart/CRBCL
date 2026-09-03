@@ -23,7 +23,9 @@ def upgrade() -> None:
     op.add_column("cases", sa.Column("legal_hold_reason", sa.Text(), nullable=True))
     op.add_column(
         "cases",
-        sa.Column("legal_hold_by_id", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "legal_hold_by_id", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
     )
     op.add_column("cases", sa.Column("legal_hold_at", sa.DateTime(timezone=True), nullable=True))
     op.create_index("ix_cases_is_legal_hold", "cases", ["is_legal_hold"])

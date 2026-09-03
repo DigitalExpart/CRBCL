@@ -370,23 +370,21 @@ class AuthService {
   }
 
   async me() {
-    if (this.apiClient.baseURL) {
-      try {
-        const res = await this.apiClient.fetch('/api/v1/auth/me');
-        if (res.ok) {
-          const user = await res.json();
-          StorageManager.set(USER_KEY, user);
-          return user;
-        } else if (res.status === 401 || res.status === 403) {
-          this.setToken(null);
-          StorageManager.remove(USER_KEY);
-          return null;
-        }
-      } catch (err) {
-        if (!config.enableDemoData) {
-          console.warn('Backend unavailable, failing closed:', err);
-          return null;
-        }
+    try {
+      const res = await this.apiClient.fetch('/api/v1/auth/me');
+      if (res.ok) {
+        const user = await res.json();
+        StorageManager.set(USER_KEY, user);
+        return user;
+      } else if (res.status === 401 || res.status === 403) {
+        this.setToken(null);
+        StorageManager.remove(USER_KEY);
+        return null;
+      }
+    } catch (err) {
+      if (!config.enableDemoData) {
+        console.warn('Backend unavailable, failing closed:', err);
+        return null;
       }
     }
 
@@ -398,140 +396,151 @@ class AuthService {
   }
 
   async loginViaEmailPassword(email, password) {
-    if (this.apiClient.baseURL) {
+    try {
       const res = await this.apiClient.fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: { message: 'Login failed' } }));
-        throw new Error(err?.error?.message || err.message || 'Invalid credentials');
+        const err = await res.json().catch(() => ({}));
+        const msg =
+          err?.error?.message ||
+          err?.detail?.error?.message ||
+          err?.detail?.message ||
+          (typeof err?.detail === 'string' ? err.detail : '') ||
+          'Invalid credentials';
+        throw new Error(msg);
       }
       const data = await res.json();
       this.setToken(data.access_token || data.token || 'crbcl_token');
       if (data.user) StorageManager.set(USER_KEY, data.user);
       return data;
+    } catch (err) {
+      if (!config.enableDemoData) {
+        throw err;
+      }
+      const user = {
+        id: `usr_${Date.now()}`,
+        email,
+        role: email.toLowerCase().includes('admin') ? 'admin' : 'staff',
+        full_name: email.split('@')[0],
+        team_access: ['All'],
+      };
+      this.setToken('crbcl_session_' + Date.now());
+      StorageManager.set(USER_KEY, user);
+      return { token: this.getToken(), user };
     }
-
-    if (!config.enableDemoData) {
-      throw new Error('API server is not configured or unavailable');
-    }
-
-    const user = {
-      id: `usr_${Date.now()}`,
-      email,
-      role: email.toLowerCase().includes('admin') ? 'admin' : 'staff',
-      full_name: email.split('@')[0],
-      team_access: ['All'],
-    };
-    this.setToken('crbcl_session_' + Date.now());
-    StorageManager.set(USER_KEY, user);
-    return { token: this.getToken(), user };
   }
 
   async loginWithProvider(provider = 'google', redirectUrl = '/') {
-    if (this.apiClient.baseURL) {
-      window.location.href = `${this.apiClient.baseURL}/api/v1/auth/oauth/${provider}?returnTo=${encodeURIComponent(redirectUrl)}`;
-      return;
-    }
-    if (!config.enableDemoData) {
-      throw new Error('OAuth login unavailable');
-    }
-    const user = {
-      id: `usr_oauth_${Date.now()}`,
-      email: `user@crbcl.ca`,
-      role: 'admin',
-      full_name: 'CRBCL User',
-      team_access: ['All'],
-    };
-    this.setToken('crbcl_oauth_token_' + Date.now());
-    StorageManager.set(USER_KEY, user);
-    window.location.href = redirectUrl;
+    const base = this.apiClient.baseURL || '';
+    window.location.href = `${base}/api/v1/auth/oauth/${provider}?returnTo=${encodeURIComponent(redirectUrl)}`;
   }
 
-  async register({ email, password }) {
-    if (this.apiClient.baseURL) {
-      const res = await this.apiClient.fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: { message: 'Registration failed' } }));
-        throw new Error(err?.error?.message || err.message || 'Registration failed');
-      }
-      return await res.json();
+  async register({ email, password, fullName }) {
+    const res = await this.apiClient.fetch('/api/v1/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, full_name: fullName || '' }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        err?.detail?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Registration failed';
+      throw new Error(msg);
     }
-    return { success: true, email };
+    return await res.json();
   }
 
   async verifyOtp({ email, otpCode }) {
-    if (this.apiClient.baseURL) {
-      const res = await this.apiClient.fetch('/api/v1/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otpCode }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: { message: 'Verification failed' } }));
-        throw new Error(err?.error?.message || err.message || 'Invalid OTP code');
-      }
-      const data = await res.json();
-      if (data.access_token) this.setToken(data.access_token);
-      return data;
+    const res = await this.apiClient.fetch('/api/v1/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp_code: otpCode }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        err?.detail?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Invalid verification code';
+      throw new Error(msg);
     }
-    const token = 'crbcl_otp_token_' + Date.now();
-    this.setToken(token);
-    return { success: true, access_token: token };
+    const data = await res.json();
+    if (data.access_token) this.setToken(data.access_token);
+    if (data.user) StorageManager.set(USER_KEY, data.user);
+    return data;
   }
 
   async resendOtp(email) {
-    if (this.apiClient.baseURL) {
-      const res = await this.apiClient.fetch('/api/v1/auth/resend-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error('Failed to resend OTP');
-      return await res.json();
+    const res = await this.apiClient.fetch('/api/v1/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        err?.detail?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Failed to resend OTP';
+      throw new Error(msg);
     }
-    return { success: true };
+    return await res.json();
   }
 
   async resetPasswordRequest(email) {
-    if (this.apiClient.baseURL) {
-      const res = await this.apiClient.fetch('/api/v1/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error('Failed to send reset link');
-      return await res.json();
+    const res = await this.apiClient.fetch('/api/v1/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        err?.detail?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Failed to send reset link';
+      throw new Error(msg);
     }
-    return { success: true };
+    return await res.json();
   }
 
   async resetPassword({ resetToken, newPassword }) {
-    if (this.apiClient.baseURL) {
-      const res = await this.apiClient.fetch('/api/v1/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reset_token: resetToken, new_password: newPassword }),
-      });
-      if (!res.ok) throw new Error('Password reset failed');
-      return await res.json();
+    const res = await this.apiClient.fetch('/api/v1/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reset_token: resetToken, new_password: newPassword }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        err?.detail?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Password reset failed';
+      throw new Error(msg);
     }
-    return { success: true };
+    return await res.json();
   }
 
   async logout(redirectUrl = null) {
-    if (this.apiClient.baseURL) {
-      try {
-        await this.apiClient.fetch('/api/v1/auth/logout', { method: 'POST' });
-      } catch (e) {
-        console.warn('Logout API error:', e);
-      }
+    try {
+      await this.apiClient.fetch('/api/v1/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.warn('Logout API error:', e);
     }
     this.setToken(null);
     StorageManager.remove(USER_KEY);

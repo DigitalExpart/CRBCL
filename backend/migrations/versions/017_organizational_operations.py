@@ -33,7 +33,12 @@ def upgrade() -> None:
         sa.Column("employment_status", sa.String(50), nullable=False, server_default="ACTIVE"),
         sa.Column("hire_date", sa.Date(), nullable=False),
         sa.Column("end_date", sa.Date(), nullable=True),
-        sa.Column("supervisor_employee_id", UUID(as_uuid=True), sa.ForeignKey("employees.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "supervisor_employee_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("employees.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("photo_url", sa.String(500), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -114,9 +119,16 @@ def upgrade() -> None:
     op.create_table(
         "facility_work_orders",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("facility_id", UUID(as_uuid=True), sa.ForeignKey("facilities.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "facility_id", UUID(as_uuid=True), sa.ForeignKey("facilities.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("reported_by_id", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("assigned_to_employee_id", UUID(as_uuid=True), sa.ForeignKey("employees.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "assigned_to_employee_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("employees.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("category", sa.String(100), nullable=False, server_default="General Maintenance"),
         sa.Column("priority", sa.String(50), nullable=False, server_default="MEDIUM"),
         sa.Column("description", sa.Text(), nullable=False),
@@ -134,7 +146,9 @@ def upgrade() -> None:
     op.create_table(
         "facility_inspections",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("facility_id", UUID(as_uuid=True), sa.ForeignKey("facilities.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "facility_id", UUID(as_uuid=True), sa.ForeignKey("facilities.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("inspection_type", sa.String(100), nullable=False),
         sa.Column("inspection_date", sa.Date(), nullable=False),
         sa.Column("inspector_name", sa.String(100), nullable=False),
@@ -158,7 +172,12 @@ def upgrade() -> None:
         sa.Column("purchase_date", sa.Date(), nullable=True),
         sa.Column("warranty_expiry", sa.Date(), nullable=True),
         sa.Column("status", sa.String(50), nullable=False, server_default="AVAILABLE"),
-        sa.Column("assigned_employee_id", UUID(as_uuid=True), sa.ForeignKey("employees.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "assigned_employee_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("employees.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("location", sa.String(200), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -249,7 +268,12 @@ def upgrade() -> None:
         sa.Column("interests", sa.Text(), nullable=True),
         sa.Column("emergency_contact_name", sa.String(200), nullable=True),
         sa.Column("emergency_contact_phone", sa.String(50), nullable=True),
-        sa.Column("background_check_id", UUID(as_uuid=True), sa.ForeignKey("background_checks.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "background_check_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("background_checks.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
@@ -261,7 +285,9 @@ def upgrade() -> None:
     op.create_table(
         "volunteer_applications",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("volunteer_id", UUID(as_uuid=True), sa.ForeignKey("volunteers.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "volunteer_id", UUID(as_uuid=True), sa.ForeignKey("volunteers.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("application_date", sa.Date(), nullable=False),
         sa.Column("status", sa.String(50), nullable=False, server_default="UNDER_REVIEW"),
         sa.Column("reviewer_id", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
@@ -274,12 +300,19 @@ def upgrade() -> None:
     op.create_table(
         "volunteer_assignments",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("volunteer_id", UUID(as_uuid=True), sa.ForeignKey("volunteers.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "volunteer_id", UUID(as_uuid=True), sa.ForeignKey("volunteers.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("program_name", sa.String(200), nullable=False),
         sa.Column("role_title", sa.String(200), nullable=False),
         sa.Column("start_date", sa.Date(), nullable=False),
         sa.Column("end_date", sa.Date(), nullable=True),
-        sa.Column("supervisor_employee_id", UUID(as_uuid=True), sa.ForeignKey("employees.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "supervisor_employee_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("employees.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
     )
@@ -288,11 +321,15 @@ def upgrade() -> None:
     op.create_table(
         "volunteer_hours",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("volunteer_id", UUID(as_uuid=True), sa.ForeignKey("volunteers.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "volunteer_id", UUID(as_uuid=True), sa.ForeignKey("volunteers.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("service_date", sa.Date(), nullable=False),
         sa.Column("hours", sa.Numeric(5, 2), nullable=False),
         sa.Column("program_name", sa.String(200), nullable=False),
-        sa.Column("approved_by_user_id", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "approved_by_user_id", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
