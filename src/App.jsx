@@ -10,6 +10,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 // Auth pages
 import Login from '@/pages/Login';
+import AdminLogin from '@/pages/AdminLogin';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
@@ -140,10 +141,21 @@ const AuthenticatedApp = () => {
     >
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
+        {/* Dedicated Admin Portal Routes (Redirects to /admin/login when unauthenticated) */}
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/admin/login" replace />} />}>
+          <Route element={<AppLayout />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/integrations" element={<AdminIntegrations />} />
+            <Route path="/admin/terminology" element={<AdminTerminology />} />
+          </Route>
+        </Route>
+
+        {/* Standard Staff & Caseworker Protected Routes (Redirects to /login when unauthenticated) */}
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
@@ -190,7 +202,6 @@ const AuthenticatedApp = () => {
             <Route path="/fleet/maintenance" element={<FleetMaintenance />} />
 
             {/* Phase 13 Enterprise Integrations, OCR & Communications */}
-            <Route path="/admin/integrations" element={<AdminIntegrations />} />
             <Route path="/ocr/review" element={<OCRReview />} />
             <Route path="/communications" element={<CommunicationsHub />} />
 
@@ -199,8 +210,6 @@ const AuthenticatedApp = () => {
             <Route path="/facilities" element={<Facilities />} />
             <Route path="/assets" element={<ITAssets />} />
             <Route path="/volunteers" element={<Volunteers />} />
-
-
 
             <Route path="/plans/:id" element={<PlanDetail />} />
             <Route path="/plans/:id/edit" element={<PlanEditor />} />
@@ -216,11 +225,9 @@ const AuthenticatedApp = () => {
             <Route path="/documents" element={<Documents />} />
             <Route path="/incidents" element={<Incidents />} />
             <Route path="/clinical-notes" element={<ClinicalNotes />} />
-            <Route path="/admin/terminology" element={<AdminTerminology />} />
             <Route path="/ask-red-bear" element={<AskRedBear />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/teams/:id" element={<TeamDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
           </Route>
         </Route>
 

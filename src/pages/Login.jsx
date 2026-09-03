@@ -20,8 +20,26 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await api.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/";
+      const res = await api.auth.loginViaEmailPassword(email, password);
+      const user = res?.user || (await api.auth.me().catch(() => null));
+      const roles = Array.isArray(user?.roles) ? user.roles : [];
+      const isAdmin = 
+        user?.role === "admin" ||
+        user?.role === "executive_director" ||
+        roles.includes("executive_director") ||
+        roles.includes("it_admin") ||
+        roles.includes("admin");
+
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = params.get("returnTo");
+
+      if (returnTo) {
+        window.location.href = returnTo;
+      } else if (isAdmin) {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/";
+      }
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -39,12 +57,20 @@ export default function Login() {
       title="Welcome back"
       subtitle="Log in to your account"
       footer={
-        <>
-          Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            Create one
-          </Link>
-        </>
+        <div className="space-y-3">
+          <div>
+            Don't have an account?{" "}
+            <Link to="/register" className="text-primary font-medium hover:underline">
+              Create one
+            </Link>
+          </div>
+          <div className="pt-2 border-t border-border/50 text-xs text-muted-foreground">
+            Administrative Staff?{" "}
+            <Link to="/admin/login" className="text-purple-700 dark:text-purple-400 font-semibold hover:underline">
+              Executive Admin Portal →
+            </Link>
+          </div>
+        </div>
       }
     >
       <Button
