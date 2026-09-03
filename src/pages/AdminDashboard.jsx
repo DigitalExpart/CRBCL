@@ -146,8 +146,8 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Executive Admin Portal"
-        subtitle="Dedicated portal for staff sign-up approvals, access control, and platform administration"
+        title="Director's Dashboard"
+        subtitle="Executive operational overview, staff registration approvals, and organizational administration"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={loadUsers} disabled={loading}>

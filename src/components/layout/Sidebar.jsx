@@ -15,7 +15,6 @@ const getNavItems = (isAdminUser) => [
   isAdminUser 
     ? { label: "Director's Dashboard", icon: LayoutDashboard, path: "/admin" }
     : { label: "Staff Dashboard", icon: LayoutDashboard, path: "/" },
-  ...(isAdminUser ? [{ label: "Executive Admin Portal", icon: Shield, path: "/admin" }] : []),
   { label: "Intake & Referrals", icon: Inbox, path: "/intake" },
   { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
   { label: "My Schedule", icon: Calendar, path: "/schedule" },
