@@ -58,13 +58,6 @@ export default function AdminLogin() {
         </div>
       }
     >
-      <div className="mb-6 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-start gap-2.5 text-left">
-        <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-        <p className="text-xs text-purple-900 dark:text-purple-300">
-          This URL is strictly reserved for managing staff sign-ups, approving roles, and reviewing system operations.
-        </p>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-4 text-left">
         {error && (
           <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md flex items-start gap-2">
