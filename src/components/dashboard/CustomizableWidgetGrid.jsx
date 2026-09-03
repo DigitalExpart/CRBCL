@@ -45,6 +45,22 @@ const DEFAULT_FALLBACK_WIDGETS = [
   { widget_key: 'cases_over_12_months', title: 'Long-Term Open Cases (12m+)', category: 'QA', is_visible: false, position: 8, value: 0 },
 ];
 
+function formatWidgetValue(val) {
+  if (val === null || val === undefined) return '0';
+  if (typeof val === 'number') return val.toLocaleString();
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    if (val.approved_spend !== undefined) {
+      const num = parseFloat(val.approved_spend) || 0;
+      return `$${num.toLocaleString()}`;
+    }
+    if (val.count !== undefined) return String(val.count);
+    if (val.value !== undefined) return String(val.value);
+    return '0';
+  }
+  return String(val);
+}
+
 export default function CustomizableWidgetGrid() {
   const [loading, setLoading] = useState(false);
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
@@ -233,7 +249,7 @@ export default function CustomizableWidgetGrid() {
 
                         <div className="flex items-center justify-between pt-1">
                           <div className="text-2xl font-extrabold text-foreground">
-                            {widget.value !== undefined ? widget.value : 0}
+                            {formatWidgetValue(widget.value)}
                           </div>
                           <div className="p-2 rounded-lg bg-primary/10 text-primary">
                             <Icon className="w-5 h-5" />

@@ -198,19 +198,26 @@ class DashboardService:
             data["pending_approvals"] = (await session.execute(stmt)).scalar() or 0
 
         # 5. Financial Spend Summary
-        if Permissions.FINANCE_REQUEST_READ in user_permissions or "admin.configuration.manage" in user_permissions:
+        if Permissions.FINANCE_REQUEST_READ in user_permissions or "admin.configuration.manage" in user_permissions or "executive_director" in user_permissions or "admin" in user_permissions:
             stmt = select(func.sum(ServiceRequest.total_amount)).where(
                 ServiceRequest.deleted_at.is_(None), ServiceRequest.status == "APPROVED"
             )
             total = (await session.execute(stmt)).scalar() or Decimal("0.00")
-            data["financial_summary"] = {"approved_spend": str(total), "currency": "CAD"}
+            data["financial_summary"] = f"${float(total):,.2f}"
 
         # 6. My Assigned Cases
-        if Permissions.CASE_READ in user_permissions or "admin.configuration.manage" in user_permissions:
+        if Permissions.CASE_READ in user_permissions or "admin.configuration.manage" in user_permissions or "executive_director" in user_permissions or "admin" in user_permissions:
             stmt = select(func.count(CaseAssignment.id)).where(
                 CaseAssignment.user_id == user_id, CaseAssignment.is_active.is_(True)
             )
-            data["my_assigned_cases_count"] = (await session.execute(stmt)).scalar() or 0
+            assigned_count = (await session.execute(stmt)).scalar() or 0
+            data["my_assigned_cases"] = assigned_count
+            data["my_assigned_cases_count"] = assigned_count
+
+        # 7. QA Metrics
+        data["audits_due"] = 0
+        data["cases_without_recent_notes"] = 0
+        data["cases_over_12_months"] = 0
 
         return data
 

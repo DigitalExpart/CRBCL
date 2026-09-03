@@ -23,7 +23,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [cases, clients, families, programs, donations, funding, incidents, appointments] = await Promise.all([
+        const results = await Promise.allSettled([
           api.entities.Case.list("-created_date", 50),
           api.entities.Client.list("-created_date", 50),
           api.entities.Family.list("-created_date", 50),
@@ -33,6 +33,9 @@ export default function Dashboard() {
           api.entities.Incident.list("-created_date", 50),
           api.entities.Appointment.list("-created_date", 50),
         ]);
+        const [cases, clients, families, programs, donations, funding, incidents, appointments] = results.map(
+          (r) => (r.status === "fulfilled" && Array.isArray(r.value) ? r.value : [])
+        );
         setStats({ cases, clients, families, programs, donations, funding, incidents, appointments });
       } catch (e) { /* empty state */ }
       setLoading(false);
