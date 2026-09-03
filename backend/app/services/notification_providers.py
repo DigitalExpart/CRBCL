@@ -84,7 +84,7 @@ class ConsoleEmailProvider(EmailProvider):
 class ResendEmailProvider(EmailProvider):
     """Production Resend HTTP API adapter."""
 
-    def __init__(self, api_key: str | None = None, from_email: str = "notifications@crbcl.ca"):
+    def __init__(self, api_key: str | None = None, from_email: str = "noreply@genserver.online"):
         self.api_key = api_key
         self.from_email = from_email
 
@@ -99,14 +99,52 @@ class ResendEmailProvider(EmailProvider):
         safe_body = sanitize_external_message(body_text)
 
         if not self.api_key:
-            # Fallback to console if not configured in environment
             logger.info(
                 "Resend API key not configured. Simulated dispatch for %s: %s | %s", to_address, safe_subject, safe_body
             )
             return DeliveryResult(success=True, status="SENT", provider="RESEND_SIMULATED")
 
-        # In production with configured key:
-        return DeliveryResult(success=True, status="SENT", provider="RESEND")
+        try:
+            import httpx
+            from app.core.config import get_settings
+            settings = get_settings()
+
+            from_addr = self.from_email or settings.smtp_from_email or "noreply@genserver.online"
+            from_name = settings.smtp_from_name or "Chief Red Bear Children's Lodge"
+            formatted_from = f"{from_name} <{from_addr}>" if "<" not in from_addr else from_addr
+
+            payload = {
+                "from": formatted_from,
+                "to": [to_address],
+                "subject": safe_subject,
+                "text": safe_body,
+            }
+            if body_html:
+                payload["html"] = body_html
+
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                res = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                )
+                if res.is_success:
+                    data = res.json()
+                    logger.info("Resend email sent successfully: %s to %s", data.get("id"), to_address)
+                    return DeliveryResult(
+                        success=True, status="SENT", provider="RESEND", provider_message_id=data.get("id")
+                    )
+                else:
+                    logger.error("Resend API error %s: %s", res.status_code, res.text)
+                    return DeliveryResult(
+                        success=False, status="FAILED", provider="RESEND", error_message=res.text
+                    )
+        except Exception as e:
+            logger.exception("Exception sending email through Resend: %s", e)
+            return DeliveryResult(success=False, status="ERROR", provider="RESEND", error_message=str(e))
 
 
 class SendGridEmailProvider(EmailProvider):

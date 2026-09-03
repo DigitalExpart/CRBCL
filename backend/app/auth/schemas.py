@@ -67,8 +67,10 @@ class ForgotPasswordRequest(BaseModel):
 
 
 class ResetPasswordRequest(BaseModel):
-    reset_token: str
-    new_password: str = Field(min_length=8, max_length=128)
+    reset_token: str = Field(default="", alias="resetToken")
+    new_password: str = Field(min_length=8, max_length=128, alias="newPassword")
+
+    model_config = {"populate_by_name": True}
 
 
 class MessageResponse(BaseModel):

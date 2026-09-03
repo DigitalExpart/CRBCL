@@ -20,7 +20,13 @@ from app.auth.schemas import (
     VerifyOtpRequest,
     VerifyOtpResponse,
 )
-from app.auth.security import generate_csrf_token, get_cookie_settings
+from app.auth.security import (
+    create_reset_token,
+    decode_reset_token,
+    generate_csrf_token,
+    get_cookie_settings,
+    hash_password,
+)
 from app.auth.service import AuthService
 from app.core.config import get_settings
 from app.core.database import get_db
@@ -282,9 +288,54 @@ async def resend_otp(body: ResendOtpRequest, db: AsyncSession = Depends(get_db))
 
 @router.post("/forgot-password", response_model=MessageResponse)
 async def forgot_password(body: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
-    return MessageResponse(message="If an account exists, a reset link has been sent")
+    auth = AuthService(db)
+    user = await auth.get_user_by_email(body.email)
+    if user and user.is_active and not user.is_deleted:
+        reset_token = create_reset_token(user.id)
+        email_service = EmailService(db)
+        await email_service.send_password_reset_email(
+            to_email=user.email,
+            full_name=user.full_name or user.display_name or "Team Member",
+            reset_token=reset_token,
+        )
+    return MessageResponse(
+        message="If an account exists with that email, a password reset link has been sent."
+    )
 
 
 @router.post("/reset-password", response_model=MessageResponse)
 async def reset_password(body: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
-    return MessageResponse(message="Password reset is not yet fully implemented")
+    if not body.reset_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password reset token is required",
+        )
+
+    user_id = decode_reset_token(body.reset_token)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This password reset link is invalid or has expired. Please request a new one.",
+        )
+
+    auth = AuthService(db)
+    user = await auth.get_user_by_id(user_id)
+    if not user or not user.is_active or user.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User account not found or is currently inactive",
+        )
+
+    # Update password and reset lockout counters
+    user.password_hash = hash_password(body.new_password)
+    user.failed_login_count = 0
+    user.locked_until = None
+
+    # Revoke any active sessions for security
+    await auth.revoke_all_user_sessions(user.id)
+    await db.commit()
+
+    return MessageResponse(
+        message="Your password has been successfully reset. You can now log in with your new password."
+    )
+

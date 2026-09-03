@@ -288,3 +288,110 @@ class EmailService:
   </table>
 </body>
 </html>"""
+
+    async def send_password_reset_email(self, to_email: str, full_name: str, reset_token: str) -> bool:
+        """Send a password reset email with secure token link."""
+        frontend_url = self.settings.frontend_url.rstrip("/")
+        reset_url = f"{frontend_url}/reset-password?token={reset_token}"
+        display_name = full_name.strip() if full_name else "Team Member"
+
+        subject = "Reset Your Password — Chief Red Bear Children's Lodge"
+        html_content = self._render_password_reset_email_html(display_name, reset_url)
+        text_content = (
+            f"Hello {display_name},\n\n"
+            f"We received a request to reset your password for your Chief Red Bear Children's Lodge account.\n\n"
+            f"Please visit the following link to choose a new password (valid for 1 hour):\n"
+            f"{reset_url}\n\n"
+            f"If you did not request a password reset, you can safely ignore this email.\n\n"
+            f"Best regards,\nCRBCL Platform Team"
+        )
+
+        provider = self._detect_provider()
+        if provider == "resend":
+            return await self._send_via_resend(to_email, subject, html_content, text_content)
+        elif provider == "smtp":
+            return await self._send_via_smtp(to_email, subject, html_content, text_content)
+        else:
+            logger.info(
+                "\n"
+                "==============================================================\n"
+                "📧 [CRBCL PASSWORD RESET EMAIL]\n"
+                "--------------------------------------------------------------\n"
+                "Recipient : %s\n"
+                "Reset URL : %s\n"
+                "Expires In: 1 hour\n"
+                "==============================================================",
+                to_email,
+                reset_url,
+            )
+            return True
+
+    @staticmethod
+    def _render_password_reset_email_html(name: str, reset_url: str) -> str:
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Your Password</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden;">
+          <!-- Header Banner -->
+          <tr>
+            <td style="background-color: #881337; padding: 28px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">Chief Red Bear Children's Lodge</h1>
+              <p style="color: #fecdd3; font-size: 13px; margin: 6px 0 0 0;">Family Wellness & Child Protection Platform</p>
+            </td>
+          </tr>
+
+          <!-- Main Body -->
+          <tr>
+            <td style="padding: 36px 32px;">
+              <h2 style="color: #0f172a; font-size: 20px; font-weight: 600; margin: 0 0 16px 0;">Reset Your Password</h2>
+              <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hello <strong>{name}</strong>,
+              </p>
+              <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+                We received a request to reset your password for your CRBCL platform account. Click the button below to choose a new password:
+              </p>
+
+              <!-- Reset Button -->
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="{reset_url}" target="_blank" style="background-color: #881337; color: #ffffff; text-decoration: none; padding: 14px 32px; font-size: 15px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 2px 4px rgba(136, 19, 55, 0.25);">
+                  Reset My Password
+                </a>
+              </div>
+
+              <!-- Expiry warning -->
+              <div style="background-color: #f1f5f9; border-left: 4px solid #881337; border-radius: 4px; padding: 12px 16px; margin: 24px 0 16px 0;">
+                <p style="color: #334155; font-size: 13px; line-height: 1.5; margin: 0;">
+                  ⏱️ <strong>Note:</strong> This link is valid for <strong>1 hour</strong>. If you did not request a password reset, you may safely ignore this email — your account remains secure.
+                </p>
+              </div>
+
+              <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin: 24px 0 0 0; word-break: break-all;">
+                If the button above does not work, copy and paste this link into your browser:<br>
+                <a href="{reset_url}" style="color: #881337;">{reset_url}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 32px; text-align: center;">
+              <p style="color: #94a3b8; font-size: 12px; margin: 0; line-height: 1.4;">
+                Chief Red Bear Children's Lodge • Cote First Nation • Treaty 4 Territory
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+

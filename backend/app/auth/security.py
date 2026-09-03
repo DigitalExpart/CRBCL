@@ -70,6 +70,31 @@ def decode_access_token(token: str) -> dict | None:
         return None
 
 
+def create_reset_token(user_id: uuid.UUID) -> str:
+    """Generate a signed, 1-hour password reset JWT token."""
+    settings = get_settings()
+    now = datetime.now(UTC)
+    payload = {
+        "sub": str(user_id),
+        "iat": now,
+        "exp": now + timedelta(hours=1),
+        "type": "password_reset",
+    }
+    return jwt.encode(payload, settings.session_secret, algorithm=ALGORITHM)
+
+
+def decode_reset_token(token: str) -> uuid.UUID | None:
+    """Validate a password reset token and return the user UUID."""
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.session_secret, algorithms=[ALGORITHM])
+        if payload.get("type") != "password_reset":
+            return None
+        return uuid.UUID(payload["sub"])
+    except (JWTError, ValueError, KeyError):
+        return None
+
+
 # ── CSRF Token helpers ──────────────────────────────────────
 
 
