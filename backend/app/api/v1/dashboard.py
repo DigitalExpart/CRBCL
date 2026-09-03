@@ -2,37 +2,30 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.user import User
-from app.permissions.constants import Permissions
-from app.permissions.dependencies import get_current_user_permissions, require_permission
+from app.permissions.dependencies import get_current_user_permissions
 from app.services.dashboard_service import DashboardService
 
 router = APIRouter(prefix="/dashboard", tags=["Custom User Dashboards"])
 
 
-@router.get(
-    "/user-layout",
-    dependencies=[Depends(require_permission(Permissions.DASHBOARD_CUSTOMIZE))],
-)
+@router.get("/user-layout")
 async def get_user_dashboard_layout(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(Permissions.DASHBOARD_CUSTOMIZE)),
+    current_user: User = Depends(get_current_user),
     user_perms: set[str] = Depends(get_current_user_permissions),
 ):
     """Return user's customized drag/drop widget layout and authorized metric data."""
     return await DashboardService.get_user_dashboard(db, user_id=current_user.id, user_permissions=user_perms)
 
 
-@router.post(
-    "/layout",
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(require_permission(Permissions.DASHBOARD_CUSTOMIZE))],
-)
+@router.post("/layout", status_code=status.HTTP_200_OK)
 async def save_user_dashboard_layout(
     payload: Any = Body(...),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(Permissions.DASHBOARD_CUSTOMIZE)),
+    current_user: User = Depends(get_current_user),
 ):
     """Save updated widget layout ordering and positions for current user."""
     items = []

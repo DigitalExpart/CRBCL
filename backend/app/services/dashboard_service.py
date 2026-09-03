@@ -115,6 +115,7 @@ class DashboardService:
         """Fetch user dashboard layout and populate widget metrics based on caller permissions."""
         available_widgets = await cls.ensure_standard_widgets(session)
         user_layout = await ReportingQARepository.get_user_dashboard_layout(session, user_id)
+        has_saved_layout = len(user_layout) > 0
 
         # Map user custom positions or fall back to default
         layout_map = {ul.widget_key: ul for ul in user_layout}
@@ -126,11 +127,18 @@ class DashboardService:
                 not w.required_permission
                 or w.required_permission in user_permissions
                 or "admin.configuration.manage" in user_permissions
+                or "executive_director" in user_permissions
+                or "admin" in user_permissions
             )
 
             user_pref = layout_map.get(w.widget_key)
-            is_visible = user_pref.is_visible if user_pref else True
-            position = user_pref.position if user_pref else idx
+            if has_saved_layout:
+                is_visible = user_pref.is_visible if user_pref else False
+                position = user_pref.position if user_pref else (100 + idx)
+            else:
+                is_visible = idx < 5
+                position = idx
+
             width = user_pref.width if user_pref else w.default_width
             height = user_pref.height if user_pref else w.default_height
 

@@ -19,6 +19,8 @@ import {
   X,
 } from 'lucide-react';
 
+const STORAGE_KEY = 'crbcl_dashboard_widgets_v2';
+
 const WIDGET_ICONS = {
   active_cases: FolderOpen,
   children_out_of_home: Users,
@@ -44,17 +46,27 @@ const DEFAULT_FALLBACK_WIDGETS = [
 ];
 
 export default function CustomizableWidgetGrid() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
+  
+  // Initial load from local storage if available for instant rendering
   const [availableWidgets, setAvailableWidgets] = useState(DEFAULT_FALLBACK_WIDGETS);
-  const [activeWidgets, setActiveWidgets] = useState(DEFAULT_FALLBACK_WIDGETS.filter(w => w.is_visible));
+  const [activeWidgets, setActiveWidgets] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch { /* ignore */ }
+    return DEFAULT_FALLBACK_WIDGETS.filter(w => w.is_visible);
+  });
 
   useEffect(() => {
     loadUserLayout();
   }, []);
 
   const loadUserLayout = async () => {
-    setLoading(true);
     try {
       const res = await reportingApi.getUserDashboardLayout();
       const rawLayout = res?.layout || res?.data?.layout || (Array.isArray(res) ? res : []);
@@ -69,20 +81,35 @@ export default function CustomizableWidgetGrid() {
           value: metrics[w.widget_key] !== undefined ? metrics[w.widget_key] : 0,
         }));
         setAvailableWidgets(fullWidgets);
+
+        // Check if user has saved preferences in localStorage
+        const localSaved = localStorage.getItem(STORAGE_KEY);
+        if (localSaved) {
+          try {
+            const parsed = JSON.parse(localSaved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const activeWithMetrics = parsed.map(p => ({
+                ...p,
+                value: metrics[p.widget_key] !== undefined ? metrics[p.widget_key] : (p.value || 0),
+              }));
+              setActiveWidgets(activeWithMetrics);
+              return;
+            }
+          } catch { /* ignore */ }
+        }
+
         const active = fullWidgets
           .filter((w) => w.is_visible && w.has_permission !== false)
           .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-        setActiveWidgets(active.length > 0 ? active : fullWidgets.slice(0, 4));
-      } else {
-        setAvailableWidgets(DEFAULT_FALLBACK_WIDGETS);
-        setActiveWidgets(DEFAULT_FALLBACK_WIDGETS.filter((w) => w.is_visible));
+        
+        const finalActive = active.length > 0 ? active : fullWidgets.slice(0, 5);
+        setActiveWidgets(finalActive);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(finalActive));
+        } catch { /* ignore */ }
       }
     } catch (err) {
       console.warn('Dashboard layout API fallback:', err);
-      setAvailableWidgets(DEFAULT_FALLBACK_WIDGETS);
-      setActiveWidgets(DEFAULT_FALLBACK_WIDGETS.filter((w) => w.is_visible));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -102,6 +129,10 @@ export default function CustomizableWidgetGrid() {
 
   const saveLayout = async (widgetsList) => {
     try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(widgetsList));
+    } catch { /* ignore */ }
+
+    try {
       const payload = widgetsList.map((w, idx) => ({
         widget_key: w.widget_key,
         position: idx,
@@ -109,7 +140,7 @@ export default function CustomizableWidgetGrid() {
       }));
       await reportingApi.saveUserDashboardLayout(payload);
     } catch (err) {
-      console.warn('Failed to persist dashboard layout:', err);
+      console.warn('Failed to persist dashboard layout to server:', err);
     }
   };
 
@@ -136,10 +167,6 @@ export default function CustomizableWidgetGrid() {
     setActiveWidgets(updated);
     saveLayout(updated);
   };
-
-  if (loading) {
-    return <div className="p-4 text-center text-xs text-muted-foreground">Loading customizable dashboard...</div>;
-  }
 
   return (
     <div className="space-y-4">
