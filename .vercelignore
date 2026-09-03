@@ -1,5 +1,9 @@
-backend/
 .venv/
+backend/.venv/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/tests/
 .github/
 docs/
 infrastructure/
+mobile/
