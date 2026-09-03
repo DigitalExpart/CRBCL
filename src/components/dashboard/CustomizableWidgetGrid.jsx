@@ -31,12 +31,23 @@ const WIDGET_ICONS = {
   my_assigned_cases: Briefcase,
 };
 
+const DEFAULT_FALLBACK_WIDGETS = [
+  { widget_key: 'active_cases', title: 'Active Cases', category: 'OPERATIONAL', is_visible: true, position: 0, value: 0 },
+  { widget_key: 'new_intakes', title: 'New Intakes (30d)', category: 'OPERATIONAL', is_visible: true, position: 1, value: 0 },
+  { widget_key: 'children_out_of_home', title: 'Children Out of Home', category: 'OPERATIONAL', is_visible: true, position: 2, value: 0 },
+  { widget_key: 'pending_approvals', title: 'Pending Approvals', category: 'GOVERNANCE', is_visible: true, position: 3, value: 0 },
+  { widget_key: 'my_assigned_cases', title: 'My Assigned Caseload', category: 'MY_WORK', is_visible: true, position: 4, value: 0 },
+  { widget_key: 'financial_summary', title: 'Financial Spend Summary', category: 'FINANCE', is_visible: false, position: 5, value: 0 },
+  { widget_key: 'audits_due', title: 'QA Audits Due', category: 'QA', is_visible: false, position: 6, value: 0 },
+  { widget_key: 'cases_without_recent_notes', title: 'Cases Without Notes (30d+)', category: 'QA', is_visible: false, position: 7, value: 0 },
+  { widget_key: 'cases_over_12_months', title: 'Long-Term Open Cases (12m+)', category: 'QA', is_visible: false, position: 8, value: 0 },
+];
+
 export default function CustomizableWidgetGrid() {
-  const [layout, setLayout] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
-  const [availableWidgets, setAvailableWidgets] = useState([]);
-  const [activeWidgets, setActiveWidgets] = useState([]);
+  const [availableWidgets, setAvailableWidgets] = useState(DEFAULT_FALLBACK_WIDGETS);
+  const [activeWidgets, setActiveWidgets] = useState(DEFAULT_FALLBACK_WIDGETS.filter(w => w.is_visible));
 
   useEffect(() => {
     loadUserLayout();
@@ -46,16 +57,30 @@ export default function CustomizableWidgetGrid() {
     setLoading(true);
     try {
       const res = await reportingApi.getUserDashboardLayout();
-      setLayout(res.data);
-      if (res.data) {
-        setAvailableWidgets(res.data.available_widgets || []);
-        const active = (res.data.active_widgets || [])
-          .filter((w) => w.is_visible)
-          .sort((a, b) => a.position_index - b.position_index);
-        setActiveWidgets(active);
+      const rawLayout = res?.layout || res?.data?.layout || (Array.isArray(res) ? res : []);
+      const metrics = res?.metrics || res?.data?.metrics || {};
+
+      if (Array.isArray(rawLayout) && rawLayout.length > 0) {
+        const fullWidgets = rawLayout.map((w, idx) => ({
+          ...w,
+          title: w.title || w.widget_key?.replace(/_/g, ' '),
+          category: w.category || 'OPERATIONAL',
+          position: w.position !== undefined ? w.position : idx,
+          value: metrics[w.widget_key] !== undefined ? metrics[w.widget_key] : 0,
+        }));
+        setAvailableWidgets(fullWidgets);
+        const active = fullWidgets
+          .filter((w) => w.is_visible && w.has_permission !== false)
+          .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+        setActiveWidgets(active.length > 0 ? active : fullWidgets.slice(0, 4));
+      } else {
+        setAvailableWidgets(DEFAULT_FALLBACK_WIDGETS);
+        setActiveWidgets(DEFAULT_FALLBACK_WIDGETS.filter((w) => w.is_visible));
       }
     } catch (err) {
-      console.error('Failed to load dashboard layout', err);
+      console.warn('Dashboard layout API fallback:', err);
+      setAvailableWidgets(DEFAULT_FALLBACK_WIDGETS);
+      setActiveWidgets(DEFAULT_FALLBACK_WIDGETS.filter((w) => w.is_visible));
     } finally {
       setLoading(false);
     }
@@ -67,10 +92,9 @@ export default function CustomizableWidgetGrid() {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    // Update position indices
     const updated = items.map((item, idx) => ({
       ...item,
-      position_index: idx,
+      position: idx,
     }));
     setActiveWidgets(updated);
     saveLayout(updated);
@@ -78,16 +102,14 @@ export default function CustomizableWidgetGrid() {
 
   const saveLayout = async (widgetsList) => {
     try {
-      const payload = {
-        widgets: widgetsList.map((w, idx) => ({
-          widget_key: w.widget_key,
-          position_index: idx,
-          is_visible: true,
-        })),
-      };
+      const payload = widgetsList.map((w, idx) => ({
+        widget_key: w.widget_key,
+        position: idx,
+        is_visible: true,
+      }));
       await reportingApi.saveUserDashboardLayout(payload);
     } catch (err) {
-      console.error('Failed to persist dashboard layout', err);
+      console.warn('Failed to persist dashboard layout:', err);
     }
   };
 
@@ -102,12 +124,9 @@ export default function CustomizableWidgetGrid() {
         updated = [
           ...activeWidgets,
           {
-            widget_key: target.widget_key,
-            title: target.title,
-            category: target.category,
-            position_index: activeWidgets.length,
+            ...target,
+            position: activeWidgets.length,
             is_visible: true,
-            value: 0,
           },
         ];
       } else {
@@ -130,7 +149,7 @@ export default function CustomizableWidgetGrid() {
           <LayoutGrid className="w-4 h-4 text-primary" />
           <span className="text-xs font-semibold text-foreground">Custom User Widget Grid</span>
           <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-medium">
-            Drag to Reorder
+            {activeWidgets.length} Active • Drag to Reorder
           </span>
         </div>
         <button
@@ -172,7 +191,7 @@ export default function CustomizableWidgetGrid() {
                             >
                               <GripVertical className="w-4 h-4" />
                             </div>
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate max-w-[150px]">
                               {widget.title}
                             </span>
                           </div>
@@ -187,7 +206,7 @@ export default function CustomizableWidgetGrid() {
 
                         <div className="flex items-center justify-between pt-1">
                           <div className="text-2xl font-extrabold text-foreground">
-                            {widget.value !== undefined ? widget.value : '—'}
+                            {widget.value !== undefined ? widget.value : 0}
                           </div>
                           <div className="p-2 rounded-lg bg-primary/10 text-primary">
                             <Icon className="w-5 h-5" />
