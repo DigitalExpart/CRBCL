@@ -57,20 +57,12 @@ export default function Login() {
       title="Welcome back"
       subtitle="Log in to your account"
       footer={
-        <div className="space-y-3">
-          <div>
-            Don't have an account?{" "}
-            <Link to="/register" className="text-primary font-medium hover:underline">
-              Create one
-            </Link>
-          </div>
-          <div className="pt-2 border-t border-border/50 text-xs text-muted-foreground">
-            Administrative Staff?{" "}
-            <Link to="/admin/login" className="text-purple-700 dark:text-purple-400 font-semibold hover:underline">
-              Executive Admin Portal →
-            </Link>
-          </div>
-        </div>
+        <>
+          Don't have an account?{" "}
+          <Link to="/register" className="text-primary font-medium hover:underline">
+            Create one
+          </Link>
+        </>
       }
     >
       <Button
