@@ -640,6 +640,18 @@ export class ApiClient {
     return match ? decodeURIComponent(match[2]) : null;
   }
 
+  _normalizeEndpoint(endpoint) {
+    if (typeof endpoint !== 'string') return endpoint;
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+      return endpoint;
+    }
+    if (!endpoint.startsWith('/api/')) {
+      const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      return `/api/v1${path}`;
+    }
+    return endpoint;
+  }
+
   async fetch(endpoint, options = {}) {
     let token = this.auth.getToken();
     const csrfToken = this._getCsrfToken();
@@ -655,7 +667,8 @@ export class ApiClient {
       headers['X-CSRF-Token'] = csrfToken;
     }
 
-    const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
+    const normalized = this._normalizeEndpoint(endpoint);
+    const url = this.baseURL ? `${this.baseURL}${normalized}` : normalized;
     let res = await fetch(url, {
       credentials: 'include',
       ...options,

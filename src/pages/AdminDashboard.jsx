@@ -70,7 +70,7 @@ export default function AdminDashboard() {
 
   const checkHealth = useCallback(async () => {
     try {
-      const res = await api.get("/health");
+      const res = await api.get("/api/v1/health");
       setSystemHealth(res);
     } catch {
       setSystemHealth({ status: "connected", database: "ready" });
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
     const roleKey = selectedRole[userId] || "caseworker";
     setApprovingId(userId);
     try {
-      await api.patch(`/users/${userId}/approve?role_key=${roleKey}`);
+      await api.patch(`/api/v1/users/${userId}/approve?role_key=${roleKey}`);
       toast({
         title: "User Approved",
         description: `User has been approved with role: ${roleKey.replace("_", " ")}`,
