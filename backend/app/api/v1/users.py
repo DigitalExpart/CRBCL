@@ -75,6 +75,28 @@ async def get_user(
     return _build_user_response(target_user)
 
 
+@router.patch("/{user_id}/approve", response_model=UserResponse)
+async def approve_user(
+    user_id: uuid.UUID,
+    role_key: str = Query(default="caseworker"),
+    user: User = Depends(require_permission(Permissions.ADMIN_USERS_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    repo = UserRepository(db)
+    target_user = await repo.get_with_roles_and_teams(user_id)
+    if not target_user or target_user.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": {"code": "USER_NOT_FOUND", "message": "User not found"}},
+        )
+    target_user.is_active = True
+    target_user.is_verified = True
+    await repo.assign_roles(target_user.id, [role_key], assigned_by=user.id)
+    await db.commit()
+    refreshed = await repo.get_with_roles_and_teams(user_id)
+    return _build_user_response(refreshed)
+
+
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     payload: UserCreate,

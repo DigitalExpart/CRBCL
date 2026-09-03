@@ -13,6 +13,7 @@ import { api } from "@/api";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { label: "Admin Portal", icon: Shield, path: "/admin", adminOnly: true },
   { label: "Intake & Referrals", icon: Inbox, path: "/intake" },
   { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
   { label: "My Schedule", icon: Calendar, path: "/schedule" },
@@ -26,14 +27,11 @@ const navItems = [
   { label: "Quality Assurance", icon: CheckSquare, path: "/qa" },
   { label: "Fleet & Vehicles", icon: Truck, path: "/fleet" },
   { label: "Purchase Orders", icon: FileText, path: "/finance/requests" },
-
-
   { label: "Placement Invoices", icon: Receipt, path: "/finance/invoices" },
   { label: "Financial Ledger", icon: BookOpen, path: "/finance/ledger" },
   { label: "Clients", icon: Users, path: "/clients" },
   { label: "Families", icon: Heart, path: "/families" },
   { label: "Notifications", icon: Bell, path: "/notifications" },
-
   { label: "Programs", icon: BookOpen, path: "/programs" },
   { label: "HR & Staff", icon: UserCog, path: "/employees" },
   { label: "Housing Units", icon: Home, path: "/housing" },
@@ -46,7 +44,6 @@ const navItems = [
   { label: "Incidents", icon: AlertTriangle, path: "/incidents" },
   { label: "Cultural Terminology", icon: BookOpen, path: "/admin/terminology" },
   { label: "Ask Red Bear", icon: MessageCircle, path: "/ask-red-bear" },
-  { label: "Admin Dashboard", icon: Shield, path: "/admin", adminOnly: true },
 ];
 
 export default function Sidebar() {
@@ -56,7 +53,17 @@ export default function Sidebar() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   React.useEffect(() => {
-    api.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => {});
+    api.auth.me().then((u) => {
+      const roles = Array.isArray(u?.roles) ? u.roles : [];
+      const hasAdmin = 
+        u?.role === "admin" ||
+        u?.role === "executive_director" ||
+        roles.includes("executive_director") ||
+        roles.includes("it_admin") ||
+        roles.includes("admin") ||
+        roles.includes("director_manager");
+      setIsAdmin(hasAdmin);
+    }).catch(() => {});
   }, []);
 
   const handleLogout = () => {
