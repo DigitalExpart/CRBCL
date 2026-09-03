@@ -7,6 +7,10 @@ import logging
 import re
 from dataclasses import dataclass
 
+import httpx
+
+from app.core.config import get_settings
+
 logger = logging.getLogger("crbcl.notifications.providers")
 
 
@@ -105,8 +109,6 @@ class ResendEmailProvider(EmailProvider):
             return DeliveryResult(success=True, status="SENT", provider="RESEND_SIMULATED")
 
         try:
-            import httpx
-            from app.core.config import get_settings
             settings = get_settings()
 
             from_addr = self.from_email or settings.smtp_from_email or "noreply@genserver.online"

@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import logging
+
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
@@ -34,8 +38,12 @@ from app.auth.security import (
 from app.auth.service import AuthService
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.models.user import User
+from app.models.notification import Notification
+from app.models.role import Role, UserRole
+from app.models.user import User, UserPreference
 from app.services.email_service import EmailService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -75,8 +83,6 @@ def _clear_auth_cookies(response: Response) -> None:
 
 
 def _build_user_info(user: User) -> UserInfo:
-    import json
-
     roles = [ur.role.key for ur in user.roles if ur.role and ur.role.is_active]
     permissions = set()
     for ur in user.roles:
@@ -235,9 +241,6 @@ async def update_profile(
         user.phone = body.phone.strip() or None
 
     if body.avatar_url is not None:
-        from sqlalchemy import select
-        from app.models.user import UserPreference
-
         pref_res = await db.execute(
             select(UserPreference).where(
                 UserPreference.user_id == user.id,
@@ -295,15 +298,11 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
     # Queue administrative approval notification to Executive Directors & IT Admins
     try:
-        from app.models.notification import Notification
-        from app.models.role import Role, UserRole
-        from sqlalchemy import select
-
         admin_query = (
             select(User.id)
             .join(UserRole, UserRole.user_id == User.id)
             .join(Role, Role.id == UserRole.role_id)
-            .where(Role.key.in_(["executive_director", "it_admin", "director_manager"]), User.is_active == True)
+            .where(Role.key.in_(["executive_director", "it_admin", "director_manager"]), User.is_active.is_(True))
         )
         admin_res = await db.execute(admin_query)
         admin_ids = set(admin_res.scalars().all())

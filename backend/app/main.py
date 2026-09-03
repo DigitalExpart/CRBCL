@@ -53,7 +53,8 @@ def create_app() -> FastAPI:
     )
 
     # ── CORS Middleware ──────────────────────────────────────
-    origins = list(set(settings.cors_origins_list + [
+    origins = list(set([
+        *settings.cors_origins_list,
         "https://genserver.online",
         "https://www.genserver.online",
         "https://crbcl-sofware.vercel.app",

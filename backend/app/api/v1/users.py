@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
 from app.auth.security import hash_password
 from app.core.database import get_db
-from app.models.user import User
+from app.models.user import User, UserPreference
 from app.permissions.constants import Permissions
 from app.permissions.dependencies import require_permission
 from app.repositories.user_repo import UserRepository
@@ -21,7 +23,6 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 
 def _build_user_response(user: User) -> UserResponse:
-    import json
 
     roles = [ur.role.key for ur in user.roles if ur.role and ur.role.is_active]
 
@@ -192,19 +193,12 @@ async def update_user(
     # Determine role keys from role_keys or role
     role_keys = payload.role_keys
     if role_keys is None and payload.role:
-        if payload.role == "admin":
-            role_keys = ["executive_director", "it_admin"]
-        else:
-            role_keys = [payload.role]
+        role_keys = ["executive_director", "it_admin"] if payload.role == "admin" else [payload.role]
 
     if role_keys is not None:
         await repo.assign_roles(user_id, role_keys, assigned_by=user.id)
 
     if payload.team_access is not None:
-        import json
-        from sqlalchemy import select
-        from app.models.user import UserPreference
-
         pref_res = await db.execute(
             select(UserPreference).where(
                 UserPreference.user_id == user_id,

@@ -177,10 +177,10 @@ class AuthService:
         await self.db.flush()
 
         # Assign default caseworker role
-        role_res = await self.db.execute(select(Role).where(Role.key == default_role_key, Role.is_active == True))
+        role_res = await self.db.execute(select(Role).where(Role.key == default_role_key, Role.is_active.is_(True)))
         role = role_res.scalar_one_or_none()
         if not role:
-            fallback_res = await self.db.execute(select(Role).where(Role.is_active == True).limit(1))
+            fallback_res = await self.db.execute(select(Role).where(Role.is_active.is_(True)).limit(1))
             role = fallback_res.scalar_one_or_none()
 
         if role:
