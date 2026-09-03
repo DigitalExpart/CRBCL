@@ -2,17 +2,7 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "build": {
-    "env": {
-      "PYTHON_VERSION": "3.11",
-      "PYO3_USE_ABI3_FORWARD_COMPATIBILITY": "1"
-    }
-  },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
