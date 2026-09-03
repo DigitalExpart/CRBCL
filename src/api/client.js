@@ -438,11 +438,19 @@ class AuthService {
     window.location.href = `${base}/api/v1/auth/oauth/${provider}?returnTo=${encodeURIComponent(redirectUrl)}`;
   }
 
-  async register({ email, password, fullName }) {
+  async register({ email, password, firstName, lastName, fullName, department }) {
+    const computedFullName = fullName || `${firstName || ''} ${lastName || ''}`.trim();
     const res = await this.apiClient.fetch('/api/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, full_name: fullName || '' }),
+      body: JSON.stringify({
+        email,
+        password,
+        first_name: firstName || '',
+        last_name: lastName || '',
+        full_name: computedFullName,
+        department: department || '',
+      }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

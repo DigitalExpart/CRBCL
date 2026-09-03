@@ -4,13 +4,29 @@ import { api } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Lock, Eye, EyeOff, Loader2, User, Building2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/auth/AuthLayout";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
 
+const DEPARTMENTS = [
+  "Case Management",
+  "Family Services",
+  "Youth Services",
+  "Cultural Programs",
+  "Mental Health & Wellness",
+  "Administration",
+  "Finance",
+  "Human Resources (HR)",
+  "IT & Systems",
+  "Housing & Community Outreach",
+];
+
 export default function Register() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [department, setDepartment] = useState("Case Management");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,9 +44,19 @@ export default function Register() {
       setError("Passwords do not match");
       return;
     }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
     setLoading(true);
     try {
-      await api.auth.register({ email, password });
+      await api.auth.register({
+        email,
+        password,
+        firstName,
+        lastName,
+        department,
+      });
       setShowOtp(true);
     } catch (err) {
       setError(err.message || "Registration failed");
@@ -165,16 +191,73 @@ export default function Register() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* First & Last Name */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">First Name</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Input
+                id="firstName"
+                type="text"
+                autoComplete="given-name"
+                placeholder="Jane"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="pl-10 h-12"
+                required
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Input
+                id="lastName"
+                type="text"
+                autoComplete="family-name"
+                placeholder="Doe"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="pl-10 h-12"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Department Selection */}
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="department">Department</Label>
+          <div className="relative">
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
+            <select
+              id="department"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              className="flex h-12 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              required
+            >
+              {DEPARTMENTS.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Email */}
+        <div className="space-y-2">
+          <Label htmlFor="email">Work Email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="email"
               type="email"
               autoComplete="email"
-              autoFocus
-              placeholder="you@example.com"
+              placeholder="you@crbcl.ca"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-10 h-12"
@@ -182,6 +265,8 @@ export default function Register() {
             />
           </div>
         </div>
+
+        {/* Password */}
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
           <div className="relative">
@@ -210,6 +295,8 @@ export default function Register() {
             </button>
           </div>
         </div>
+
+        {/* Confirm Password */}
         <div className="space-y-2">
           <Label htmlFor="confirm">Confirm Password</Label>
           <div className="relative">
@@ -238,6 +325,7 @@ export default function Register() {
             </button>
           </div>
         </div>
+
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (
             <>

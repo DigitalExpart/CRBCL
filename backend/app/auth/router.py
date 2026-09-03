@@ -183,7 +183,39 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_409_CONFLICT,
             detail={"error": {"code": "EMAIL_EXISTS", "message": "An account with this email already exists"}},
         )
-    user = await auth.register_user(body.email, body.password, body.full_name)
+
+    full_name = body.full_name or f"{body.first_name} {body.last_name}".strip()
+    user = await auth.register_user(body.email, body.password, full_name=full_name)
+
+    # Queue administrative approval notification to Executive Directors & IT Admins
+    try:
+        from app.models.notification import Notification
+        from app.models.role import Role, UserRole
+        from sqlalchemy import select
+
+        admin_query = (
+            select(User.id)
+            .join(UserRole, UserRole.user_id == User.id)
+            .join(Role, Role.id == UserRole.role_id)
+            .where(Role.key.in_(["executive_director", "it_admin", "director_manager"]), User.is_active == True)
+        )
+        admin_res = await db.execute(admin_query)
+        admin_ids = set(admin_res.scalars().all())
+
+        dept_label = f" ({body.department})" if body.department else ""
+        for admin_id in admin_ids:
+            notif = Notification(
+                recipient_id=admin_id,
+                type="STAFF_REGISTRATION_REQUEST",
+                title="New Staff Sign-Up Request",
+                message=f"{full_name or body.email}{dept_label} has signed up and is awaiting access verification.",
+                priority="HIGH",
+                related_entity_type="user",
+                related_entity_id=user.id,
+            )
+            db.add(notif)
+    except Exception as e:
+        logger.warning(f"Could not queue admin notification: {e}")
 
     # Generate and dispatch 6-digit verification code
     email_service = EmailService(db)
