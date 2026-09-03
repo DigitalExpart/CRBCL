@@ -2,7 +2,7 @@
 name = "crbcl-backend"
 version = "0.1.0"
 description = "CRBCL Family Wellness Case Management Platform — Backend API"
-requires-python = ">=3.11"
+requires-python = ">=3.11, <3.12"
 readme = "README.md"
 
 dependencies = [

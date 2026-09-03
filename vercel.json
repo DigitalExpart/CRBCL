@@ -2,6 +2,11 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/**/*.py": {
+      "runtime": "python3.11"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
