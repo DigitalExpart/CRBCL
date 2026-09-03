@@ -11,34 +11,38 @@ subprojects {
 }
 
 subprojects {
-    project.ext.set("flutter", [
-        compileSdkVersion: 34,
-        targetSdkVersion: 34,
-        minSdkVersion: 21,
-        buildToolsVersion: "34.0.0"
-    ])
+    if (project.name != "app") {
+        project.ext.set("flutter", [
+            compileSdkVersion: 34,
+            targetSdkVersion: 34,
+            minSdkVersion: 21,
+            buildToolsVersion: "34.0.0"
+        ])
+    }
 }
 
 subprojects {
-    if (project.state.executed) {
-        if (project.hasProperty("android")) {
-            project.android {
-                if (namespace == null || namespace.isEmpty()) {
-                    namespace = (project.group && !project.group.isEmpty()) ? project.group : "ca.crbcl.${project.name.replace('-', '_')}"
-                }
-                compileSdkVersion 34
-                buildToolsVersion "34.0.0"
-            }
-        }
-    } else {
-        project.afterEvaluate { p ->
-            if (p.hasProperty("android")) {
-                p.android {
+    if (project.name != "app") {
+        if (project.state.executed) {
+            if (project.hasProperty("android")) {
+                project.android {
                     if (namespace == null || namespace.isEmpty()) {
-                        namespace = (p.group && !p.group.isEmpty()) ? p.group : "ca.crbcl.${p.name.replace('-', '_')}"
+                        namespace = (project.group && !project.group.isEmpty()) ? project.group : "ca.crbcl.${project.name.replace('-', '_')}"
                     }
                     compileSdkVersion 34
                     buildToolsVersion "34.0.0"
+                }
+            }
+        } else {
+            project.afterEvaluate { p ->
+                if (p.hasProperty("android")) {
+                    p.android {
+                        if (namespace == null || namespace.isEmpty()) {
+                            namespace = (p.group && !p.group.isEmpty()) ? p.group : "ca.crbcl.${p.name.replace('-', '_')}"
+                        }
+                        compileSdkVersion 34
+                        buildToolsVersion "34.0.0"
+                    }
                 }
             }
         }
