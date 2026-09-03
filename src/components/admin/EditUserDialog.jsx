@@ -7,6 +7,8 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/api";
 import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
 
+import { toast } from "@/components/ui/use-toast";
+
 const ROLES = [
   { key: "caseworker", label: "Caseworker — Standard Case Files" },
   { key: "supervisor", label: "Supervisor — Approval & Reviews" },
@@ -38,15 +40,19 @@ export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {
     setLoading(true);
     setError("");
     try {
-      await api.patch(`/users/${user.id}`, {
+      await api.patch(`/api/v1/users/${user.id}`, {
         role,
         role_keys: [role],
         team_access: teamAccess,
       });
+      toast({
+        title: "Role Updated",
+        description: `User role has been successfully updated to ${role.replace("_", " ")}.`,
+      });
       if (onSaved) onSaved();
       onOpenChange(false);
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || "Failed to update user.");
+      setError(err.response?.data?.detail || err.message || "Failed to update user role.");
     } finally {
       setLoading(false);
     }

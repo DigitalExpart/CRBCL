@@ -167,7 +167,7 @@ async def update_user(
     update_fields["updated_by"] = user.id
 
     if update_fields:
-        await repo.update(user_id, **update_fields)
+        await repo.update(target, **update_fields)
 
     # Determine role keys from role_keys or role
     role_keys = payload.role_keys
