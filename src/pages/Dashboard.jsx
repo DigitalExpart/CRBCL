@@ -5,6 +5,9 @@ import {
   FolderOpen, Users, Heart, BookOpen, DollarSign, Gift,
   AlertTriangle, Calendar, ArrowRight, Clock, TrendingUp
 } from "lucide-react";
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell
+} from "recharts";
 import StatCard from "@/components/shared/StatCard";
 import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
