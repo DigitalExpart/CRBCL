@@ -77,8 +77,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Executive Command Center" 
-        subtitle="Real-time organizational overview — Chief Red Bear Children's Lodge"
+        title="Family Wellness Platform" 
+        subtitle="Staff Caseload, Services & Operational Overview — Chief Red Bear Children's Lodge"
       />
 
       {/* KPI Cards */}

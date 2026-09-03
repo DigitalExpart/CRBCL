@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { api } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,22 @@ export default function AdminDashboard() {
   const [selectedRole, setSelectedRole] = useState({});
   const [error, setError] = useState("");
   const [systemHealth, setSystemHealth] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(null);
+
+  useEffect(() => {
+    api.auth.me().then((u) => {
+      const roles = Array.isArray(u?.roles) ? u.roles : [];
+      const hasAdmin = 
+        u?.role === "admin" ||
+        u?.role === "executive_director" ||
+        roles.includes("executive_director") ||
+        roles.includes("it_admin") ||
+        roles.includes("admin");
+      setIsAuthorized(hasAdmin);
+    }).catch(() => {
+      setIsAuthorized(false);
+    });
+  }, []);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -107,6 +124,23 @@ export default function AdminDashboard() {
   const adminCount = users.filter((u) => 
     u.roles?.includes("executive_director") || u.roles?.includes("admin") || u.roles?.includes("it_admin")
   ).length;
+
+  if (isAuthorized === false) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-4">
+        <div className="w-16 h-16 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto">
+          <ShieldAlert className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold">Access Restricted</h2>
+        <p className="text-sm text-muted-foreground max-w-md">
+          This portal is restricted to Executive Directors and System Administrators. Please return to your staff dashboard.
+        </p>
+        <Link to="/">
+          <Button>Return to Dashboard</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
