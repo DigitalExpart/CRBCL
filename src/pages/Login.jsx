@@ -22,20 +22,24 @@ export default function Login() {
     try {
       const res = await api.auth.loginViaEmailPassword(email, password);
       const user = res?.user || (await api.auth.me().catch(() => null));
-      const roles = Array.isArray(user?.roles) ? user.roles : [];
-      const isAdmin = 
-        user?.role === "admin" ||
-        user?.role === "executive_director" ||
-        roles.includes("executive_director") ||
-        roles.includes("it_admin") ||
-        roles.includes("admin");
+      const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+      const isItAdmin = user?.role === "admin" || roles.includes("admin") || roles.includes("it_admin");
+      const isCEO = roles.includes("ceo");
+      const isExecutive = roles.includes("executive_director");
+      const isDirector = roles.includes("director_manager");
 
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get("returnTo");
 
-      if (returnTo) {
+      if (returnTo && (!returnTo.startsWith("/admin") || isItAdmin)) {
         window.location.href = returnTo;
-      } else if (isAdmin) {
+      } else if (isCEO) {
+        window.location.href = "/ceo";
+      } else if (isExecutive) {
+        window.location.href = "/executive";
+      } else if (isDirector) {
+        window.location.href = "/director";
+      } else if (isItAdmin) {
         window.location.href = "/admin";
       } else {
         window.location.href = "/";

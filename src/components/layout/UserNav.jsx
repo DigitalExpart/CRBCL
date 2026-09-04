@@ -59,8 +59,9 @@ export default function UserNav() {
 
   const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
   const isItAdmin = user?.role === "admin" || roles.some((r) => ["admin", "it_admin"].includes(String(r).toLowerCase()));
-  const isExecutive = user?.role === "admin" || roles.some((r) => ["admin", "executive_director"].includes(String(r).toLowerCase()));
-  const isDirector = isExecutive || roles.some((r) => ["director_manager"].includes(String(r).toLowerCase()));
+  const isCEO = roles.some((r) => ["ceo"].includes(String(r).toLowerCase()));
+  const isExecutive = roles.some((r) => ["executive_director"].includes(String(r).toLowerCase()));
+  const isDirector = roles.some((r) => ["director_manager"].includes(String(r).toLowerCase()));
 
   const getInitials = (name, email) => {
     if (name && name.trim()) {
@@ -170,25 +171,26 @@ export default function UserNav() {
         )}
 
         {isExecutive && (
-          <>
-            <DropdownMenuItem
-              onClick={() => navigate("/executive")}
-              className="cursor-pointer"
-            >
-              <TrendingUp className="mr-2 h-4 w-4 text-indigo-600" />
-              <span>Executive Dashboard</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => navigate("/ceo")}
-              className="cursor-pointer"
-            >
-              <Crown className="mr-2 h-4 w-4 text-emerald-600" />
-              <span>CEO Dashboard</span>
-            </DropdownMenuItem>
-          </>
+          <DropdownMenuItem
+            onClick={() => navigate("/executive")}
+            className="cursor-pointer"
+          >
+            <TrendingUp className="mr-2 h-4 w-4 text-indigo-600" />
+            <span>Executive Dashboard</span>
+          </DropdownMenuItem>
         )}
 
-        {(isItAdmin || isExecutive) && (
+        {isCEO && (
+          <DropdownMenuItem
+            onClick={() => navigate("/ceo")}
+            className="cursor-pointer"
+          >
+            <Crown className="mr-2 h-4 w-4 text-emerald-600" />
+            <span>CEO Dashboard</span>
+          </DropdownMenuItem>
+        )}
+
+        {isItAdmin && (
           <DropdownMenuItem
             onClick={() => navigate("/admin")}
             className="cursor-pointer"

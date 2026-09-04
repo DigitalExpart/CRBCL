@@ -21,16 +21,14 @@ export default function AdminLogin() {
     try {
       const res = await api.auth.loginViaEmailPassword(email, password);
       const user = res?.user || (await api.auth.me().catch(() => null));
-      const roles = Array.isArray(user?.roles) ? user.roles : [];
-      const isAdmin = 
+      const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+      const isItAdmin = 
         user?.role === "admin" ||
-        user?.role === "executive_director" ||
-        roles.includes("executive_director") ||
         roles.includes("it_admin") ||
         roles.includes("admin");
 
-      if (!isAdmin) {
-        setError("Access Denied: This account is not authorized for the Executive Admin Portal. Please use the Staff Portal.");
+      if (!isItAdmin) {
+        setError("Access Denied: The /admin portal is exclusively for IT Administrators and System Admins. Directors, leadership, and staff please use the standard portal.");
         setLoading(false);
         return;
       }
@@ -45,15 +43,15 @@ export default function AdminLogin() {
   return (
     <AuthLayout
       icon={Shield}
-      title="Executive Admin Portal"
-      subtitle="Restricted sign-in for CRBCL Executive Directors & System Administrators"
+      title="IT Admin Portal"
+      subtitle="Restricted sign-in exclusively for CRBCL IT Administrators & System Admins"
       footer={
         <div className="space-y-2 text-center text-xs">
           <p className="text-muted-foreground">
-            Standard staff member or caseworker?
+            Director, executive, supervisor, or frontline staff?
           </p>
           <Link to="/login" className="inline-flex items-center text-primary font-medium hover:underline">
-            Go to Staff Portal <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            Go to Standard Portal <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Link>
         </div>
       }

@@ -25,15 +25,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     api.auth.me().then((u) => {
-      const roles = Array.isArray(u?.roles) ? u.roles : [];
-      const hasAdmin = 
-        u?.role === "admin" ||
-        u?.role === "executive_director" ||
-        roles.includes("executive_director") ||
-        roles.includes("it_admin") ||
-        roles.includes("admin") ||
-        roles.includes("director_manager");
-      if (hasAdmin) {
+      const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+      const isItAdmin = u?.role === "admin" || roles.includes("admin") || roles.includes("it_admin");
+      const isCEO = roles.includes("ceo");
+      const isExecutive = roles.includes("executive_director");
+      const isDirector = roles.includes("director_manager");
+
+      if (isCEO) {
+        window.location.replace("/ceo");
+      } else if (isExecutive) {
+        window.location.replace("/executive");
+      } else if (isDirector) {
+        window.location.replace("/director");
+      } else if (isItAdmin) {
         window.location.replace("/admin");
       }
     }).catch(() => {});

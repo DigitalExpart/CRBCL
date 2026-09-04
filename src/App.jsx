@@ -150,16 +150,12 @@ const AuthenticatedApp = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Dedicated Admin Portal Routes (Redirects to /admin/login when unauthenticated) */}
+        {/* Dedicated Admin Portal Routes (Exclusively for IT Admins / System Admins) */}
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/admin/login" replace />} />}>
           <Route element={<AppLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/profile" element={<Profile />} />
             <Route path="/admin/integrations" element={<AdminIntegrations />} />
             <Route path="/admin/terminology" element={<AdminTerminology />} />
-            <Route path="/director" element={<DirectorsDashboard />} />
-            <Route path="/executive" element={<ExecutiveDashboard />} />
-            <Route path="/ceo" element={<CEODashboard />} />
           </Route>
         </Route>
 
@@ -171,6 +167,7 @@ const AuthenticatedApp = () => {
             <Route path="/director" element={<DirectorsDashboard />} />
             <Route path="/executive" element={<ExecutiveDashboard />} />
             <Route path="/ceo" element={<CEODashboard />} />
+            <Route path="/terminology" element={<AdminTerminology />} />
             <Route path="/intake" element={<IntakeList />} />
             <Route path="/intake/new" element={<NewIntake />} />
             <Route path="/intake/approvals" element={<SupervisorApprovalQueue />} />

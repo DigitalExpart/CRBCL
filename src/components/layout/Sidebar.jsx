@@ -14,8 +14,9 @@ import { api } from "@/api";
 
 const getNavItems = (userRoles = []) => {
   const isItAdmin = userRoles.includes("it_admin") || userRoles.includes("admin");
-  const isExecutive = userRoles.includes("executive_director") || userRoles.includes("admin");
-  const isDirector = userRoles.includes("director_manager") || isExecutive;
+  const isCEO = userRoles.includes("ceo");
+  const isExecutive = userRoles.includes("executive_director");
+  const isDirector = userRoles.includes("director_manager");
 
   const items = [
     { label: "Staff Dashboard", icon: LayoutDashboard, path: "/" },
@@ -26,9 +27,11 @@ const getNavItems = (userRoles = []) => {
   }
   if (isExecutive) {
     items.push({ label: "Executive Dashboard", icon: TrendingUp, path: "/executive" });
+  }
+  if (isCEO) {
     items.push({ label: "CEO Dashboard", icon: Crown, path: "/ceo" });
   }
-  if (isItAdmin || isExecutive) {
+  if (isItAdmin) {
     items.push({ label: "Admin & IT Portal", icon: Shield, path: "/admin" });
   }
 
@@ -61,7 +64,7 @@ const getNavItems = (userRoles = []) => {
     { label: "Donations", icon: Gift, path: "/donations" },
     { label: "Clinical Notes", icon: FileText, path: "/clinical-notes" },
     { label: "Incidents", icon: AlertTriangle, path: "/incidents" },
-    { label: "Cultural Terminology", icon: BookOpen, path: "/admin/terminology" },
+    { label: "Cultural Terminology", icon: BookOpen, path: "/terminology" },
     { label: "Ask Red Bear", icon: MessageCircle, path: "/ask-red-bear" },
   );
 

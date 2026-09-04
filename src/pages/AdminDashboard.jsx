@@ -43,14 +43,25 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     api.auth.me().then((u) => {
-      const roles = Array.isArray(u?.roles) ? u.roles : [];
-      const hasAdmin = 
+      const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+      const isItAdmin = 
         u?.role === "admin" ||
-        u?.role === "executive_director" ||
-        roles.includes("executive_director") ||
         roles.includes("it_admin") ||
         roles.includes("admin");
-      setIsAuthorized(hasAdmin);
+
+      if (!isItAdmin) {
+        if (roles.includes("ceo")) {
+          window.location.replace("/ceo");
+        } else if (roles.includes("executive_director")) {
+          window.location.replace("/executive");
+        } else if (roles.includes("director_manager")) {
+          window.location.replace("/director");
+        } else {
+          window.location.replace("/");
+        }
+        return;
+      }
+      setIsAuthorized(true);
     }).catch(() => {
       setIsAuthorized(false);
     });
@@ -123,7 +134,7 @@ export default function AdminDashboard() {
   );
 
   const adminCount = users.filter((u) => 
-    u.roles?.includes("executive_director") || u.roles?.includes("admin") || u.roles?.includes("it_admin")
+    u.role === "admin" || u.roles?.includes("admin") || u.roles?.includes("it_admin")
   ).length;
 
   if (isAuthorized === false) {
@@ -134,7 +145,7 @@ export default function AdminDashboard() {
         </div>
         <h2 className="text-xl font-bold">Access Restricted</h2>
         <p className="text-sm text-muted-foreground max-w-md">
-          This portal is restricted to Executive Directors and System Administrators. Please return to your staff dashboard.
+          This portal is restricted exclusively to IT Administrators & System Admins. Leadership and staff access the platform via their respective dashboards.
         </p>
         <Link to="/">
           <Button>Return to Dashboard</Button>

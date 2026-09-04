@@ -210,12 +210,12 @@ export default function CEODashboard() {
             </Link>
 
             <Link
-              to="/admin"
+              to="/reports"
               className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/60 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <FileCheck className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium">Admin & IT Portal</span>
+                <span className="text-sm font-medium">Agency Reports & Governance</span>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Link>
