@@ -50,33 +50,66 @@ export default function TeamDashboard() {
     api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  const hasAccess = currentUser?.role === "admin" ||
+  const executiveRoles = ["executive_director", "director_manager", "it_admin", "admin"];
+  const isExecutive = currentUser?.role === "admin" ||
+    (currentUser?.roles || []).some(r => executiveRoles.includes(r));
+
+  const hasAccess = isExecutive ||
     (currentUser?.team_access || []).includes("all") ||
     (currentUser?.team_access || []).includes(String(teamId));
 
   useEffect(() => {
-    if (!currentUser || !hasAccess) return;
-    async function load() {
-      const fetches = {};
-      if (focus.cases)       fetches.cases       = api.entities.Case.list("-created_date", 100);
-      if (focus.clients)     fetches.clients     = api.entities.Client.list("-created_date", 100);
-      if (focus.families)    fetches.families    = api.entities.Family.list("-created_date", 100);
-      if (focus.programs)    fetches.programs    = api.entities.Program.list("-created_date", 100);
-      if (focus.funding)     fetches.funding     = api.entities.FundingGrant.list("-created_date", 50);
-      if (focus.donations)   fetches.donations   = api.entities.Donation.list("-created_date", 50);
-      if (focus.employees)   fetches.employees   = api.entities.Employee.list("-created_date", 100);
-      if (focus.incidents)   fetches.incidents   = api.entities.Incident.list("-created_date", 50);
-      if (focus.appointments) fetches.appointments = api.entities.Appointment.list("-created_date", 50);
-
-      const keys = Object.keys(fetches);
-      const results = await Promise.all(Object.values(fetches));
-      const resolved = {};
-      keys.forEach((k, i) => { resolved[k] = results[i]; });
-      setData(prev => ({ ...prev, ...resolved }));
+    if (!currentUser) return;
+    if (!hasAccess) {
       setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    async function load() {
+      setLoading(true);
+      try {
+        const safeFetch = async (promise) => {
+          try {
+            const res = await promise;
+            return Array.isArray(res) ? res : (res?.items || []);
+          } catch (err) {
+            console.warn("Slice load error (non-fatal):", err);
+            return [];
+          }
+        };
+
+        const fetches = {};
+        if (focus.cases)        fetches.cases        = safeFetch(api.entities.Case.list("-created_date", 100));
+        if (focus.clients)      fetches.clients      = safeFetch(api.entities.Client.list("-created_date", 100));
+        if (focus.families)     fetches.families     = safeFetch(api.entities.Family.list("-created_date", 100));
+        if (focus.programs)     fetches.programs     = safeFetch(api.entities.Program.list("-created_date", 100));
+        if (focus.funding)      fetches.funding      = safeFetch(api.entities.FundingGrant.list("-created_date", 50));
+        if (focus.donations)    fetches.donations    = safeFetch(api.entities.Donation.list("-created_date", 50));
+        if (focus.employees)    fetches.employees    = safeFetch(api.entities.Employee.list("-created_date", 100));
+        if (focus.incidents)    fetches.incidents    = safeFetch(api.entities.Incident.list("-created_date", 50));
+        if (focus.appointments) fetches.appointments = safeFetch(api.entities.Appointment.list("-created_date", 50));
+        if (focus.documents)    fetches.documents    = safeFetch(api.entities.Document.list("-created_date", 50));
+
+        const keys = Object.keys(fetches);
+        const results = await Promise.all(Object.values(fetches));
+        if (!isMounted) return;
+
+        const resolved = {};
+        keys.forEach((k, i) => { resolved[k] = results[i]; });
+        setData(prev => ({ ...prev, ...resolved }));
+      } catch (err) {
+        console.error("TeamDashboard load failed:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     }
     load();
-  }, [teamId, currentUser]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [teamId, currentUser, hasAccess]);
 
   if (!team) return <div className="p-8 text-center text-muted-foreground">Team not found.</div>;
 

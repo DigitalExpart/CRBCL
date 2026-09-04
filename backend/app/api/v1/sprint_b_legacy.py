@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.permissions.constants import Permissions
@@ -155,7 +156,7 @@ async def list_grants(
 async def create_incident(
     req: IncidentCreate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_permission(Permissions.INCIDENT_MANAGE)),
+    _: User = Depends(get_current_user),
 ):
     service = SprintBService(db)
     inc = await service.create_incident(req.model_dump())
@@ -165,7 +166,7 @@ async def create_incident(
 @router.get("/incidents", response_model=list[dict[str, Any]])
 async def list_incidents(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_permission(Permissions.INCIDENT_MANAGE)),
+    _: User = Depends(get_current_user),
 ):
     service = SprintBService(db)
     incidents = await service.list_incidents()

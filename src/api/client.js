@@ -83,10 +83,14 @@ const NATIVE_ENDPOINT_MAP = {
   programs: '/api/v1/programs',
   grant: '/api/v1/grants',
   grants: '/api/v1/grants',
+  fundinggrant: '/api/v1/grants',
+  fundinggrants: '/api/v1/grants',
   incident: '/api/v1/incidents',
   incidents: '/api/v1/incidents',
   appointment: '/api/v1/appointments',
   appointments: '/api/v1/appointments',
+  document: '/api/v1/documents',
+  documents: '/api/v1/documents',
 };
 
 // Entity service implementation with native FastAPI v1 routing & fail-closed safety
@@ -145,6 +149,9 @@ class EntityClient {
           const data = await res.json();
           if (Array.isArray(data)) return data;
           if (data && Array.isArray(data.items)) return data.items;
+          return [];
+        } else if (res.status === 403 || res.status === 404) {
+          console.warn(`Entity ${this.name} returned HTTP ${res.status}: Returning empty slice.`);
           return [];
         } else if (!config.enableDemoData) {
           const errData = await res.json().catch(() => ({}));

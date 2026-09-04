@@ -1,11 +1,12 @@
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.user import User
+from app.permissions.constants import Permissions
 from app.permissions.dependencies import get_current_user_permissions
 from app.services.dashboard_service import DashboardService
 
@@ -19,6 +20,11 @@ async def get_user_dashboard_layout(
     user_perms: set[str] = Depends(get_current_user_permissions),
 ):
     """Return user's customized drag/drop widget layout and authorized metric data."""
+    if Permissions.DASHBOARD_CUSTOMIZE not in user_perms:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": {"code": "PERMISSION_DENIED", "message": f"User does not have required permission: {Permissions.DASHBOARD_CUSTOMIZE}"}},
+        )
     return await DashboardService.get_user_dashboard(db, user_id=current_user.id, user_permissions=user_perms)
 
 
