@@ -219,3 +219,37 @@ async def update_user(
     await db.commit()
     fresh = await repo.get_with_roles_and_teams(user_id)
     return _build_user_response(fresh)
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: uuid.UUID,
+    request: Request,
+    user: User = Depends(require_permission(Permissions.ADMIN_USERS_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    if user.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": {"code": "CANNOT_DELETE_SELF", "message": "You cannot delete your own administrator account"}},
+        )
+    repo = UserRepository(db)
+    target = await repo.get(user_id)
+    if not target or target.deleted_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": {"code": "USER_NOT_FOUND", "message": "User not found"}},
+        )
+    await repo.soft_delete(target)
+
+    audit_service = AuditService(db)
+    await audit_service.log_event(
+        event_type="USER_DELETED",
+        user_id=user.id,
+        entity_type="user",
+        entity_id=user_id,
+        after_data={"deleted_user_email": target.email},
+        ip_address=request.client.host if request.client else None,
+    )
+    await db.commit()
+    return None

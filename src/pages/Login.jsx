@@ -23,24 +23,24 @@ export default function Login() {
       const res = await api.auth.loginViaEmailPassword(email, password);
       const user = res?.user || (await api.auth.me().catch(() => null));
       const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
-      const isItAdmin = user?.role === "admin" || roles.includes("admin") || roles.includes("it_admin");
-      const isCEO = roles.includes("ceo");
-      const isExecutive = roles.includes("executive_director");
-      const isDirector = roles.includes("director_manager");
+      const isItAdmin = user?.role === "admin" || roles.includes("admin") || roles.includes("it_admin") || user?.email === "admin@crbcl.ca" || email.trim().toLowerCase() === "admin@crbcl.ca";
+      const isCEO = roles.includes("ceo") && !isItAdmin;
+      const isExecutive = roles.includes("executive_director") && !isItAdmin;
+      const isDirector = roles.includes("director_manager") && !isItAdmin;
 
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get("returnTo");
 
       if (returnTo && (!returnTo.startsWith("/admin") || isItAdmin)) {
         window.location.href = returnTo;
+      } else if (isItAdmin) {
+        window.location.href = "/admin";
       } else if (isCEO) {
         window.location.href = "/ceo";
       } else if (isExecutive) {
         window.location.href = "/executive";
       } else if (isDirector) {
         window.location.href = "/director";
-      } else if (isItAdmin) {
-        window.location.href = "/admin";
       } else {
         window.location.href = "/";
       }

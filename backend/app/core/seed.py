@@ -54,6 +54,12 @@ logger = logging.getLogger("crbcl.seed")
 # ── 1. Default Roles ─────────────────────────────────────────
 ROLES_DATA = [
     {
+        "key": "ceo",
+        "name": "Chief Executive Officer (CEO)",
+        "description": "Executive leadership with organization-wide strategy, board reporting, and capital allocation.",
+        "is_system": True,
+    },
+    {
         "key": "executive_director",
         "name": "Executive Director",
         "description": "Executive leadership with organization-wide governance and oversight.",
@@ -2107,10 +2113,10 @@ async def seed_database(db: AsyncSession) -> None:
             db.add(admin_user)
             await db.flush()
 
-            # Assign Executive Director role
-            ed_role = role_models.get("executive_director")
-            if ed_role:
-                db.add(UserRole(user_id=admin_user.id, role_id=ed_role.id))
+            # Assign IT Admin role
+            admin_role = role_models.get("it_admin")
+            if admin_role:
+                db.add(UserRole(user_id=admin_user.id, role_id=admin_role.id))
 
     await db.commit()
     logger.info("Database bootstrap & seed complete.")

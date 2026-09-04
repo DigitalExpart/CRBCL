@@ -10,15 +10,16 @@ import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
 import { toast } from "@/components/ui/use-toast";
 
 const ROLES = [
-  { key: "caseworker", label: "Caseworker — Standard Case Files" },
-  { key: "supervisor", label: "Supervisor — Approval & Reviews" },
-  { key: "director_manager", label: "Director / Manager — Operational Oversight" },
-  { key: "executive_director", label: "Executive Director — Full Administrator" },
+  { key: "ceo", label: "Chief Executive Officer (CEO) — Strategic Leadership & Governance" },
+  { key: "executive_director", label: "Executive Director — Cross-Agency Leadership" },
+  { key: "director_manager", label: "Director / Manager — Departmental Operations" },
+  { key: "supervisor", label: "Supervisor — Casework Approvals & Reviews" },
+  { key: "caseworker", label: "Caseworker — Direct Client & Case Management" },
   { key: "case_aide", label: "Case Aide — Support Worker" },
   { key: "finance_staff", label: "Finance Staff — Billing & Invoices" },
-  { key: "cultural_worker", label: "Cultural Worker — Programs & Elders" },
+  { key: "cultural_worker", label: "Cultural Worker — Cultural Supports & Elders" },
   { key: "clinical_staff", label: "Clinical Staff — Medical & Therapy" },
-  { key: "it_admin", label: "IT Administrator — Security & Config" },
+  { key: "it_admin", label: "IT Administrator — Standalone System Admin" },
 ];
 
 export default function EditUserDialog({ user, open, onOpenChange, onSaved }) {

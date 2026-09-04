@@ -12,11 +12,11 @@ import {
 import { api } from "@/api";
 
 
-const getNavItems = (userRoles = []) => {
-  const isItAdmin = userRoles.includes("it_admin") || userRoles.includes("admin");
-  const isCEO = userRoles.includes("ceo");
-  const isExecutive = userRoles.includes("executive_director");
-  const isDirector = userRoles.includes("director_manager");
+const getNavItems = (userRoles = [], userEmail = "") => {
+  const isItAdmin = userRoles.includes("it_admin") || userRoles.includes("admin") || userEmail === "admin@crbcl.ca";
+  const isCEO = userRoles.includes("ceo") && !isItAdmin;
+  const isExecutive = userRoles.includes("executive_director") && !isItAdmin;
+  const isDirector = userRoles.includes("director_manager") && !isItAdmin;
 
   const items = [
     { label: "Staff Dashboard", icon: LayoutDashboard, path: "/" },
@@ -76,11 +76,13 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userRoles, setUserRoles] = useState([]);
+  const [userEmail, setUserEmail] = useState("");
 
   React.useEffect(() => {
     api.auth.me().then((u) => {
       const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
       setUserRoles(roles);
+      setUserEmail(u?.email || "");
     }).catch(() => {});
   }, []);
 
@@ -109,7 +111,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto scrollbar-thin">
-        {getNavItems(userRoles).map((item) => {
+        {getNavItems(userRoles, userEmail).map((item) => {
           const isActive = location.pathname === item.path || 
             (item.path !== "/" && location.pathname.startsWith(item.path));
           return (

@@ -58,10 +58,10 @@ export default function UserNav() {
   }, []);
 
   const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
-  const isItAdmin = user?.role === "admin" || roles.some((r) => ["admin", "it_admin"].includes(String(r).toLowerCase()));
-  const isCEO = roles.some((r) => ["ceo"].includes(String(r).toLowerCase()));
-  const isExecutive = roles.some((r) => ["executive_director"].includes(String(r).toLowerCase()));
-  const isDirector = roles.some((r) => ["director_manager"].includes(String(r).toLowerCase()));
+  const isItAdmin = user?.role === "admin" || roles.some((r) => ["admin", "it_admin"].includes(String(r).toLowerCase())) || user?.email === "admin@crbcl.ca";
+  const isCEO = roles.some((r) => ["ceo"].includes(String(r).toLowerCase())) && !isItAdmin;
+  const isExecutive = roles.some((r) => ["executive_director"].includes(String(r).toLowerCase())) && !isItAdmin;
+  const isDirector = roles.some((r) => ["director_manager"].includes(String(r).toLowerCase())) && !isItAdmin;
 
   const getInitials = (name, email) => {
     if (name && name.trim()) {
@@ -85,9 +85,10 @@ export default function UserNav() {
   };
 
   const getRoleLabel = () => {
+    if (isItAdmin) return "System Administrator";
+    if (roles.includes("ceo")) return "Chief Executive Officer";
     if (roles.includes("executive_director")) return "Executive Director";
     if (roles.includes("director_manager")) return "Director";
-    if (roles.includes("it_admin")) return "IT Admin";
     if (roles.includes("supervisor")) return "Supervisor";
     if (roles.includes("clinical_staff")) return "Clinical";
     if (roles.includes("finance_staff")) return "Finance";
