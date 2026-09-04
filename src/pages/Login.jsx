@@ -22,7 +22,7 @@ export default function Login() {
     try {
       // Pre-flight check: block admin email before even calling the API
       if (email.trim().toLowerCase() === "admin@crbcl.ca") {
-        setError("__admin_blocked__");
+        setError("Access Denied: Administrator accounts cannot sign in through this portal.");
         setLoading(false);
         return;
       }
@@ -35,7 +35,7 @@ export default function Login() {
       // Block any account with admin/it_admin role from the staff portal
       if (isItAdmin) {
         api.auth.logout(null);
-        setError("__admin_blocked__");
+        setError("Access Denied: Administrator accounts cannot sign in through this portal.");
         setLoading(false);
         return;
       }
@@ -75,20 +75,12 @@ export default function Login() {
       title="Welcome back"
       subtitle="Log in to your account"
       footer={
-        <div className="space-y-3 text-center text-xs">
-          <div>
-            Don't have an account?{" "}
-            <Link to="/register" className="text-primary font-medium hover:underline">
-              Create one
-            </Link>
-          </div>
-          <div className="pt-2 border-t border-border/60">
-            <span className="text-muted-foreground">System Administrator? </span>
-            <Link to="/admin/login" className="text-primary font-semibold hover:underline inline-flex items-center gap-0.5">
-              Dedicated Admin Portal &rarr;
-            </Link>
-          </div>
-        </div>
+        <>
+          Don't have an account?{" "}
+          <Link to="/register" className="text-primary font-medium hover:underline">
+            Create one
+          </Link>
+        </>
       }
     >
       <Button
@@ -109,32 +101,12 @@ export default function Login() {
         </div>
       </div>
 
-      {error && error === "__admin_blocked__" ? (
-        <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-start gap-3 shadow-sm">
-          <ShieldAlert className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-          <div className="space-y-1.5 flex-1">
-            <p className="font-semibold text-destructive leading-tight">
-              Access Denied: Administrator Account
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              This login page is exclusively for staff and leadership. System Administrator accounts cannot log in here.
-            </p>
-            <div className="pt-1">
-              <Link
-                to="/admin/login"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground text-xs font-medium hover:bg-destructive/90 transition-colors shadow-sm"
-              >
-                Go to Dedicated Admin Login &rarr;
-              </Link>
-            </div>
-          </div>
-        </div>
-      ) : error ? (
+      {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-start gap-2">
           <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <span>{error}</span>
         </div>
-      ) : null}
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
