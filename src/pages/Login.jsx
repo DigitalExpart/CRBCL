@@ -4,7 +4,7 @@ import { api } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { LogIn, Mail, Lock, Eye, EyeOff, Loader2, ShieldAlert } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 
@@ -20,21 +20,35 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
+      // Pre-flight check: block admin email before even calling the API
+      if (email.trim().toLowerCase() === "admin@crbcl.ca") {
+        setError("__admin_blocked__");
+        setLoading(false);
+        return;
+      }
+
       const res = await api.auth.loginViaEmailPassword(email, password);
       const user = res?.user || (await api.auth.me().catch(() => null));
       const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
-      const isItAdmin = user?.role === "admin" || roles.includes("admin") || roles.includes("it_admin") || user?.email === "admin@crbcl.ca" || email.trim().toLowerCase() === "admin@crbcl.ca";
-      const isCEO = roles.includes("ceo") && !isItAdmin;
-      const isExecutive = roles.includes("executive_director") && !isItAdmin;
-      const isDirector = roles.includes("director_manager") && !isItAdmin;
+      const isItAdmin = user?.role === "admin" || roles.includes("admin") || roles.includes("it_admin") || user?.email === "admin@crbcl.ca";
+
+      // Block any account with admin/it_admin role from the staff portal
+      if (isItAdmin) {
+        api.auth.logout(null);
+        setError("__admin_blocked__");
+        setLoading(false);
+        return;
+      }
+
+      const isCEO = roles.includes("ceo");
+      const isExecutive = roles.includes("executive_director");
+      const isDirector = roles.includes("director_manager");
 
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get("returnTo");
 
-      if (returnTo && (!returnTo.startsWith("/admin") || isItAdmin)) {
+      if (returnTo && !returnTo.startsWith("/admin")) {
         window.location.href = returnTo;
-      } else if (isItAdmin) {
-        window.location.href = "/admin";
       } else if (isCEO) {
         window.location.href = "/ceo";
       } else if (isExecutive) {
@@ -61,12 +75,20 @@ export default function Login() {
       title="Welcome back"
       subtitle="Log in to your account"
       footer={
-        <>
-          Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            Create one
-          </Link>
-        </>
+        <div className="space-y-3 text-center text-xs">
+          <div>
+            Don't have an account?{" "}
+            <Link to="/register" className="text-primary font-medium hover:underline">
+              Create one
+            </Link>
+          </div>
+          <div className="pt-2 border-t border-border/60">
+            <span className="text-muted-foreground">System Administrator? </span>
+            <Link to="/admin/login" className="text-primary font-semibold hover:underline inline-flex items-center gap-0.5">
+              Dedicated Admin Portal &rarr;
+            </Link>
+          </div>
+        </div>
       }
     >
       <Button
@@ -87,11 +109,32 @@ export default function Login() {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
+      {error && error === "__admin_blocked__" ? (
+        <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-start gap-3 shadow-sm">
+          <ShieldAlert className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+          <div className="space-y-1.5 flex-1">
+            <p className="font-semibold text-destructive leading-tight">
+              Access Denied: Administrator Account
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This login page is exclusively for staff and leadership. System Administrator accounts cannot log in here.
+            </p>
+            <div className="pt-1">
+              <Link
+                to="/admin/login"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground text-xs font-medium hover:bg-destructive/90 transition-colors shadow-sm"
+              >
+                Go to Dedicated Admin Login &rarr;
+              </Link>
+            </div>
+          </div>
         </div>
-      )}
+      ) : error ? (
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-start gap-2">
+          <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      ) : null}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">

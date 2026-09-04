@@ -32,7 +32,7 @@ export default function Dashboard() {
       const isDirector = roles.includes("director_manager") && !isItAdmin;
 
       if (isItAdmin) {
-        window.location.replace("/admin");
+        window.location.replace("/admin/login");
       } else if (isCEO) {
         window.location.replace("/ceo");
       } else if (isExecutive) {

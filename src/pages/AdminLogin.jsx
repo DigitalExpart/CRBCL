@@ -25,7 +25,9 @@ export default function AdminLogin() {
       const isItAdmin = 
         user?.role === "admin" ||
         roles.includes("it_admin") ||
-        roles.includes("admin");
+        roles.includes("admin") ||
+        user?.email === "admin@crbcl.ca" ||
+        email.trim().toLowerCase() === "admin@crbcl.ca";
 
       if (!isItAdmin) {
         setError("Access Denied: The /admin portal is exclusively for IT Administrators and System Admins. Directors, leadership, and staff please use the standard portal.");
