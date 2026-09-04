@@ -5,65 +5,79 @@ import {
   Calendar, DollarSign, Gift, FileText, AlertTriangle,
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
   Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home,
-  CalendarDays, Bell, UserCheck, Receipt, BarChart3, CheckSquare, Truck
+  CalendarDays, Bell, UserCheck, Receipt, BarChart3, CheckSquare, Truck,
+  Crown, TrendingUp, Building
 } from "lucide-react";
 
 import { api } from "@/api";
 
 
-const getNavItems = (isAdminUser) => [
-  isAdminUser 
-    ? { label: "Director's Dashboard", icon: LayoutDashboard, path: "/admin" }
-    : { label: "Staff Dashboard", icon: LayoutDashboard, path: "/" },
-  { label: "Intake & Referrals", icon: Inbox, path: "/intake" },
-  { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
-  { label: "My Schedule", icon: Calendar, path: "/schedule" },
-  { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
-  { label: "Staffing Facilitator", icon: UserCheck, path: "/staffing" },
-  { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
-  { label: "Cases", icon: FolderOpen, path: "/cases" },
-  { label: "Placement Homes", icon: Home, path: "/placement-homes" },
-  { label: "Finance & Billing", icon: DollarSign, path: "/finance" },
-  { label: "Reporting & Hub", icon: BarChart3, path: "/reports" },
-  { label: "Quality Assurance", icon: CheckSquare, path: "/qa" },
-  { label: "Fleet & Vehicles", icon: Truck, path: "/fleet" },
-  { label: "Purchase Orders", icon: FileText, path: "/finance/requests" },
-  { label: "Placement Invoices", icon: Receipt, path: "/finance/invoices" },
-  { label: "Financial Ledger", icon: BookOpen, path: "/finance/ledger" },
-  { label: "Clients", icon: Users, path: "/clients" },
-  { label: "Families", icon: Heart, path: "/families" },
-  { label: "Notifications", icon: Bell, path: "/notifications" },
-  { label: "Programs", icon: BookOpen, path: "/programs" },
-  { label: "HR & Staff", icon: UserCog, path: "/employees" },
-  { label: "Housing Units", icon: Home, path: "/housing" },
-  { label: "Facilities", icon: LayoutGrid, path: "/facilities" },
-  { label: "IT Assets", icon: Shield, path: "/assets" },
-  { label: "Volunteers", icon: UserCheck, path: "/volunteers" },
-  { label: "Funding", icon: DollarSign, path: "/funding" },
-  { label: "Donations", icon: Gift, path: "/donations" },
-  { label: "Clinical Notes", icon: FileText, path: "/clinical-notes" },
-  { label: "Incidents", icon: AlertTriangle, path: "/incidents" },
-  { label: "Cultural Terminology", icon: BookOpen, path: "/admin/terminology" },
-  { label: "Ask Red Bear", icon: MessageCircle, path: "/ask-red-bear" },
-];
+const getNavItems = (userRoles = []) => {
+  const isItAdmin = userRoles.includes("it_admin") || userRoles.includes("admin");
+  const isExecutive = userRoles.includes("executive_director") || userRoles.includes("admin");
+  const isDirector = userRoles.includes("director_manager") || isExecutive;
+
+  const items = [
+    { label: "Staff Dashboard", icon: LayoutDashboard, path: "/" },
+  ];
+
+  if (isDirector) {
+    items.push({ label: "Director's Dashboard", icon: Building, path: "/director" });
+  }
+  if (isExecutive) {
+    items.push({ label: "Executive Dashboard", icon: TrendingUp, path: "/executive" });
+    items.push({ label: "CEO Dashboard", icon: Crown, path: "/ceo" });
+  }
+  if (isItAdmin || isExecutive) {
+    items.push({ label: "Admin & IT Portal", icon: Shield, path: "/admin" });
+  }
+
+  items.push(
+    { label: "Intake & Referrals", icon: Inbox, path: "/intake" },
+    { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
+    { label: "My Schedule", icon: Calendar, path: "/schedule" },
+    { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
+    { label: "Staffing Facilitator", icon: UserCheck, path: "/staffing" },
+    { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
+    { label: "Cases", icon: FolderOpen, path: "/cases" },
+    { label: "Placement Homes", icon: Home, path: "/placement-homes" },
+    { label: "Finance & Billing", icon: DollarSign, path: "/finance" },
+    { label: "Reporting & Hub", icon: BarChart3, path: "/reports" },
+    { label: "Quality Assurance", icon: CheckSquare, path: "/qa" },
+    { label: "Fleet & Vehicles", icon: Truck, path: "/fleet" },
+    { label: "Purchase Orders", icon: FileText, path: "/finance/requests" },
+    { label: "Placement Invoices", icon: Receipt, path: "/finance/invoices" },
+    { label: "Financial Ledger", icon: BookOpen, path: "/finance/ledger" },
+    { label: "Clients", icon: Users, path: "/clients" },
+    { label: "Families", icon: Heart, path: "/families" },
+    { label: "Notifications", icon: Bell, path: "/notifications" },
+    { label: "Programs", icon: BookOpen, path: "/programs" },
+    { label: "HR & Staff", icon: UserCog, path: "/employees" },
+    { label: "Housing Units", icon: Home, path: "/housing" },
+    { label: "Facilities", icon: LayoutGrid, path: "/facilities" },
+    { label: "IT Assets", icon: Shield, path: "/assets" },
+    { label: "Volunteers", icon: UserCheck, path: "/volunteers" },
+    { label: "Funding", icon: DollarSign, path: "/funding" },
+    { label: "Donations", icon: Gift, path: "/donations" },
+    { label: "Clinical Notes", icon: FileText, path: "/clinical-notes" },
+    { label: "Incidents", icon: AlertTriangle, path: "/incidents" },
+    { label: "Cultural Terminology", icon: BookOpen, path: "/admin/terminology" },
+    { label: "Ask Red Bear", icon: MessageCircle, path: "/ask-red-bear" },
+  );
+
+  return items;
+};
 
 export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [userRoles, setUserRoles] = useState([]);
 
   React.useEffect(() => {
     api.auth.me().then((u) => {
-      const roles = Array.isArray(u?.roles) ? u.roles : [];
-      const hasAdmin = 
-        u?.role === "admin" ||
-        u?.role === "executive_director" ||
-        roles.includes("executive_director") ||
-        roles.includes("it_admin") ||
-        roles.includes("admin") ||
-        roles.includes("director_manager");
-      setIsAdmin(hasAdmin);
+      const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+      setUserRoles(roles);
     }).catch(() => {});
   }, []);
 
@@ -92,7 +106,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto scrollbar-thin">
-        {getNavItems(isAdmin).map((item) => {
+        {getNavItems(userRoles).map((item) => {
           const isActive = location.pathname === item.path || 
             (item.path !== "/" && location.pathname.startsWith(item.path));
           return (

@@ -15,6 +15,9 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Profile from '@/pages/Profile';
+import DirectorsDashboard from '@/pages/DirectorsDashboard';
+import ExecutiveDashboard from '@/pages/ExecutiveDashboard';
+import CEODashboard from '@/pages/CEODashboard';
 
 // Layout
 import AppLayout from '@/components/layout/AppLayout';
@@ -154,6 +157,9 @@ const AuthenticatedApp = () => {
             <Route path="/admin/profile" element={<Profile />} />
             <Route path="/admin/integrations" element={<AdminIntegrations />} />
             <Route path="/admin/terminology" element={<AdminTerminology />} />
+            <Route path="/director" element={<DirectorsDashboard />} />
+            <Route path="/executive" element={<ExecutiveDashboard />} />
+            <Route path="/ceo" element={<CEODashboard />} />
           </Route>
         </Route>
 
@@ -162,6 +168,9 @@ const AuthenticatedApp = () => {
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/director" element={<DirectorsDashboard />} />
+            <Route path="/executive" element={<ExecutiveDashboard />} />
+            <Route path="/ceo" element={<CEODashboard />} />
             <Route path="/intake" element={<IntakeList />} />
             <Route path="/intake/new" element={<NewIntake />} />
             <Route path="/intake/approvals" element={<SupervisorApprovalQueue />} />

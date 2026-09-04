@@ -17,6 +17,9 @@ import {
   LogOut,
   ChevronDown,
   Shield,
+  Crown,
+  TrendingUp,
+  Building,
 } from "lucide-react";
 
 export default function UserNav() {
@@ -55,14 +58,9 @@ export default function UserNav() {
   }, []);
 
   const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
-  const isAdmin =
-    user?.role === "admin" ||
-    user?.role === "executive_director" ||
-    roles.some((r) =>
-      ["admin", "executive_director", "director_manager", "it_admin"].includes(
-        String(r).toLowerCase()
-      )
-    );
+  const isItAdmin = user?.role === "admin" || roles.some((r) => ["admin", "it_admin"].includes(String(r).toLowerCase()));
+  const isExecutive = user?.role === "admin" || roles.some((r) => ["admin", "executive_director"].includes(String(r).toLowerCase()));
+  const isDirector = isExecutive || roles.some((r) => ["director_manager"].includes(String(r).toLowerCase()));
 
   const getInitials = (name, email) => {
     if (name && name.trim()) {
@@ -161,13 +159,42 @@ export default function UserNav() {
           <span>My Profile & Settings</span>
         </DropdownMenuItem>
 
-        {isAdmin && (
+        {isDirector && (
+          <DropdownMenuItem
+            onClick={() => navigate("/director")}
+            className="cursor-pointer"
+          >
+            <Building className="mr-2 h-4 w-4 text-amber-600" />
+            <span>Director's Dashboard</span>
+          </DropdownMenuItem>
+        )}
+
+        {isExecutive && (
+          <>
+            <DropdownMenuItem
+              onClick={() => navigate("/executive")}
+              className="cursor-pointer"
+            >
+              <TrendingUp className="mr-2 h-4 w-4 text-indigo-600" />
+              <span>Executive Dashboard</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => navigate("/ceo")}
+              className="cursor-pointer"
+            >
+              <Crown className="mr-2 h-4 w-4 text-emerald-600" />
+              <span>CEO Dashboard</span>
+            </DropdownMenuItem>
+          </>
+        )}
+
+        {(isItAdmin || isExecutive) && (
           <DropdownMenuItem
             onClick={() => navigate("/admin")}
             className="cursor-pointer"
           >
-            <LayoutDashboard className="mr-2 h-4 w-4 text-amber-600" />
-            <span>Director's Dashboard</span>
+            <Shield className="mr-2 h-4 w-4 text-blue-600" />
+            <span>Admin & IT Portal</span>
           </DropdownMenuItem>
         )}
 
