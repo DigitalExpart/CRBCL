@@ -110,11 +110,33 @@ def create_app() -> FastAPI:
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
 
+    def _get_cors_headers(request: Request) -> dict[str, str]:
+        origin = request.headers.get("origin")
+        if not origin:
+            return {}
+        if (
+            origin in origins
+            or origin.endswith(".vercel.app")
+            or origin == "https://vercel.app"
+            or origin.endswith("genserver.online")
+            or "localhost" in origin
+            or "127.0.0.1" in origin
+        ):
+            return {
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Expose-Headers": "*",
+            }
+        return {}
+
     # ── Structured Error Handlers ────────────────────────────
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
+        cors = _get_cors_headers(request)
         if isinstance(exc.detail, dict) and "error" in exc.detail:
-            return JSONResponse(status_code=exc.status_code, content=exc.detail)
+            return JSONResponse(status_code=exc.status_code, content=exc.detail, headers=cors)
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -124,10 +146,12 @@ def create_app() -> FastAPI:
                     "details": {},
                 }
             },
+            headers=cors,
         )
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        cors = _get_cors_headers(request)
         errors = {}
         for err in exc.errors():
             field = ".".join(str(loc) for loc in err["loc"] if loc != "body")
@@ -141,11 +165,13 @@ def create_app() -> FastAPI:
                     "details": errors,
                 }
             },
+            headers=cors,
         )
 
     @app.exception_handler(Exception)
     async def general_exception_handler(request: Request, exc: Exception):
         logger.error("Unhandled server exception: %s", exc, exc_info=True)
+        cors = _get_cors_headers(request)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
@@ -155,6 +181,7 @@ def create_app() -> FastAPI:
                     "details": {},
                 }
             },
+            headers=cors,
         )
 
     # ── Mount Routers ────────────────────────────────────────
