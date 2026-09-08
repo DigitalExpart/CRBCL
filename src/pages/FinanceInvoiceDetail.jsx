@@ -2,16 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
-  Receipt, 
   Lock, 
   Ban, 
-  CheckCircle2, 
   AlertCircle, 
-  ShieldCheck, 
-  Calendar, 
-  Home, 
-  User,
-  Info
+  ShieldCheck
 } from 'lucide-react';
 import financeApi from '../api/finance';
 

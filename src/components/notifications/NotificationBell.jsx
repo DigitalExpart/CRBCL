@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { notificationsApi } from "@/api/notifications";
-import { Bell, Check, CheckCheck, Clock, ShieldAlert, Sparkles, ExternalLink, Settings } from "lucide-react";
+import { Bell, Check, CheckCheck, ShieldAlert, Sparkles, ExternalLink, Settings } from "lucide-react";
 import NotificationPreferencesModal from "@/components/NotificationPreferencesModal";
 
 export default function NotificationBell() {

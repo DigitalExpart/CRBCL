@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { assessmentsApi } from '@/api/assessments';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Info,
-  Clock,
   Check,
   X,
   FileText,

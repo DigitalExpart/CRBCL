@@ -371,6 +371,13 @@ PERMISSIONS_DATA = [
         "category": "placement_homes",
     },
     {"key": Permissions.PLACEMENT_HOME_MAP_READ, "name": "View Placement Homes Map", "category": "placement_homes"},
+    # Resource Unit & Recruitment (Sprint 1)
+    {"key": Permissions.RESOURCE_HOME_READ, "name": "Read Resource Homes", "category": "resource_unit"},
+    {"key": Permissions.RESOURCE_HOME_WRITE, "name": "Manage Resource Homes", "category": "resource_unit"},
+    {"key": Permissions.RESOURCE_RECRUITMENT_READ, "name": "Read Resource Recruitment", "category": "resource_unit"},
+    {"key": Permissions.RESOURCE_RECRUITMENT_WRITE, "name": "Manage Resource Recruitment", "category": "resource_unit"},
+    {"key": Permissions.RESOURCE_RECRUITMENT_APPROVE, "name": "Approve Resource Recruitment Applications", "category": "resource_unit"},
+    {"key": Permissions.RESOURCE_DASHBOARD_READ, "name": "View Resource Team Dashboard", "category": "resource_unit"},
     # Documents
     {"key": Permissions.DOCUMENT_READ, "name": "Read Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_UPLOAD, "name": "Upload Documents", "category": "documents"},
@@ -564,6 +571,12 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_UPLOAD,
         Permissions.ADMIN_TEAMS_MANAGE,
         Permissions.TIMELINE_READ,
+        Permissions.RESOURCE_HOME_READ,
+        Permissions.RESOURCE_HOME_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_READ,
+        Permissions.RESOURCE_RECRUITMENT_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_APPROVE,
+        Permissions.RESOURCE_DASHBOARD_READ,
     ],
     "supervisor": [
         Permissions.INTAKE_READ,
@@ -712,6 +725,12 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_READ,
         Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
+        Permissions.RESOURCE_HOME_READ,
+        Permissions.RESOURCE_HOME_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_READ,
+        Permissions.RESOURCE_RECRUITMENT_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_APPROVE,
+        Permissions.RESOURCE_DASHBOARD_READ,
     ],
     "caseworker": [
         Permissions.INTAKE_READ,
@@ -840,6 +859,11 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_READ,
         Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
+        Permissions.RESOURCE_HOME_READ,
+        Permissions.RESOURCE_HOME_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_READ,
+        Permissions.RESOURCE_RECRUITMENT_WRITE,
+        Permissions.RESOURCE_DASHBOARD_READ,
     ],
     "case_aide": [
         Permissions.CLIENT_READ,
@@ -1149,10 +1173,34 @@ TEAMS_DATA = [
         "color": "bg-red-900",
         "description": "Strategic planning, governance, partnerships, funding, organizational leadership.",
     },
+    {
+        "code": "resource_team",
+        "name": "Resource Team",
+        "short_name": "Resource Team",
+        "sort_order": 23,
+        "color": "bg-amber-700",
+        "description": "Kinship care, foster care, customary care, caregiver recruitment, home licensing, capacity, and placement matching.",
+    },
 ]
 
 # ── 5. Standard Lookups ──────────────────────────────────────
 LOOKUPS_DATA = {
+    "departments": [
+        {"key": "resource_team", "label": "Resource Team", "sort_order": 1},
+        {"key": "growing_up_well", "label": "Growing Up Well (Protection Services)", "sort_order": 2},
+        {"key": "enhancement_preservation", "label": "Enhancement & Preservation (Prevention Services)", "sort_order": 3},
+        {"key": "post_majority", "label": "Post-Majority (Young Adults)", "sort_order": 4},
+        {"key": "culture", "label": "Culture & Traditional Healing", "sort_order": 5},
+        {"key": "early_learning", "label": "Early Learning / Daycare", "sort_order": 6},
+        {"key": "sacred_wolf", "label": "Sacred Wolf Lodge", "sort_order": 7},
+        {"key": "policy_data", "label": "Policy & Data", "sort_order": 8},
+        {"key": "finance", "label": "Finance & Administration", "sort_order": 9},
+        {"key": "human_resources", "label": "Human Resources", "sort_order": 10},
+        {"key": "operations", "label": "Operations & Facilities", "sort_order": 11},
+        {"key": "it_systems", "label": "IT & Systems", "sort_order": 12},
+        {"key": "communications", "label": "Communications", "sort_order": 13},
+        {"key": "governance", "label": "Governance & Executive Leadership", "sort_order": 14},
+    ],
     "case_statuses": [
         {"key": "Open", "label": "Open", "sort_order": 1},
         {"key": "Active", "label": "Active", "sort_order": 2},

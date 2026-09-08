@@ -1,24 +1,17 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { familiesApi } from '@/api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users,
-  Heart,
-  Home,
-  MapPin,
-  Sparkles,
   ArrowLeft,
-  Plus,
   Clock,
   FileText,
   AlertTriangle,
-  UserCheck,
 } from "lucide-react";
 import Genogram from '@/components/families/Genogram';
 import FamilyMap from '@/components/families/FamilyMap';

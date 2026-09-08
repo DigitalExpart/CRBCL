@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import {
-  Inbox, ArrowLeft, Shield, AlertTriangle, CheckCircle, Clock,
-  User, Users, Phone, Building, FileText, Lock, Link as LinkIcon,
-  ExternalLink, ChevronRight, Edit3, Send, AlertCircle, History, Sparkles
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Shield, FileText, Lock, Link as LinkIcon,
+  ExternalLink, Edit3, AlertCircle, History
 } from "lucide-react";
 import { referralsApi } from "@/api/referrals";
 import { Button } from "@/components/ui/button";

@@ -15,9 +15,7 @@ import {
   AlertTriangle,
   ChevronRight,
   ShieldCheck,
-  TrendingUp,
   Sparkles,
-  ArrowRight,
 } from "lucide-react";
 import {
   ResponsiveContainer,

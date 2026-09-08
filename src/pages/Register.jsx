@@ -9,24 +9,12 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import AuthLayout from "@/components/auth/AuthLayout";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
-
-const DEPARTMENTS = [
-  "Case Management",
-  "Family Services",
-  "Youth Services",
-  "Cultural Programs",
-  "Mental Health & Wellness",
-  "Administration",
-  "Finance",
-  "Human Resources (HR)",
-  "IT & Systems",
-  "Housing & Community Outreach",
-];
+import { DEPARTMENTS } from "@/constants/departments";
 
 export default function Register() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [department, setDepartment] = useState("Case Management");
+  const [department, setDepartment] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

@@ -401,6 +401,21 @@ class PlacementHomeRepository:
         result = await self.session.execute(query)
         return result.scalars().first()
 
+    async def get_active_primary_caregiver(self, home_id: uuid.UUID) -> PlacementHomeMember | None:
+        """Fetch the currently active primary caregiver for a placement home."""
+        query = (
+            select(PlacementHomeMember)
+            .options(selectinload(PlacementHomeMember.person))
+            .where(
+                PlacementHomeMember.placement_home_id == home_id,
+                PlacementHomeMember.role == "PRIMARY_CAREGIVER",
+                PlacementHomeMember.is_active.is_(True),
+                PlacementHomeMember.deleted_at.is_(None),
+            )
+        )
+        result = await self.session.execute(query)
+        return result.scalars().first()
+
     # ── Licenses ───────────────────────────────────────────────
     async def create_license(self, license_: PlacementHomeLicense) -> PlacementHomeLicense:
         self.session.add(license_)

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/api";
 import { useNavigate } from "react-router-dom";
-import { Users, ChevronRight, Lock } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 
 export const TEAMS = [

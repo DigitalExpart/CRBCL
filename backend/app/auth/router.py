@@ -294,7 +294,12 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
         )
 
     full_name = body.full_name or f"{body.first_name} {body.last_name}".strip()
-    user = await auth.register_user(body.email, body.password, full_name=full_name)
+    user = await auth.register_user(
+        body.email,
+        body.password,
+        full_name=full_name,
+        department=body.department or None,
+    )
 
     # Queue administrative approval notification to Executive Directors & IT Admins
     try:

@@ -3,14 +3,11 @@ import { Link } from 'react-router-dom';
 import { 
   Receipt, 
   PlusCircle, 
-  Calendar, 
-  Home, 
   CheckCircle2, 
   Clock, 
   Ban, 
   ChevronRight, 
-  AlertCircle,
-  ShieldCheck
+  AlertCircle
 } from 'lucide-react';
 import financeApi from '../api/finance';
 import placementHomesApi from '../api/placementHomes';

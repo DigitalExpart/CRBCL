@@ -5,20 +5,13 @@ import {
   Bell,
   Check,
   CheckCheck,
-  Clock,
-  Shield,
   ShieldAlert,
   Settings,
-  Filter,
   RefreshCw,
   Mail,
   MessageSquare,
   RotateCw,
-  AlertCircle,
-  ExternalLink,
-  Search,
-  CheckCircle2,
-  XCircle
+  ExternalLink
 } from 'lucide-react';
 import NotificationPreferencesModal from '../components/NotificationPreferencesModal';
 

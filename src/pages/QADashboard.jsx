@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { reportingApi } from '../api/reporting';
 import {
-  ClipboardCheck,
   AlertTriangle,
   Clock,
   CheckCircle2,
@@ -10,8 +9,6 @@ import {
   Users,
   Plus,
   ArrowRight,
-  ShieldCheck,
-  Calendar,
 } from 'lucide-react';
 
 export default function QADashboard() {

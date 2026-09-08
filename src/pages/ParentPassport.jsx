@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { reportingApi } from '../api/reporting';
-import { Printer, ArrowLeft, User, Phone, FileText } from 'lucide-react';
+import { Printer, ArrowLeft } from 'lucide-react';
 
 export default function ParentPassport() {
   const { id } = useParams();

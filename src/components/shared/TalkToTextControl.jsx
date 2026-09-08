@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Square, Check, X, Volume2 } from 'lucide-react';
+import { Mic, Square, Check, X, Volume2 } from 'lucide-react';
 
 export function TalkToTextControl({ onTranscriptReady, buttonText = "Talk-to-Text", disabled = false }) {
   const [isRecording, setIsRecording] = useState(false);

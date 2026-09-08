@@ -2,18 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fleetApi } from '@/api/fleet';
 import TripCheckoutModal from '@/components/fleet/TripCheckoutModal';
-import TripCheckinModal from '@/components/fleet/TripCheckinModal';
 import FleetMap from '@/components/fleet/FleetMap';
 import {
   ArrowLeft,
-  Truck,
-  Gauge,
-  Calendar,
-  ShieldCheck,
-  Wrench,
-  Navigation,
   Trash2,
-  MapPin,
 } from 'lucide-react';
 
 export default function VehicleDetail() {

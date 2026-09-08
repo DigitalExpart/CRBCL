@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  Inbox, Plus, Search, Filter, AlertTriangle, CheckCircle, Clock,
-  ArrowRight, Shield, User, Users, ChevronRight, FileText, RefreshCw
+  Inbox, Plus, Search, AlertTriangle, CheckCircle, Clock, Users, ChevronRight, FileText, RefreshCw
 } from "lucide-react";
 import { referralsApi } from "@/api/referrals";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";

@@ -4,13 +4,8 @@ import {
   ChevronLeft,
   FileText,
   Shield,
-  Plus,
-  Trash2,
   Save,
   AlertTriangle,
-  Users,
-  Heart,
-  Target,
   Calendar,
   MapPin,
 } from 'lucide-react';

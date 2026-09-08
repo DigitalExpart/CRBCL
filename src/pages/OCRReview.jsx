@@ -4,7 +4,6 @@ import {
   FileText, 
   Check, 
   X, 
-  Edit3, 
   AlertCircle, 
   ShieldCheck,
   Sparkles,

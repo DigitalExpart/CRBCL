@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Languages, Globe, Save, RefreshCw } from 'lucide-react';
+import { Languages, Globe, Save } from 'lucide-react';
 import { api } from '../api/client';
 import { useTerminology } from '../hooks/useTerminology';
 

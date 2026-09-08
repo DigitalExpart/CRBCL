@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Shield, ArrowLeft, CheckCircle2, AlertTriangle, Send,
-  FileText, Users, Clock, RotateCcw, Building, Check, Sparkles
+import { ArrowLeft, CheckCircle2, Send,
+  FileText, Users, RotateCcw
 } from "lucide-react";
 import { referralsApi } from "@/api/referrals";
 import { teamsApi } from "@/api/teams";

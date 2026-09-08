@@ -6,12 +6,9 @@ import {
   ShieldAlert,
   ArrowLeft,
   Heart,
-  Calendar,
-  User,
   Phone,
   Home,
   AlertTriangle,
-  FileCheck,
 } from 'lucide-react';
 
 export default function ChildPassport() {

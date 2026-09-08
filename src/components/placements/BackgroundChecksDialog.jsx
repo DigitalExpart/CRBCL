@@ -2,14 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   Plus,
-  Calendar,
-  User,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  FileText,
-  BadgeCheck,
-  XCircle,
   Gavel,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

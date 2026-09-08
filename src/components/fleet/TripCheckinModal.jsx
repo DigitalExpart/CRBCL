@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { fleetApi } from '@/api/fleet';
-import { X, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export default function TripCheckinModal({ trip, isOpen, onClose, onSuccess }) {
   const [endOdometer, setEndOdometer] = useState(trip?.start_odometer || 0);

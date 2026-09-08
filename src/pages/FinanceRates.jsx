@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   PlusCircle, 
-  Calendar, 
-  Layers, 
-  CheckCircle2, 
   AlertCircle 
 } from 'lucide-react';
 import financeApi from '../api/finance';

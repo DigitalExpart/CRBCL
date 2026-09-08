@@ -6,10 +6,8 @@ import { assessmentTemplatesApi } from "@/api/assessmentTemplates";
 import { plansApi } from "@/api/plans";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft, Edit2, CheckCircle2, AlertTriangle, User, Users, ShieldAlert,
-  FileText, Clock, ArrowRightLeft, Link as LinkIcon, Download, Plus, Lock,
-  Calendar, MapPin, Phone, Mail, Building, History, Check, X, RotateCcw,
-  Sparkles, Stethoscope, AlertCircle, Share2, FolderCheck, ClipboardList, ShieldCheck, Shield
+  ArrowLeft, Edit2, AlertTriangle, User, Users, ShieldAlert, Clock, ArrowRightLeft, Link as LinkIcon, Download, Plus, Lock,
+  Calendar, Phone, Mail, Building, History, Check, RotateCcw, Stethoscope, FolderCheck, ClipboardList, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CaseFormDialog from "@/components/cases/CaseFormDialog";
 import PlansTab from "@/components/plans/PlansTab";

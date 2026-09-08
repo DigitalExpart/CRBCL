@@ -37,6 +37,7 @@ from app.api.v1.qa import router as qa_router
 from app.api.v1.referrals import router as referrals_router
 from app.api.v1.removals import router as removals_router
 from app.api.v1.reporting import router as reporting_router
+from app.api.v1.resource_recruitments import router as resource_recruitments_router
 from app.api.v1.schools import router as schools_router
 from app.api.v1.sprint_b_legacy import router as sprint_b_legacy_router
 from app.api.v1.staffing import router as staffing_router
@@ -89,4 +90,5 @@ api_v1_router.include_router(integrations_router)
 api_v1_router.include_router(ocr_router)
 api_v1_router.include_router(ask_red_bear_router)
 api_v1_router.include_router(communications_router)
+api_v1_router.include_router(resource_recruitments_router)
 api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])

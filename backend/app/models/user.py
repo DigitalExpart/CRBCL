@@ -34,6 +34,8 @@ class User(Base, AuditMixin, SoftDeleteMixin):
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    department: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+
     # Phase 14 MFA Hardening
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     mfa_secret: Mapped[str | None] = mapped_column(String(100), nullable=True)

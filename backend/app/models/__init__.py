@@ -181,6 +181,13 @@ from app.models.reporting_qa import (  # noqa: F401
     SavedReport,
     UserDashboardWidget,
 )
+from app.models.resource_recruitment import (  # noqa: F401
+    ApplicantRole,
+    RecruitmentState,
+    ResourceRecruitment,
+    ResourceRecruitmentApplicant,
+    ResourceRecruitmentHistory,
+)
 from app.models.role import Permission, Role, RolePermission, UserRole  # noqa: F401
 from app.models.school import (  # noqa: F401
     ClientSchoolEnrolment,

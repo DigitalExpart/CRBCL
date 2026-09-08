@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { reportingApi } from '../api/reporting';
 import api from '../api/client';
 import {
-  ClipboardCheck,
   ArrowLeft,
   CheckCircle2,
   XCircle,
   MinusCircle,
-  Save,
-  AlertCircle,
 } from 'lucide-react';
 
 export default function QAAuditNew() {

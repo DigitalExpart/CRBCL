@@ -1,29 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
   Home,
-  AlertCircle,
   Plus,
-  Calendar,
-  User,
-  Building,
-  CheckCircle2,
-  AlertTriangle,
   Clock,
-  DollarSign,
   Globe,
-  ArrowRight,
   LogOut,
   Shield,
   ShieldAlert,
-  Edit2,
-  FileText,
-  BadgeCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';

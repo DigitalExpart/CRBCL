@@ -8,9 +8,7 @@ import {
   Users,
   ChevronRight,
   ShieldAlert,
-  ArrowRight,
-  AlertCircle,
-  FileText
+  ArrowRight
 } from 'lucide-react';
 
 export default function ScheduleStaffingWidget() {

@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from app.models.person import Person
     from app.models.placement import PlacementEpisode
     from app.models.provider import Provider
+    from app.models.resource_recruitment import ResourceRecruitment
     from app.models.user import User
 
 
@@ -103,6 +104,9 @@ class PlacementHome(Base, AuditMixin, SoftDeleteMixin):
         "PlacementEpisode", back_populates="placement_home", lazy="selectin"
     )
     assessments: Mapped[list[Assessment]] = relationship("Assessment", back_populates="placement_home", lazy="selectin")
+    recruitments: Mapped[list[ResourceRecruitment]] = relationship(
+        "ResourceRecruitment", back_populates="resource_home", lazy="selectin"
+    )
 
 
 class PlacementHomeMember(Base, AuditMixin, SoftDeleteMixin):
@@ -119,7 +123,7 @@ class PlacementHomeMember(Base, AuditMixin, SoftDeleteMixin):
     )
     role: Mapped[str] = mapped_column(
         String(50), nullable=False, default="PRIMARY_CAREGIVER"
-    )  # PRIMARY_CAREGIVER, SECONDARY_CAREGIVER, ADULT_HOUSEHOLD_MEMBER, YOUTH_HOUSEHOLD_MEMBER, OTHER
+    )  # PRIMARY_CAREGIVER, SECONDARY_CAREGIVER, SPOUSE_PARTNER, CHILD, OTHER_ADULT, OTHER
     start_date: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)

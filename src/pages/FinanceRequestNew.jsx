@@ -8,9 +8,7 @@ import {
   Send, 
   AlertCircle,
   Building,
-  User,
-  Layers,
-  DollarSign
+  User
 } from 'lucide-react';
 import financeApi from '../api/finance';
 

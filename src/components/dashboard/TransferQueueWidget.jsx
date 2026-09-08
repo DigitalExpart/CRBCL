@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { casesApi } from "@/api/cases";
 import { Link } from "react-router-dom";
-import { ArrowRightLeft, Clock, CheckCircle2, XCircle, ArrowRight, ShieldAlert } from "lucide-react";
+import { ArrowRightLeft, ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fleetApi } from '@/api/fleet';
-import { Wrench, Plus, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
 
 export default function FleetMaintenance() {
   const navigate = useNavigate();

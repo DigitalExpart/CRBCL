@@ -4,20 +4,13 @@ import {
   Home,
   Plus,
   Search,
-  Filter,
-  MapPin,
   Bed,
-  ShieldCheck,
-  AlertTriangle,
-  Users,
   CheckCircle2,
-  Calendar,
-  Phone,
-  Layers,
   Map as MapIcon,
   List as ListIcon,
   ChevronRight,
   ExternalLink,
+  Building,
 } from "lucide-react";
 import { placementHomesApi } from "@/api/placementHomes";
 import { Button } from "@/components/ui/button";
@@ -27,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { toast } from "react-hot-toast";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -200,6 +193,10 @@ export default function PlacementHomesList() {
               Map
             </Button>
           </div>
+          <Button variant="outline" onClick={() => navigate("/resource-team")} className="gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+            <Building className="h-4 w-4" />
+            Resource Team
+          </Button>
           <Button onClick={() => setShowCreateModal(true)} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
             <Plus className="h-4 w-4" />
             Add Placement Home
@@ -379,7 +376,9 @@ export default function PlacementHomesList() {
                         <div className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
                           {home.name}
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">{home.home_code}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          Resource ID: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{home.home_code}</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant="outline" className="text-xs font-normal">

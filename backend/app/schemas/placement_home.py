@@ -14,7 +14,7 @@ class PlacementHomeMemberBase(BaseModel):
     person_id: uuid.UUID
     role: str = Field(
         default="PRIMARY_CAREGIVER",
-        description="PRIMARY_CAREGIVER, SECONDARY_CAREGIVER, ADULT_HOUSEHOLD_MEMBER, YOUTH_HOUSEHOLD_MEMBER, OTHER",
+        description="PRIMARY_CAREGIVER, SECONDARY_CAREGIVER, SPOUSE_PARTNER, CHILD, OTHER_ADULT, OTHER",
     )
     start_date: date = Field(default_factory=date.today)
     end_date: date | None = None

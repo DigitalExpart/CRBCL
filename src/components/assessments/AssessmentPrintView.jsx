@@ -1,6 +1,5 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { CheckCircle, XCircle } from 'lucide-react';
 
 export default function AssessmentPrintView({ assessment }) {
   if (!assessment) return null;

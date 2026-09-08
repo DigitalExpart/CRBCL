@@ -1,6 +1,5 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Shield, FileText, CheckCircle, Hash } from 'lucide-react';
 
 export default function PlanPrintView({ printData }) {
   if (!printData) return null;

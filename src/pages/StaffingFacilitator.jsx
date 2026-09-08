@@ -11,14 +11,9 @@ import {
   Flame,
   FileWarning,
   Plus,
-  ArrowRight,
-  Shield,
-  CheckCircle2,
   ChevronRight,
   X,
-  RefreshCw,
-  Search,
-  Filter
+  RefreshCw
 } from 'lucide-react';
 
 export default function StaffingFacilitator() {

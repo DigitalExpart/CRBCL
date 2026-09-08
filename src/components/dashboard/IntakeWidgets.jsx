@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Inbox, Clock, Plus, AlertTriangle, CheckCircle, ChevronRight
+  Inbox, Plus, ChevronRight
 } from "lucide-react";
 import { referralsApi } from "@/api/referrals";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

@@ -2,15 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { reportingApi } from '../api/reporting';
 import {
-  FileSpreadsheet,
   Download,
   Save,
   Play,
   ArrowLeft,
   CheckSquare,
   Square,
-  Filter,
-  Layers,
 } from 'lucide-react';
 
 export default function ReportBuilder() {

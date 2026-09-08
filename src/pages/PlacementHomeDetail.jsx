@@ -10,21 +10,12 @@ import {
   Eye,
   PhoneCall,
   Bed,
-  FileText,
-  Clock,
   Plus,
-  Calendar,
   AlertTriangle,
-  CheckCircle2,
   MapPin,
-  Mail,
   Phone,
-  Edit,
-  Archive,
   RefreshCw,
-  Trash2,
   Lock,
-  FileCheck,
 } from "lucide-react";
 import { placementHomesApi } from "@/api/placementHomes";
 import { Button } from "@/components/ui/button";
@@ -135,6 +126,19 @@ export default function PlacementHomeDetail() {
       toast.error(err.response?.data?.detail || "Failed to add member.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleEndMembership = async (memberId) => {
+    try {
+      await placementHomesApi.updateMember(id, memberId, {
+        is_active: false,
+        end_date: new Date().toISOString().split("T")[0],
+      });
+      toast.success("Household membership ended and preserved in historical records.");
+      fetchHomeData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to end membership.");
     }
   };
 
@@ -396,13 +400,25 @@ export default function PlacementHomeDetail() {
                       <div className="space-y-0.5">
                         <div className="font-semibold text-slate-900 dark:text-slate-100">{m.person_name || "Person #" + m.person_id}</div>
                         <div className="text-xs text-slate-500">
-                          Role: <Badge variant="outline" className="text-[11px] font-normal">{m.role.replace(/_/g, " ")}</Badge> • Active since {m.start_date}
+                          Role: <Badge variant="outline" className="text-[11px] font-normal">{m.role.replace(/_/g, " ")}</Badge> • Active: {m.start_date}{m.end_date ? ` to ${m.end_date}` : ""}
                         </div>
                         {m.notes && <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">{m.notes}</div>}
                       </div>
-                      <Badge className={m.is_active ? "bg-emerald-500/10 text-emerald-700" : "bg-slate-500/10 text-slate-700"}>
-                        {m.is_active ? "Active Member" : "Former"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className={m.is_active ? "bg-emerald-500/10 text-emerald-700" : "bg-slate-500/10 text-slate-700"}>
+                          {m.is_active ? "Active Member" : "Former"}
+                        </Badge>
+                        {m.is_active && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs text-rose-600 hover:bg-rose-50 h-7"
+                            onClick={() => handleEndMembership(m.id)}
+                          >
+                            End Membership
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -646,8 +662,9 @@ export default function PlacementHomeDetail() {
                 <SelectContent>
                   <SelectItem value="PRIMARY_CAREGIVER">Primary Caregiver</SelectItem>
                   <SelectItem value="SECONDARY_CAREGIVER">Secondary Caregiver</SelectItem>
-                  <SelectItem value="ADULT_HOUSEHOLD_MEMBER">Adult Household Member</SelectItem>
-                  <SelectItem value="YOUTH_HOUSEHOLD_MEMBER">Youth Household Member</SelectItem>
+                  <SelectItem value="SPOUSE_PARTNER">Spouse / Partner</SelectItem>
+                  <SelectItem value="CHILD">Child</SelectItem>
+                  <SelectItem value="OTHER_ADULT">Other Adult</SelectItem>
                   <SelectItem value="OTHER">Other</SelectItem>
                 </SelectContent>
               </Select>

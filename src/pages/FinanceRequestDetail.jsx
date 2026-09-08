@@ -6,14 +6,8 @@ import {
   CheckCircle2, 
   RotateCcw, 
   XCircle, 
-  Clock, 
-  Building, 
-  User, 
-  FileText, 
   AlertCircle,
-  ShieldCheck,
-  Calendar,
-  MessageSquare
+  ShieldCheck
 } from 'lucide-react';
 import financeApi from '../api/finance';
 

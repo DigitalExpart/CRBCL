@@ -7,21 +7,13 @@ import {
   Clock,
   MapPin,
   Plus,
-  Filter,
   ChevronLeft,
   ChevronRight,
-  Shield,
   User,
   FolderLock,
-  Sparkles,
   RefreshCw,
   X,
-  AlertCircle,
-  FileText,
-  Gavel,
-  Users,
-  Home,
-  CheckCircle2
+  FileText
 } from 'lucide-react';
 
 const EVENT_TYPE_COLORS = {

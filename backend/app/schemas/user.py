@@ -5,21 +5,31 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, validator
+
+from app.constants.department import DEPARTMENTS
 
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     full_name: str = Field(min_length=1, max_length=255)
+    department: str | None = None
     role_keys: list[str] = Field(default_factory=list)
     team_ids: list[uuid.UUID] = Field(default_factory=list)
 
+
+    @validator("department")
+    def department_must_be_known(cls, v):
+        if v is not None and v not in DEPARTMENTS:
+            raise ValueError("Invalid department")
+        return v
 
 class UserUpdate(BaseModel):
     full_name: str | None = None
     display_name: str | None = None
     phone: str | None = None
+    department: str | None = None
     is_active: bool | None = None
     role: str | None = None
     role_keys: list[str] | None = None
@@ -33,6 +43,7 @@ class UserResponse(BaseModel):
     full_name: str
     display_name: str | None = None
     phone: str | None = None
+    department: str | None = None
     is_active: bool
     is_verified: bool
     roles: list[str] = []

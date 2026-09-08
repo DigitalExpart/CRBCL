@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { fleetApi } from '@/api/fleet';
-import { X, Navigation, Gauge, FileText } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export default function TripCheckoutModal({ vehicle, isOpen, onClose, onSuccess }) {
   const [purpose, setPurpose] = useState('');

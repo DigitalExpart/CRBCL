@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Shield, Clock, AlertTriangle, CheckCircle2, RotateCcw,
-  Users, ChevronRight, Inbox, RefreshCw, ExternalLink
+import { Clock, CheckCircle2, RotateCcw, RefreshCw, ExternalLink
 } from "lucide-react";
 import { referralsApi } from "@/api/referrals";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";

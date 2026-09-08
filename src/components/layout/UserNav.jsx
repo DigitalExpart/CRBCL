@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { api } from "@/api";
 import {
   User,
-  LayoutDashboard,
   Users,
   LogOut,
   ChevronDown,

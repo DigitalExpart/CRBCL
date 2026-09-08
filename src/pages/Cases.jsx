@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { casesApi } from "@/api/cases";
 import { Link } from "react-router-dom";
-import { Plus, Search, Filter, FolderOpen, AlertCircle, ArrowUpDown, ChevronLeft, ChevronRight, UserCheck, ShieldAlert } from "lucide-react";
+import { Plus, Search, Filter, FolderOpen, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

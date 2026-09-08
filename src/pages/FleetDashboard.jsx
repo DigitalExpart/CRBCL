@@ -7,10 +7,7 @@ import {
   CheckCircle2,
   Navigation,
   Wrench,
-  AlertTriangle,
-  Clock,
   ShieldCheck,
-  Plus,
   ArrowRight,
 } from 'lucide-react';
 

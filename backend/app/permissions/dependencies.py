@@ -38,6 +38,31 @@ def require_permission(permission_key: str) -> Callable:
     return permission_checker
 
 
+def require_any_permission(*permission_keys: str) -> Callable:
+    """Dependency factory checking that the authenticated user possesses at least one of the given permissions."""
+
+    async def permission_checker(
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        perm_service = PermissionService(db)
+        for perm_key in permission_keys:
+            if await perm_service.user_has_permission(user.id, perm_key):
+                return user
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": {
+                    "code": "PERMISSION_DENIED",
+                    "message": f"User does not have any of the required permissions: {', '.join(permission_keys)}",
+                }
+            },
+        )
+
+    return permission_checker
+
+
 def require_team_access() -> Callable:
     """Dependency checking that the authenticated user can access a specific team."""
 

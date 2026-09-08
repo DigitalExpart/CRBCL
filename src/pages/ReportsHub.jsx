@@ -2,17 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { reportingApi } from '../api/reporting';
 import {
-  FileText,
   Plus,
   Play,
   Trash2,
-  BarChart3,
-  Download,
   Users,
   Building,
   DollarSign,
   Briefcase,
-  AlertCircle,
 } from 'lucide-react';
 
 export default function ReportsHub() {

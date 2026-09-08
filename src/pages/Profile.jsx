@@ -13,7 +13,6 @@ import {
   Lock,
   Camera,
   Shield,
-  Phone,
   Mail,
   CheckCircle2,
   AlertCircle,
@@ -21,8 +20,6 @@ import {
   EyeOff,
   Loader2,
   Users,
-  Calendar,
-  Sparkles,
   Trash2,
 } from "lucide-react";
 

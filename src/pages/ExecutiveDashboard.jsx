@@ -13,11 +13,9 @@ import {
   Heart,
   BookOpen,
   DollarSign,
-  TrendingUp,
   Sparkles,
   ChevronRight,
   Activity,
-  Award,
 } from "lucide-react";
 import {
   ResponsiveContainer,

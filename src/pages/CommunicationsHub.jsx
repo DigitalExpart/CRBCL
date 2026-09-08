@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { 
   Megaphone, 
-  Share2, 
   Plus, 
   CheckCircle2, 
   Clock, 
   Send, 
-  ShieldCheck, 
   Lock,
   Globe
 } from 'lucide-react';

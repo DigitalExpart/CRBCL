@@ -3,15 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { fleetApi } from '@/api/fleet';
 import TripCheckoutModal from '@/components/fleet/TripCheckoutModal';
 import {
-  Truck,
   Plus,
   Search,
   ArrowLeft,
-  CheckCircle2,
-  Navigation,
-  Wrench,
-  AlertTriangle,
-  FileText,
 } from 'lucide-react';
 
 export default function VehiclesList() {

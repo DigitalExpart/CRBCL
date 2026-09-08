@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Users, Heart, ArrowRight, Home, Shield, Sparkles } from "lucide-react";
+import { User, Users, Heart, Sparkles } from "lucide-react";
 
 export default function Genogram({ genogramData, onSelectPerson }) {
   const [selectedNode, setSelectedNode] = useState(null);

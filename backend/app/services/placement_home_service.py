@@ -274,6 +274,15 @@ class PlacementHomeService:
         """Attach a household member / caregiver to the placement home."""
         home = await self.get_home(home_id)
 
+        # Invariant: Only one active PRIMARY_CAREGIVER is permitted per home
+        if payload.role == "PRIMARY_CAREGIVER" and payload.is_active:
+            active_primary = await self.repo.get_active_primary_caregiver(home.id)
+            if active_primary:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Placement Home '{home.home_code}' already has an active primary caregiver. End the current active primary caregiver's membership before assigning a new one.",
+                )
+
         member = PlacementHomeMember(
             placement_home_id=home.id,
             person_id=payload.person_id,
@@ -308,6 +317,18 @@ class PlacementHomeService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Home member not found.")
 
         update_data = payload.model_dump(exclude_unset=True)
+
+        # Invariant: Only one active PRIMARY_CAREGIVER is permitted per home
+        target_role = update_data.get("role", member.role)
+        target_active = update_data.get("is_active", member.is_active)
+        if target_role == "PRIMARY_CAREGIVER" and target_active:
+            active_primary = await self.repo.get_active_primary_caregiver(home_id)
+            if active_primary and active_primary.id != member.id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Placement Home already has an active primary caregiver. End the current active primary caregiver's membership before assigning a new one.",
+                )
+
         for k, v in update_data.items():
             setattr(member, k, v)
         member.updated_by = user_id

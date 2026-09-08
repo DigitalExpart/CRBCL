@@ -3,9 +3,6 @@ import {
   Layers, 
   PlusCircle, 
   Building2, 
-  DollarSign, 
-  Calendar, 
-  CheckCircle2, 
   AlertCircle 
 } from 'lucide-react';
 import financeApi from '../api/finance';

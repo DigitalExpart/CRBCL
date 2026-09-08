@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/api";
-import { Plus, Building2, Wrench, AlertTriangle } from "lucide-react";
+import { Plus, Building2, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

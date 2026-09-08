@@ -5,19 +5,13 @@ import { usersApi } from '../api/users';
 import { teamsApi } from '../api/teams';
 import {
   Users,
-  Calendar as CalendarIcon,
-  Clock,
-  MapPin,
   ChevronLeft,
   ChevronRight,
-  Shield,
   FolderLock,
-  Filter,
   User,
   RefreshCw,
   FileText,
-  Activity,
-  Layers
+  Activity
 } from 'lucide-react';
 
 const EVENT_TYPE_COLORS = {

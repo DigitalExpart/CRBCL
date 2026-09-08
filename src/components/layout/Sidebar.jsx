@@ -18,21 +18,18 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   const isExecutive = userRoles.includes("executive_director") && !isItAdmin;
   const isDirector = userRoles.includes("director_manager") && !isItAdmin;
 
-  const items = [
-    { label: "Staff Dashboard", icon: LayoutDashboard, path: "/" },
-  ];
+  const items = [];
 
-  if (isDirector) {
-    items.push({ label: "Director's Dashboard", icon: Building, path: "/director" });
-  }
-  if (isExecutive) {
-    items.push({ label: "Executive Dashboard", icon: TrendingUp, path: "/executive" });
-  }
-  if (isCEO) {
-    items.push({ label: "CEO Dashboard", icon: Crown, path: "/ceo" });
-  }
   if (isItAdmin) {
     items.push({ label: "Admin & IT Portal", icon: Shield, path: "/admin" });
+  } else if (isCEO) {
+    items.push({ label: "CEO Dashboard", icon: Crown, path: "/ceo" });
+  } else if (isExecutive) {
+    items.push({ label: "Executive Dashboard", icon: TrendingUp, path: "/executive" });
+  } else if (isDirector) {
+    items.push({ label: "Director's Dashboard", icon: Building, path: "/director" });
+  } else {
+    items.push({ label: "Staff Dashboard", icon: LayoutDashboard, path: "/" });
   }
 
   items.push(
@@ -44,6 +41,8 @@ const getNavItems = (userRoles = [], userEmail = "") => {
     { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
     { label: "Cases", icon: FolderOpen, path: "/cases" },
     { label: "Placement Homes", icon: Home, path: "/placement-homes" },
+    { label: "Resource Team", icon: Building, path: "/resource-team" },
+    { label: "Recruitment Pipeline", icon: Users, path: "/resource-team/recruitment" },
     { label: "Finance & Billing", icon: DollarSign, path: "/finance" },
     { label: "Reporting & Hub", icon: BarChart3, path: "/reports" },
     { label: "Quality Assurance", icon: CheckSquare, path: "/qa" },

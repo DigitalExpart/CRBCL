@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Inbox, Plus, Trash2, ArrowLeft, Shield, AlertTriangle,
-  User, Users, Phone, Building, FileText, CheckCircle2, Lock
+  Inbox, Plus, Trash2, ArrowLeft, AlertTriangle, Users, FileText, Lock
 } from "lucide-react";
 import { referralsApi } from "@/api/referrals";
 import { clientsApi } from "@/api/clients";

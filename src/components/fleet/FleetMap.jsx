@@ -2,7 +2,7 @@ import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Truck, Navigation, AlertTriangle, ShieldCheck, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 // Fix for default Leaflet marker icons in React bundles
 delete L.Icon.Default.prototype._getIconUrl;

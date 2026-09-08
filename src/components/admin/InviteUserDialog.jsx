@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, UserPlus, Mail, Lock, Eye, EyeOff, Key, Copy, Check, Sparkles, ShieldCheck } from "lucide-react";
+import { Loader2, UserPlus, Mail, Lock, Eye, EyeOff, Copy, Check, Sparkles, ShieldCheck } from "lucide-react";
 import { api } from "@/api";
 import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
 import { toast } from "@/components/ui/use-toast";
+import { DEPARTMENTS } from "@/constants/departments";
 
 const AVAILABLE_ROLES = [
   { key: "ceo", label: "Chief Executive Officer (CEO) — Executive Strategy & Board" },
@@ -28,10 +29,11 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("caseworker");
+  const [department, setDepartment] = useState("");
   const [teamAccess, setTeamAccess] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [createdSuccess, setCreatedSuccess] = useState(null); // { email, password, role, fullName }
+  const [createdSuccess, setCreatedSuccess] = useState(null); // { email, password, role, fullName, department }
   const [copied, setCopied] = useState(false);
 
   const generatePassword = () => {
@@ -49,6 +51,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
     setEmail("");
     setPassword("");
     setRole("caseworker");
+    setDepartment("");
     setTeamAccess([]);
     setError("");
     setCreatedSuccess(null);
@@ -79,6 +82,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
         full_name: fullName.trim() || email.split("@")[0],
         email: email.trim(),
         password: password,
+        department: department,
         role_keys: [role],
         team_access: teamAccess,
       });
@@ -88,6 +92,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
         email: email.trim(),
         password: password,
         role: role,
+        department: department,
       });
 
       toast({
@@ -215,6 +220,25 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
               </div>
 
               <div className="space-y-1.5">
+                <Label>Department</Label>
+                <Select value={department} onValueChange={setDepartment} disabled={loading}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEPARTMENTS.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  Operational department (e.g. Resource Team, Growing Up Well). Distinct from role.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
                 <Label>Assigned Role & Responsibilities</Label>
                 <Select value={role} onValueChange={setRole} disabled={loading}>
                   <SelectTrigger className="w-full">
@@ -282,6 +306,10 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                 <span className="font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
                   {createdSuccess.password}
                 </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground">Department:</span>
+                <span className="font-semibold text-foreground">{createdSuccess.department}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">Assigned Role:</span>

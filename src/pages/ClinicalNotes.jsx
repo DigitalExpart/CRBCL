@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Stethoscope, Lock, Plus, FileText, ShieldAlert, Download, MessageSquarePlus } from 'lucide-react';
+import { Stethoscope, Lock, Plus, FileText, ShieldAlert, MessageSquarePlus } from 'lucide-react';
 import { api } from '../api/client';
 import { TalkToTextControl } from '../components/shared/TalkToTextControl';
 

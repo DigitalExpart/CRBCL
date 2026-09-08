@@ -6,15 +6,12 @@ import {
   Plus,
   Copy,
   PenTool,
-  Printer,
   ChevronRight,
   CheckCircle2,
   Clock,
   Lock,
-  RotateCcw,
   Target,
   Sparkles,
-  AlertCircle,
   UploadCloud,
 } from 'lucide-react';
 import { plansApi } from '../../api/plans';

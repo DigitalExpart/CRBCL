@@ -15,14 +15,10 @@ import {
   UploadCloud,
   Printer,
   Copy,
-  Clock,
-  User,
-  Users,
   AlertTriangle,
   Heart,
   Target,
   Hash,
-  Sparkles,
 } from 'lucide-react';
 import { plansApi } from '../api/plans';
 import PlanSignatureDialog from '../components/plans/PlanSignatureDialog';

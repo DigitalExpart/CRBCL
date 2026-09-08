@@ -10,11 +10,10 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import ImportExport from "@/components/shared/ImportExport";
+import { DEPARTMENTS } from "@/constants/departments";
 
 const EMP_EXPORT_FIELDS = ["first_name","last_name","email","phone","position","department","status","hire_date","supervisor_name","caseload_count"];
 const EMP_LABELS = { first_name:"First Name", last_name:"Last Name", email:"Email", phone:"Phone", position:"Position", department:"Department", status:"Status", hire_date:"Hire Date", supervisor_name:"Supervisor", caseload_count:"Caseload" };
-
-const DEPARTMENTS = ["Administration", "Case Management", "Youth Services", "Family Services", "Mental Health", "Cultural Programs", "Housing", "Finance", "HR", "IT", "Community Outreach"];
 
 export default function Employees() {
   const [employees, setEmployees] = useState([]);

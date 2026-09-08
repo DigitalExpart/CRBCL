@@ -13,10 +13,7 @@ import {
   TrendingUp,
   FileCheck,
   Building,
-  Sparkles,
   ChevronRight,
-  PieChart as PieIcon,
-  ShieldAlert,
   Award,
 } from "lucide-react";
 import {

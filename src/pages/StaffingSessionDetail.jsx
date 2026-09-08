@@ -6,7 +6,6 @@ import { usersApi } from '../api/users';
 import {
   Users,
   Calendar,
-  Clock,
   MapPin,
   CheckCircle2,
   AlertCircle,
@@ -16,13 +15,9 @@ import {
   UserX,
   UserMinus,
   FileText,
-  Shield,
   Save,
-  Check,
-  X,
   RefreshCw,
-  FolderOpen,
-  Send
+  FolderOpen
 } from 'lucide-react';
 
 export default function StaffingSessionDetail() {

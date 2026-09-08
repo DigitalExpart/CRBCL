@@ -162,7 +162,14 @@ class AuthService:
         await self.db.flush()
         return len(sessions)
 
-    async def register_user(self, email: str, password: str, full_name: str = "", default_role_key: str = "caseworker") -> User:
+    async def register_user(
+        self,
+        email: str,
+        password: str,
+        full_name: str = "",
+        default_role_key: str = "caseworker",
+        department: str | None = None,
+    ) -> User:
         """Create a new user account and assign default role."""
         normalized = email.strip().lower()
         user = User(
@@ -170,6 +177,7 @@ class AuthService:
             email_normalized=normalized,
             password_hash=hash_password(password),
             full_name=full_name,
+            department=department,
             is_active=True,
             is_verified=False,
         )
