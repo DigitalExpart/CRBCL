@@ -125,6 +125,24 @@ ROLES_DATA = [
         "description": "Partner agency workers with restricted read-only case access.",
         "is_system": True,
     },
+    {
+        "key": "resource_director",
+        "name": "Resource Director",
+        "description": "Resource Unit leadership, customary care licensing, recruitment pipeline, and placement capacity oversight.",
+        "is_system": True,
+    },
+    {
+        "key": "resource_supervisor",
+        "name": "Resource Supervisor",
+        "description": "Resource Unit supervisory approvals, caregiver recruitment reviews, home study oversight, and license renewals.",
+        "is_system": True,
+    },
+    {
+        "key": "resource_worker",
+        "name": "Resource Worker",
+        "description": "Kinship and foster caregiver recruitment, applicant assessments, placement home support, and orientation.",
+        "is_system": True,
+    },
 ]
 
 # ── 2. Permissions Definition ────────────────────────────────
@@ -571,12 +589,6 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_UPLOAD,
         Permissions.ADMIN_TEAMS_MANAGE,
         Permissions.TIMELINE_READ,
-        Permissions.RESOURCE_HOME_READ,
-        Permissions.RESOURCE_HOME_WRITE,
-        Permissions.RESOURCE_RECRUITMENT_READ,
-        Permissions.RESOURCE_RECRUITMENT_WRITE,
-        Permissions.RESOURCE_RECRUITMENT_APPROVE,
-        Permissions.RESOURCE_DASHBOARD_READ,
     ],
     "supervisor": [
         Permissions.INTAKE_READ,
@@ -725,12 +737,6 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_READ,
         Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
-        Permissions.RESOURCE_HOME_READ,
-        Permissions.RESOURCE_HOME_WRITE,
-        Permissions.RESOURCE_RECRUITMENT_READ,
-        Permissions.RESOURCE_RECRUITMENT_WRITE,
-        Permissions.RESOURCE_RECRUITMENT_APPROVE,
-        Permissions.RESOURCE_DASHBOARD_READ,
     ],
     "caseworker": [
         Permissions.INTAKE_READ,
@@ -859,11 +865,6 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_READ,
         Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
-        Permissions.RESOURCE_HOME_READ,
-        Permissions.RESOURCE_HOME_WRITE,
-        Permissions.RESOURCE_RECRUITMENT_READ,
-        Permissions.RESOURCE_RECRUITMENT_WRITE,
-        Permissions.RESOURCE_DASHBOARD_READ,
     ],
     "case_aide": [
         Permissions.CLIENT_READ,
@@ -992,6 +993,86 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CASE_NOTE_READ,
         Permissions.ASSESSMENT_READ,
         Permissions.PLAN_READ,
+    ],
+    "resource_worker": [
+        Permissions.RESOURCE_HOME_READ,
+        Permissions.RESOURCE_HOME_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_READ,
+        Permissions.RESOURCE_RECRUITMENT_WRITE,
+        Permissions.RESOURCE_DASHBOARD_READ,
+        Permissions.PLACEMENT_HOME_READ,
+        Permissions.PLACEMENT_HOME_CREATE,
+        Permissions.PLACEMENT_HOME_UPDATE,
+        Permissions.PLACEMENT_HOME_MEMBER_MANAGE,
+        Permissions.PLACEMENT_HOME_CAPACITY_READ,
+        Permissions.PLACEMENT_HOME_CAPACITY_MANAGE,
+        Permissions.PLACEMENT_HOME_ASSESSMENT_READ,
+        Permissions.PLACEMENT_HOME_ASSESSMENT_CREATE,
+        Permissions.PLACEMENT_HOME_VISIT_READ,
+        Permissions.PLACEMENT_HOME_VISIT_CREATE,
+        Permissions.PLACEMENT_HOME_VISIT_UPDATE,
+        Permissions.PLACEMENT_HOME_CONTACT_READ,
+        Permissions.PLACEMENT_HOME_CONTACT_CREATE,
+        Permissions.PLACEMENT_HOME_DOCUMENT_READ,
+        Permissions.PLACEMENT_HOME_DOCUMENT_MANAGE,
+        Permissions.PLACEMENT_HOME_MAP_READ,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.TIMELINE_READ,
+    ],
+    "resource_supervisor": [
+        Permissions.RESOURCE_HOME_READ,
+        Permissions.RESOURCE_HOME_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_READ,
+        Permissions.RESOURCE_RECRUITMENT_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_APPROVE,
+        Permissions.RESOURCE_DASHBOARD_READ,
+        Permissions.PLACEMENT_HOME_READ,
+        Permissions.PLACEMENT_HOME_CREATE,
+        Permissions.PLACEMENT_HOME_UPDATE,
+        Permissions.PLACEMENT_HOME_MEMBER_MANAGE,
+        Permissions.PLACEMENT_HOME_CAPACITY_READ,
+        Permissions.PLACEMENT_HOME_CAPACITY_MANAGE,
+        Permissions.PLACEMENT_HOME_ASSESSMENT_READ,
+        Permissions.PLACEMENT_HOME_ASSESSMENT_CREATE,
+        Permissions.PLACEMENT_HOME_VISIT_READ,
+        Permissions.PLACEMENT_HOME_VISIT_CREATE,
+        Permissions.PLACEMENT_HOME_VISIT_UPDATE,
+        Permissions.PLACEMENT_HOME_CONTACT_READ,
+        Permissions.PLACEMENT_HOME_CONTACT_CREATE,
+        Permissions.PLACEMENT_HOME_DOCUMENT_READ,
+        Permissions.PLACEMENT_HOME_DOCUMENT_MANAGE,
+        Permissions.PLACEMENT_HOME_MAP_READ,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.TIMELINE_READ,
+    ],
+    "resource_director": [
+        Permissions.RESOURCE_HOME_READ,
+        Permissions.RESOURCE_HOME_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_READ,
+        Permissions.RESOURCE_RECRUITMENT_WRITE,
+        Permissions.RESOURCE_RECRUITMENT_APPROVE,
+        Permissions.RESOURCE_DASHBOARD_READ,
+        Permissions.PLACEMENT_HOME_READ,
+        Permissions.PLACEMENT_HOME_CREATE,
+        Permissions.PLACEMENT_HOME_UPDATE,
+        Permissions.PLACEMENT_HOME_MEMBER_MANAGE,
+        Permissions.PLACEMENT_HOME_CAPACITY_READ,
+        Permissions.PLACEMENT_HOME_CAPACITY_MANAGE,
+        Permissions.PLACEMENT_HOME_ASSESSMENT_READ,
+        Permissions.PLACEMENT_HOME_ASSESSMENT_CREATE,
+        Permissions.PLACEMENT_HOME_VISIT_READ,
+        Permissions.PLACEMENT_HOME_VISIT_CREATE,
+        Permissions.PLACEMENT_HOME_VISIT_UPDATE,
+        Permissions.PLACEMENT_HOME_CONTACT_READ,
+        Permissions.PLACEMENT_HOME_CONTACT_CREATE,
+        Permissions.PLACEMENT_HOME_DOCUMENT_READ,
+        Permissions.PLACEMENT_HOME_DOCUMENT_MANAGE,
+        Permissions.PLACEMENT_HOME_MAP_READ,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.TIMELINE_READ,
     ],
 }
 
@@ -2074,13 +2155,19 @@ async def seed_database(db: AsyncSession) -> None:
             )
             db.add(role)
             await db.flush()
+        else:
+            role.name = r_data["name"]
+            role.description = r_data["description"]
+            role.is_system = r_data["is_system"]
         role_models[r_data["key"]] = role
 
         # Map permissions
         assigned_perm_keys = ROLE_PERMISSIONS_MAP.get(r_data["key"], [])
+        assigned_perm_ids = set()
         for p_key in assigned_perm_keys:
             if p_key in perm_models:
                 p_model = perm_models[p_key]
+                assigned_perm_ids.add(p_model.id)
                 rp_res = await db.execute(
                     select(RolePermission).where(
                         RolePermission.role_id == role.id,
@@ -2089,6 +2176,14 @@ async def seed_database(db: AsyncSession) -> None:
                 )
                 if not rp_res.scalar_one_or_none():
                     db.add(RolePermission(role_id=role.id, permission_id=p_model.id))
+
+        # Idempotently prune permissions that were removed from system roles
+        existing_rps = (
+            await db.execute(select(RolePermission).where(RolePermission.role_id == role.id))
+        ).scalars().all()
+        for erp in existing_rps:
+            if erp.permission_id not in assigned_perm_ids:
+                await db.delete(erp)
 
     logger.info("Seeding CRBCL Teams...")
     for t_data in TEAMS_DATA:

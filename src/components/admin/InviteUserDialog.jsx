@@ -13,6 +13,9 @@ import { DEPARTMENTS } from "@/constants/departments";
 const AVAILABLE_ROLES = [
   { key: "ceo", label: "Chief Executive Officer (CEO) — Executive Strategy & Board" },
   { key: "executive_director", label: "Executive Director — Cross-Agency Leadership" },
+  { key: "resource_director", label: "Resource Director — Resource Unit Leadership & Licensing" },
+  { key: "resource_supervisor", label: "Resource Supervisor — Approvals & Recruitment Reviews" },
+  { key: "resource_worker", label: "Resource Worker — Kinship & Foster Caregiver Recruitment" },
   { key: "director_manager", label: "Director / Manager — Departmental Operations" },
   { key: "supervisor", label: "Supervisor — Casework Approvals & Reviews" },
   { key: "caseworker", label: "Caseworker — Direct Client & Case Files" },
@@ -126,6 +129,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
     if (roleKey === "executive_director") return "/executive (Executive Dashboard)";
     if (roleKey === "director_manager") return "/director (Director's Dashboard)";
     if (roleKey === "it_admin") return "/admin (IT Admin Portal)";
+    if (roleKey && roleKey.startsWith("resource_")) return "/resource-team (Resource Team Dashboard)";
     return "/ (Staff Dashboard)";
   };
 

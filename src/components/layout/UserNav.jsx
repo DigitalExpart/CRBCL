@@ -100,6 +100,9 @@ export default function UserNav() {
     if (isItAdmin) return "System Administrator";
     if (roles.includes("ceo")) return "Chief Executive Officer";
     if (roles.includes("executive_director")) return "Executive Director";
+    if (roles.includes("resource_director")) return "Resource Director";
+    if (roles.includes("resource_supervisor")) return "Resource Supervisor";
+    if (roles.includes("resource_worker")) return "Resource Worker";
     if (roles.includes("director_manager")) return "Director";
     if (roles.includes("supervisor")) return "Supervisor";
     if (roles.includes("clinical_staff")) return "Clinical";

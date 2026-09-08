@@ -12,6 +12,9 @@ import { toast } from "@/components/ui/use-toast";
 const ROLES = [
   { key: "ceo", label: "Chief Executive Officer (CEO) — Strategic Leadership & Governance" },
   { key: "executive_director", label: "Executive Director — Cross-Agency Leadership" },
+  { key: "resource_director", label: "Resource Director — Resource Unit Leadership & Licensing" },
+  { key: "resource_supervisor", label: "Resource Supervisor — Approvals & Recruitment Reviews" },
+  { key: "resource_worker", label: "Resource Worker — Kinship & Foster Caregiver Recruitment" },
   { key: "director_manager", label: "Director / Manager — Departmental Operations" },
   { key: "supervisor", label: "Supervisor — Casework Approvals & Reviews" },
   { key: "caseworker", label: "Caseworker — Direct Client & Case Management" },

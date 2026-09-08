@@ -26,6 +26,9 @@ import { toast } from "@/components/ui/use-toast";
 const AVAILABLE_ROLES = [
   { key: "ceo", label: "Chief Executive Officer (CEO)" },
   { key: "executive_director", label: "Executive Director" },
+  { key: "resource_director", label: "Resource Director" },
+  { key: "resource_supervisor", label: "Resource Supervisor" },
+  { key: "resource_worker", label: "Resource Worker" },
   { key: "director_manager", label: "Director / Manager" },
   { key: "supervisor", label: "Supervisor" },
   { key: "caseworker", label: "Caseworker" },
@@ -422,6 +425,7 @@ export default function AdminDashboard() {
                               if (r === "ceo") badgeColor = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold";
                               else if (r === "executive_director") badgeColor = "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-bold";
                               else if (r === "director_manager") badgeColor = "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
+                              else if (r.startsWith("resource_")) badgeColor = "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-300/40";
                               else if (r === "it_admin" || r === "admin") badgeColor = "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-bold";
 
                               return (

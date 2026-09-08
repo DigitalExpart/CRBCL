@@ -21,61 +21,110 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.security import create_access_token, hash_password
+from app.core.seed import ROLE_PERMISSIONS_MAP
 from app.models.case import Case
 from app.models.person import Person
 from app.models.placement import PlacementEpisode
 from app.models.placement_home import PlacementHome, PlacementHomeMember
-from app.models.role import Permission, RolePermission
+from app.models.role import Permission, Role, RolePermission, UserRole
+from app.models.user import User
 from app.permissions.constants import Permissions
 
 
-@pytest.fixture
-async def resource_worker_user(
-    db_session: AsyncSession, caseworker_user: dict, seed_roles_and_permissions: dict
-):
-    """Grant Resource Unit worker permissions to caseworker without modifying conftest.py."""
-    caseworker_role = seed_roles_and_permissions["roles"]["caseworker"]
-    for perm_key in [
-        Permissions.RESOURCE_HOME_READ,
-        Permissions.RESOURCE_HOME_WRITE,
-        Permissions.RESOURCE_RECRUITMENT_READ,
-        Permissions.RESOURCE_RECRUITMENT_WRITE,
-        Permissions.RESOURCE_DASHBOARD_READ,
-        Permissions.PLACEMENT_HOME_READ,
-        Permissions.PLACEMENT_HOME_MEMBER_MANAGE,
-    ]:
-        res = await db_session.execute(select(Permission).where(Permission.key == perm_key.value))
-        p = res.scalars().first()
-        if p:
-            rp = RolePermission(role_id=caseworker_role.id, permission_id=p.id)
+async def _create_test_user_with_role(
+    db_session: AsyncSession,
+    role_key: str,
+    role_name: str,
+    email: str,
+    full_name: str,
+    department: str | None = None,
+) -> dict:
+    """Helper to provision a dedicated test user assigned to an explicit operational role."""
+    # 1. Get or create Role
+    res = await db_session.execute(select(Role).where(Role.key == role_key))
+    role = res.scalars().first()
+    if not role:
+        role = Role(key=role_key, name=role_name, is_system=True)
+        db_session.add(role)
+        await db_session.flush()
+
+        # Map permissions from authoritative seed mapping
+        perm_keys = ROLE_PERMISSIONS_MAP.get(role_key, [])
+        for pk in perm_keys:
+            val = pk.value if hasattr(pk, "value") else pk
+            p_res = await db_session.execute(select(Permission).where(Permission.key == val))
+            p = p_res.scalars().first()
+            if not p:
+                p = Permission(key=val, name=val, category="resource_unit")
+                db_session.add(p)
+                await db_session.flush()
+            rp = RolePermission(role_id=role.id, permission_id=p.id)
             db_session.add(rp)
+        await db_session.flush()
+
+    # 2. Create User
+    user = User(
+        email=email,
+        email_normalized=email.lower(),
+        password_hash=hash_password("password123"),
+        full_name=full_name,
+        department=department,
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    # 3. Assign UserRole
+    ur = UserRole(user_id=user.id, role_id=role.id)
+    db_session.add(ur)
     await db_session.commit()
-    return caseworker_user
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
 
 
 @pytest.fixture
-async def resource_approver_user(
-    db_session: AsyncSession, supervisor_user: dict, seed_roles_and_permissions: dict
-):
-    """Grant Resource Unit approval permissions to supervisor without modifying conftest.py."""
-    supervisor_role = seed_roles_and_permissions["roles"]["supervisor"]
-    for perm_key in [
-        Permissions.RESOURCE_HOME_READ,
-        Permissions.RESOURCE_HOME_WRITE,
-        Permissions.RESOURCE_RECRUITMENT_READ,
-        Permissions.RESOURCE_RECRUITMENT_WRITE,
-        Permissions.RESOURCE_RECRUITMENT_APPROVE,
-        Permissions.RESOURCE_DASHBOARD_READ,
-        Permissions.PLACEMENT_HOME_READ,
-        Permissions.PLACEMENT_HOME_MEMBER_MANAGE,
-    ]:
-        res = await db_session.execute(select(Permission).where(Permission.key == perm_key.value))
-        p = res.scalars().first()
-        if p:
-            rp = RolePermission(role_id=supervisor_role.id, permission_id=p.id)
-            db_session.add(rp)
-    await db_session.commit()
-    return supervisor_user
+async def resource_worker_user(db_session: AsyncSession, seed_roles_and_permissions: dict):
+    """Dedicated user with explicit resource_worker operational role."""
+    return await _create_test_user_with_role(
+        db_session=db_session,
+        role_key="resource_worker",
+        role_name="Resource Worker",
+        email=f"resource.worker.{uuid.uuid4().hex[:6]}@crbcl.ca",
+        full_name="Rita ResourceWorker",
+    )
+
+
+@pytest.fixture
+async def resource_supervisor_user(db_session: AsyncSession, seed_roles_and_permissions: dict):
+    """Dedicated user with explicit resource_supervisor operational role."""
+    return await _create_test_user_with_role(
+        db_session=db_session,
+        role_key="resource_supervisor",
+        role_name="Resource Supervisor",
+        email=f"resource.supervisor.{uuid.uuid4().hex[:6]}@crbcl.ca",
+        full_name="Sam ResourceSupervisor",
+    )
+
+
+@pytest.fixture
+async def resource_approver_user(resource_supervisor_user: dict):
+    """Backward-compatible alias for resource_supervisor_user."""
+    return resource_supervisor_user
+
+
+@pytest.fixture
+async def resource_director_user(db_session: AsyncSession, seed_roles_and_permissions: dict):
+    """Dedicated user with explicit resource_director operational role."""
+    return await _create_test_user_with_role(
+        db_session=db_session,
+        role_key="resource_director",
+        role_name="Resource Director",
+        email=f"resource.director.{uuid.uuid4().hex[:6]}@crbcl.ca",
+        full_name="Dana ResourceDirector",
+    )
 
 
 @pytest.mark.asyncio
@@ -864,4 +913,256 @@ async def test_route_security_and_api_authorization(
         json={"applicants": [{"person_id": str(dummy_id), "role": "PRIMARY_APPLICANT"}]},
     )
     assert forbidden_write.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_resource_director_can_approve(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    resource_worker_user: dict,
+    resource_director_user: dict,
+):
+    """Proves Resource Director can approve recruitment applications."""
+    worker_headers = resource_worker_user["headers"]
+    director_headers = resource_director_user["headers"]
+
+    person = Person(first_name="DirectorApprove", last_name="TestCaregiver", gender="FEMALE")
+    db_session.add(person)
+    await db_session.flush()
+
+    # 1. Worker creates application and advances to APPROVAL_REVIEW
+    c_res = await client.post(
+        "/api/v1/resource-recruitment",
+        headers=worker_headers,
+        json={"applicants": [{"person_id": str(person.id), "role": "PRIMARY_APPLICANT"}]},
+    )
+    assert c_res.status_code == 201
+    rec_id = c_res.json()["id"]
+
+    for stage in ["ORIENTATION", "APPLICATION", "ASSESSMENT", "APPROVAL_REVIEW"]:
+        t_res = await client.post(
+            f"/api/v1/resource-recruitment/{rec_id}/transition",
+            headers=worker_headers,
+            json={"to_state": stage},
+        )
+        assert t_res.status_code == 200
+
+    # 2. Resource Director approves
+    appr_res = await client.post(
+        f"/api/v1/resource-recruitment/{rec_id}/transition",
+        headers=director_headers,
+        json={"to_state": "APPROVED"},
+    )
+    assert appr_res.status_code == 200
+    assert appr_res.json()["current_state"] == "APPROVED"
+
+
+@pytest.mark.asyncio
+async def test_resource_director_receives_zero_it_system_admin_permissions(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    resource_director_user: dict,
+):
+    """
+    Regression assertion:
+    Resource Director leads Resource Unit operational work and must NOT receive IT/system administration privileges.
+    Verifies Resource Director receives none of:
+    - admin.users.manage
+    - admin.roles.manage
+    - admin.teams.manage
+    - admin.configuration.manage
+    """
+    from app.permissions.service import PermissionService
+
+    perm_service = PermissionService(db_session)
+    user_id = resource_director_user["user"].id
+
+    assert not await perm_service.user_has_permission(user_id, Permissions.ADMIN_USERS_MANAGE.value)
+    assert not await perm_service.user_has_permission(user_id, Permissions.ADMIN_ROLES_MANAGE.value)
+    assert not await perm_service.user_has_permission(user_id, Permissions.ADMIN_TEAMS_MANAGE.value)
+    assert not await perm_service.user_has_permission(user_id, Permissions.ADMIN_CONFIGURATION_MANAGE.value)
+
+    # Direct API access to admin user administration is denied
+    admin_users_res = await client.get("/api/v1/users", headers=resource_director_user["headers"])
+    assert admin_users_res.status_code == 403
+    assert admin_users_res.json()["error"]["code"] == "PERMISSION_DENIED"
+
+
+@pytest.mark.asyncio
+async def test_generic_caseworker_cannot_access_recruitment_apis(
+    client: AsyncClient,
+    caseworker_user: dict,
+):
+    """Proves generic caseworker cannot access recruitment read, write, or transition APIs."""
+    headers = caseworker_user["headers"]
+    dummy_id = uuid.uuid4()
+
+    # List recruitments
+    res_list = await client.get("/api/v1/resource-recruitment", headers=headers)
+    assert res_list.status_code == 403
+    assert res_list.json()["error"]["code"] == "PERMISSION_DENIED"
+
+    # Create recruitment
+    res_create = await client.post(
+        "/api/v1/resource-recruitment",
+        headers=headers,
+        json={"applicants": [{"person_id": str(dummy_id), "role": "PRIMARY_APPLICANT"}]},
+    )
+    assert res_create.status_code == 403
+    assert res_create.json()["error"]["code"] == "PERMISSION_DENIED"
+
+    # Detail
+    res_detail = await client.get(f"/api/v1/resource-recruitment/{dummy_id}", headers=headers)
+    assert res_detail.status_code == 403
+    assert res_detail.json()["error"]["code"] == "PERMISSION_DENIED"
+
+    # Transition
+    res_trans = await client.post(
+        f"/api/v1/resource-recruitment/{dummy_id}/transition",
+        headers=headers,
+        json={"to_state": "APPLICATION"},
+    )
+    assert res_trans.status_code == 403
+    assert res_trans.json()["error"]["code"] == "PERMISSION_DENIED"
+
+
+@pytest.mark.asyncio
+async def test_generic_caseworker_cannot_access_resource_dashboard(
+    client: AsyncClient,
+    caseworker_user: dict,
+):
+    """Proves generic caseworker cannot access the Resource Unit Dashboard."""
+    headers = caseworker_user["headers"]
+    res = await client.get("/api/v1/resource-recruitment/dashboard", headers=headers)
+    assert res.status_code == 403
+    assert res.json()["error"]["code"] == "PERMISSION_DENIED"
+
+
+@pytest.mark.asyncio
+async def test_it_admin_cannot_access_resource_protected_apis(
+    client: AsyncClient,
+    it_admin_user: dict,
+):
+    """Regression test: proves IT Admin cannot access Resource Unit protected APIs."""
+    headers = it_admin_user["headers"]
+    dummy_id = uuid.uuid4()
+
+    res_list = await client.get("/api/v1/resource-recruitment", headers=headers)
+    assert res_list.status_code == 403
+    assert res_list.json()["error"]["code"] == "PERMISSION_DENIED"
+
+    res_dash = await client.get("/api/v1/resource-recruitment/dashboard", headers=headers)
+    assert res_dash.status_code == 403
+    assert res_dash.json()["error"]["code"] == "PERMISSION_DENIED"
+
+    res_create = await client.post(
+        "/api/v1/resource-recruitment",
+        headers=headers,
+        json={"applicants": [{"person_id": str(dummy_id), "role": "PRIMARY_APPLICANT"}]},
+    )
+    assert res_create.status_code == 403
+    assert res_create.json()["error"]["code"] == "PERMISSION_DENIED"
+
+
+@pytest.mark.asyncio
+async def test_department_resource_team_alone_grants_zero_resource_permissions(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    seed_roles_and_permissions: dict,
+):
+    """Proves that setting Department = Resource Team alone grants zero Resource permissions."""
+    # Create a user in "Resource Team" department but with generic caseworker role
+    dept_user = await _create_test_user_with_role(
+        db_session=db_session,
+        role_key="caseworker",
+        role_name="Caseworker",
+        email=f"dept.worker.{uuid.uuid4().hex[:6]}@crbcl.ca",
+        full_name="Caseworker In Resource Team Dept",
+        department="Resource Team",
+    )
+    headers = dept_user["headers"]
+
+    # Direct API calls fail with 403 Forbidden because department is metadata only
+    res_list = await client.get("/api/v1/resource-recruitment", headers=headers)
+    assert res_list.status_code == 403
+    assert res_list.json()["error"]["code"] == "PERMISSION_DENIED"
+
+    res_dash = await client.get("/api/v1/resource-recruitment/dashboard", headers=headers)
+    assert res_dash.status_code == 403
+    assert res_dash.json()["error"]["code"] == "PERMISSION_DENIED"
+
+
+@pytest.mark.asyncio
+async def test_resource_role_assignment_works_independently_of_department(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    seed_roles_and_permissions: dict,
+):
+    """Proves Resource operational roles work independently of department assignment."""
+    # User 1: Department is "Finance & Administration", but role is resource_worker
+    finance_dept_worker = await _create_test_user_with_role(
+        db_session=db_session,
+        role_key="resource_worker",
+        role_name="Resource Worker",
+        email=f"res.in.fin.{uuid.uuid4().hex[:6]}@crbcl.ca",
+        full_name="Resource Worker in Finance Dept",
+        department="Finance & Administration",
+    )
+    # User 2: Department is None, but role is resource_worker
+    no_dept_worker = await _create_test_user_with_role(
+        db_session=db_session,
+        role_key="resource_worker",
+        role_name="Resource Worker",
+        email=f"res.no.dept.{uuid.uuid4().hex[:6]}@crbcl.ca",
+        full_name="Resource Worker without Dept",
+        department=None,
+    )
+
+    person = Person(first_name="Independent", last_name="DeptTest", gender="MALE")
+    db_session.add(person)
+    await db_session.flush()
+
+    # User 1 has full worker access despite non-Resource department
+    res1 = await client.post(
+        "/api/v1/resource-recruitment",
+        headers=finance_dept_worker["headers"],
+        json={"applicants": [{"person_id": str(person.id), "role": "PRIMARY_APPLICANT"}]},
+    )
+    assert res1.status_code == 201
+
+    # User 2 has full worker access despite having no department
+    res2 = await client.get("/api/v1/resource-recruitment", headers=no_dept_worker["headers"])
+    assert res2.status_code == 200
+    assert len(res2.json()) >= 1
+
+
+@pytest.mark.asyncio
+async def test_protected_clinical_and_reporter_boundaries_remain_unaffected(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    resource_worker_user: dict,
+):
+    """Proves Resource Worker role does NOT grant access to confidential reporter or clinical records."""
+    headers = resource_worker_user["headers"]
+    dummy_id = uuid.uuid4()
+
+    # Confidential intake reporter endpoint requires INTAKE_REPORTER_READ
+    reporter_res = await client.get(f"/api/v1/referrals/{dummy_id}/reporter", headers=headers)
+    assert reporter_res.status_code == 403
+    assert reporter_res.json()["error"]["code"] == "PERMISSION_DENIED"
+
+    # Clinical note endpoint requires CLINICAL_NOTE_CREATE
+    clinical_res = await client.post(
+        "/api/v1/clinical-notes",
+        headers=headers,
+        json={
+            "client_id": str(dummy_id),
+            "note_type": "LPN_OBSERVATION",
+            "subject": "Unauthorized clinical attempt",
+            "narrative": "Resource worker should not write clinical records.",
+        },
+    )
+    assert clinical_res.status_code == 403
+    assert clinical_res.json()["error"]["code"] == "PERMISSION_DENIED"
+
 
