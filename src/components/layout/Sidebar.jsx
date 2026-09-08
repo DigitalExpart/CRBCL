@@ -12,24 +12,52 @@ import {
 import { api } from "@/api";
 
 
+const getStoredUser = () => {
+  try {
+    const s = localStorage.getItem("crbcl_current_user");
+    return s ? JSON.parse(s) : null;
+  } catch {
+    return null;
+  }
+};
+
 const getNavItems = (userRoles = [], userEmail = "") => {
-  const isItAdmin = userRoles.includes("it_admin") || userRoles.includes("admin") || userEmail === "admin@crbcl.ca";
-  const isCEO = userRoles.includes("ceo") && !isItAdmin;
-  const isExecutive = userRoles.includes("executive_director") && !isItAdmin;
-  const isDirector = userRoles.includes("director_manager") && !isItAdmin;
+  const normalizedRoles = (Array.isArray(userRoles) ? userRoles : [userRoles])
+    .map((r) => (typeof r === "string" ? r : (r?.key || r?.name || r?.role || "")))
+    .map((r) => String(r).toLowerCase().trim());
+  const email = String(userEmail || "").toLowerCase().trim();
+
+  const isItAdmin =
+    email === "admin@crbcl.ca" ||
+    email.includes("admin") ||
+    normalizedRoles.includes("it_admin") ||
+    normalizedRoles.includes("admin") ||
+    normalizedRoles.includes("administrator") ||
+    normalizedRoles.includes("system administrator");
+
+  const isCEO = normalizedRoles.includes("ceo");
+  const isExecutive = normalizedRoles.includes("executive_director");
+  const isDirector = normalizedRoles.includes("director_manager");
 
   const items = [];
 
+  // IT Admins always get the Admin & IT Portal at the top
   if (isItAdmin) {
     items.push({ label: "Admin & IT Portal", icon: Shield, path: "/admin" });
-  } else if (isCEO) {
+  }
+
+  // Staff Dashboard is universally accessible to all staff, including administrators
+  items.push({ label: "Staff Dashboard", icon: LayoutDashboard, path: "/" });
+
+  // Leadership Dashboards: Administrators have access to every dashboard, as do their specific roles
+  if (isCEO || isItAdmin) {
     items.push({ label: "CEO Dashboard", icon: Crown, path: "/ceo" });
-  } else if (isExecutive) {
+  }
+  if (isExecutive || isCEO || isItAdmin) {
     items.push({ label: "Executive Dashboard", icon: TrendingUp, path: "/executive" });
-  } else if (isDirector) {
+  }
+  if (isDirector || isExecutive || isCEO || isItAdmin) {
     items.push({ label: "Director's Dashboard", icon: Building, path: "/director" });
-  } else {
-    items.push({ label: "Staff Dashboard", icon: LayoutDashboard, path: "/" });
   }
 
   items.push(
@@ -74,14 +102,19 @@ export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [userRoles, setUserRoles] = useState([]);
-  const [userEmail, setUserEmail] = useState("");
+  const [userRoles, setUserRoles] = useState(() => {
+    const u = getStoredUser();
+    return Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+  });
+  const [userEmail, setUserEmail] = useState(() => getStoredUser()?.email || "");
 
   React.useEffect(() => {
     api.auth.me().then((u) => {
-      const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
-      setUserRoles(roles);
-      setUserEmail(u?.email || "");
+      if (u) {
+        const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+        setUserRoles(roles);
+        setUserEmail(u?.email || "");
+      }
     }).catch(() => {});
   }, []);
 

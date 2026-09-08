@@ -19,6 +19,7 @@ import {
   Crown,
   TrendingUp,
   Building,
+  LayoutDashboard,
 } from "lucide-react";
 
 export default function UserNav() {
@@ -57,10 +58,22 @@ export default function UserNav() {
   }, []);
 
   const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
-  const isItAdmin = user?.role === "admin" || roles.some((r) => ["admin", "it_admin"].includes(String(r).toLowerCase())) || user?.email === "admin@crbcl.ca";
-  const isCEO = roles.some((r) => ["ceo"].includes(String(r).toLowerCase())) && !isItAdmin;
-  const isExecutive = roles.some((r) => ["executive_director"].includes(String(r).toLowerCase())) && !isItAdmin;
-  const isDirector = roles.some((r) => ["director_manager"].includes(String(r).toLowerCase())) && !isItAdmin;
+  const normalizedRoles = roles.map((r) => (typeof r === "string" ? r : (r?.key || r?.name || r?.role || ""))).map((r) => String(r).toLowerCase().trim());
+  const email = String(user?.email || "").toLowerCase().trim();
+
+  const isItAdmin =
+    email === "admin@crbcl.ca" ||
+    email.includes("admin") ||
+    user?.role === "admin" ||
+    user?.role === "it_admin" ||
+    normalizedRoles.includes("admin") ||
+    normalizedRoles.includes("it_admin") ||
+    normalizedRoles.includes("administrator") ||
+    normalizedRoles.includes("system administrator");
+
+  const isCEO = normalizedRoles.includes("ceo");
+  const isExecutive = normalizedRoles.includes("executive_director");
+  const isDirector = normalizedRoles.includes("director_manager");
 
   const getInitials = (name, email) => {
     if (name && name.trim()) {
@@ -160,7 +173,7 @@ export default function UserNav() {
           <span>My Profile & Settings</span>
         </DropdownMenuItem>
 
-        {isDirector && (
+        {(isDirector || isItAdmin) && (
           <DropdownMenuItem
             onClick={() => navigate("/director")}
             className="cursor-pointer"
@@ -170,7 +183,7 @@ export default function UserNav() {
           </DropdownMenuItem>
         )}
 
-        {isExecutive && (
+        {(isExecutive || isItAdmin) && (
           <DropdownMenuItem
             onClick={() => navigate("/executive")}
             className="cursor-pointer"
@@ -180,7 +193,7 @@ export default function UserNav() {
           </DropdownMenuItem>
         )}
 
-        {isCEO && (
+        {(isCEO || isItAdmin) && (
           <DropdownMenuItem
             onClick={() => navigate("/ceo")}
             className="cursor-pointer"
@@ -199,6 +212,14 @@ export default function UserNav() {
             <span>Admin & IT Portal</span>
           </DropdownMenuItem>
         )}
+
+        <DropdownMenuItem
+          onClick={() => navigate("/")}
+          className="cursor-pointer"
+        >
+          <LayoutDashboard className="mr-2 h-4 w-4 text-muted-foreground" />
+          <span>Staff Dashboard</span>
+        </DropdownMenuItem>
 
         <DropdownMenuItem
           onClick={() => navigate("/teams")}

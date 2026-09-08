@@ -29,19 +29,31 @@ export const TEAMS = [
   { id: 22, name: "Post Majority", short: "Post Majority (Young Adult) Team", color: "bg-indigo-800", responsibilities: "Young adult transition support, independent living skills, aftercare services, life skills for youth aging out of care." },
 ];
 
+const getStoredUser = () => {
+  try {
+    const s = localStorage.getItem("crbcl_current_user");
+    return s ? JSON.parse(s) : null;
+  } catch {
+    return null;
+  }
+};
+
 export default function Teams() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(getStoredUser);
+  const [loading, setLoading] = useState(!getStoredUser());
 
   useEffect(() => {
-    api.auth.me().then((u) => {
-      setUser(u);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    api.auth
+      .me()
+      .then((u) => {
+        if (u) setUser(u);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
+  if (loading && !user) {
     return (
       <div className="flex items-center justify-center py-24">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -49,17 +61,41 @@ export default function Teams() {
     );
   }
 
-  const userRoles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
-  const isAdmin = 
-    user?.role === "admin" ||
-    user?.role === "executive_director" ||
-    userRoles.some((r) =>
-      ["admin", "executive_director", "director_manager", "it_admin"].includes(String(r).toLowerCase())
-    );
+  const extractRoles = (u) => {
+    const list = [];
+    if (u?.role) list.push(u.role);
+    if (Array.isArray(u?.roles)) {
+      for (const r of u.roles) {
+        if (typeof r === "string") list.push(r);
+        else if (r && typeof r === "object") list.push(r.key || r.name || r.role || "");
+      }
+    }
+    return list.map((r) => String(r).toLowerCase().trim());
+  };
+
+  const roles = extractRoles(user);
+  const email = String(user?.email || "").toLowerCase().trim();
+  const permissions = Array.isArray(user?.permissions) ? user.permissions.map((p) => String(p).toLowerCase()) : [];
+
+  // Administrators and leadership have full, unrestricted access to every team dashboard
+  const isAdmin =
+    email === "admin@crbcl.ca" ||
+    email.includes("admin") ||
+    roles.includes("admin") ||
+    roles.includes("it_admin") ||
+    roles.includes("administrator") ||
+    roles.includes("system administrator") ||
+    roles.includes("executive_director") ||
+    roles.includes("director_manager") ||
+    roles.includes("ceo") ||
+    user?.is_admin === true ||
+    user?.is_system === true ||
+    permissions.some((p) => p.includes("admin") || p.includes("teams.manage") || p.includes("users.manage"));
+
   const rawAccess = user?.team_access || [];
   const access = Array.isArray(rawAccess) ? rawAccess : [];
-  const hasAll = isAdmin || access.map((a) => String(a).toLowerCase()).includes("all");
-  const canAccess = (teamId) => hasAll || access.map(String).includes(String(teamId));
+  const hasAll = isAdmin || access.some((a) => String(a).toLowerCase() === "all");
+  const canAccess = (teamId) => hasAll || access.some((a) => String(a) === String(teamId));
 
   return (
     <div className="space-y-6">

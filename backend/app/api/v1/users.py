@@ -38,9 +38,19 @@ def _build_user_response(user: User) -> UserResponse:
             except Exception:
                 team_access = []
 
-    if not team_access and any(
-        r in roles for r in ["executive_director", "it_admin", "director_manager", "admin"]
+    is_admin_or_leadership = (
+        user.email == "admin@crbcl.ca"
+        or "admin" in (user.email or "").lower()
+        or getattr(user, "is_system", False)
+        or any(r in roles for r in ["executive_director", "it_admin", "director_manager", "admin", "ceo"])
+    )
+
+    if (user.email == "admin@crbcl.ca" or getattr(user, "is_system", False)) and not any(
+        r in roles for r in ["admin", "it_admin"]
     ):
+        roles.append("it_admin")
+
+    if is_admin_or_leadership and (not team_access or "all" not in [str(t).lower() for t in team_access]):
         team_access = ["all"]
 
     return UserResponse(

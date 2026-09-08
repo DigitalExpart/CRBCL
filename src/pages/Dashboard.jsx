@@ -23,25 +23,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ cases: [], clients: [], families: [], programs: [], donations: [], funding: [], incidents: [], appointments: [] });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    api.auth.me().then((u) => {
-      const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
-      const isItAdmin = u?.role === "admin" || roles.includes("admin") || roles.includes("it_admin") || u?.email === "admin@crbcl.ca";
-      const isCEO = roles.includes("ceo") && !isItAdmin;
-      const isExecutive = roles.includes("executive_director") && !isItAdmin;
-      const isDirector = roles.includes("director_manager") && !isItAdmin;
 
-      if (isItAdmin) {
-        window.location.replace("/admin");
-      } else if (isCEO) {
-        window.location.replace("/ceo");
-      } else if (isExecutive) {
-        window.location.replace("/executive");
-      } else if (isDirector) {
-        window.location.replace("/director");
-      }
-    }).catch(() => {});
-  }, []);
 
   useEffect(() => {
     async function load() {

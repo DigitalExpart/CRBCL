@@ -40,6 +40,29 @@ class PermissionService:
             - None if user has unrestricted team access (e.g. Executive Director role / Super-scoped)
             - set of team UUIDs otherwise
         """
+        # Global administrators, executives, and leadership have unrestricted team access (None)
+        user_res = await self.db.execute(select(User).where(User.id == user_id))
+        user_obj = user_res.scalar_one_or_none()
+        if user_obj and (
+            user_obj.email == "admin@crbcl.ca"
+            or "admin" in (user_obj.email or "").lower()
+            or getattr(user_obj, "is_system", False)
+        ):
+            return None
+
+        roles_stmt = (
+            select(Role.key)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .where(
+                UserRole.user_id == user_id,
+                Role.is_active == True,  # noqa: E712
+            )
+        )
+        roles_res = await self.db.execute(roles_stmt)
+        user_roles = set(roles_res.scalars().all())
+        if any(r in user_roles for r in ["admin", "it_admin", "executive_director", "ceo", "director_manager"]):
+            return None
+
         # Fetch active team memberships
         memberships_res = await self.db.execute(
             select(TeamMembership.team_id).where(
