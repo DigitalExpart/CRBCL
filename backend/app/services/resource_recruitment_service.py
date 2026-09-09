@@ -20,9 +20,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.audit.service import AuditService
+from app.models.caregiver_training import CaregiverTraining
 from app.models.person import Person
-from app.models.placement import PlacementEpisode
-from app.models.placement_home import PlacementHome, PlacementHomeLicense, PlacementHomeMember
+from app.models.placement import BackgroundCheck, PlacementEpisode
+from app.models.placement_home import (
+    PlacementHome,
+    PlacementHomeLicense,
+    PlacementHomeMember,
+    PlacementHomeVisit,
+)
 from app.models.resource_recruitment import (
     RecruitmentState,
     ResourceRecruitment,
@@ -506,6 +512,114 @@ class ResourceRecruitmentService:
         renewals_res = await self.session.execute(renewals_stmt)
         upcoming_renewals = int(renewals_res.scalar() or 0)
 
+        # 7. Sprint 2 Compliance Telemetry
+        thirty_days = today + timedelta(days=30)
+
+        # 7a. Clearances expiring in next 30 days
+        clearances_exp_stmt = select(func.count(BackgroundCheck.id)).where(
+            BackgroundCheck.placement_home_id.isnot(None),
+            BackgroundCheck.deleted_at.is_(None),
+            BackgroundCheck.expiry_date.isnot(None),
+            BackgroundCheck.expiry_date >= today,
+            BackgroundCheck.expiry_date <= thirty_days,
+        )
+        clearances_exp_res = await self.session.execute(clearances_exp_stmt)
+        clearances_expiring_30_days = int(clearances_exp_res.scalar() or 0)
+
+        # 7b. Clearances expired
+        clearances_expired_stmt = select(func.count(BackgroundCheck.id)).where(
+            BackgroundCheck.placement_home_id.isnot(None),
+            BackgroundCheck.deleted_at.is_(None),
+            (BackgroundCheck.renewal_status == "EXPIRED")
+            | (
+                (BackgroundCheck.expiry_date.isnot(None))
+                & (BackgroundCheck.expiry_date < today)
+            ),
+        )
+        clearances_expired_res = await self.session.execute(clearances_expired_stmt)
+        clearances_expired = int(clearances_expired_res.scalar() or 0)
+
+        # 7c. Caregiver training due / expiring in 30 days
+        training_due_stmt = select(func.count(CaregiverTraining.id)).where(
+            CaregiverTraining.deleted_at.is_(None),
+            CaregiverTraining.status != "EXPIRED",
+            CaregiverTraining.expiry_date.isnot(None),
+            CaregiverTraining.expiry_date >= today,
+            CaregiverTraining.expiry_date <= thirty_days,
+        )
+        training_due_res = await self.session.execute(training_due_stmt)
+        training_due_30_days = int(training_due_res.scalar() or 0)
+
+        # 7d. Caregiver training expired
+        training_expired_stmt = select(func.count(CaregiverTraining.id)).where(
+            CaregiverTraining.deleted_at.is_(None),
+            CaregiverTraining.expiry_date.isnot(None),
+            CaregiverTraining.expiry_date < today,
+        )
+        training_expired_res = await self.session.execute(training_expired_stmt)
+        training_expired = int(training_expired_res.scalar() or 0)
+
+        # 7e. Inspections overdue (scheduled visit date was in the past and completed_date is None)
+        inspections_overdue_stmt = select(func.count(PlacementHomeVisit.id)).where(
+            PlacementHomeVisit.deleted_at.is_(None),
+            PlacementHomeVisit.visit_date < today,
+            PlacementHomeVisit.completed_date.is_(None),
+        )
+        inspections_overdue_res = await self.session.execute(inspections_overdue_stmt)
+        inspections_overdue = int(inspections_overdue_res.scalar() or 0)
+
+        # 7f. Outstanding corrective actions
+        actions_stmt = select(func.count(PlacementHomeVisit.id)).where(
+            PlacementHomeVisit.deleted_at.is_(None),
+            PlacementHomeVisit.corrective_action_status.in_(["REQUIRED", "PENDING", "IN_PROGRESS", "OVERDUE"]),
+        )
+        actions_res = await self.session.execute(actions_stmt)
+        outstanding_corrective_actions = int(actions_res.scalar() or 0)
+
+        # 7g. Non-compliant homes count (distinct active homes with expired clearance, overdue corrective action, or expired license)
+        non_compliant_homes_stmt = (
+            select(func.count(func.distinct(PlacementHome.id)))
+            .where(
+                PlacementHome.status == "ACTIVE",
+                PlacementHome.deleted_at.is_(None),
+                PlacementHome.is_archived.is_(False),
+                (
+                    PlacementHome.id.in_(
+                        select(BackgroundCheck.placement_home_id).where(
+                            BackgroundCheck.deleted_at.is_(None),
+                            (BackgroundCheck.renewal_status == "EXPIRED")
+                            | (
+                                (BackgroundCheck.expiry_date.isnot(None))
+                                & (BackgroundCheck.expiry_date < today)
+                            ),
+                        )
+                    )
+                    | PlacementHome.id.in_(
+                        select(PlacementHomeVisit.placement_home_id).where(
+                            PlacementHomeVisit.deleted_at.is_(None),
+                            PlacementHomeVisit.corrective_action_status.in_(
+                                ["REQUIRED", "PENDING", "IN_PROGRESS", "OVERDUE"]
+                            ),
+                            (
+                                (PlacementHomeVisit.corrective_action_due_date.isnot(None))
+                                & (PlacementHomeVisit.corrective_action_due_date < today)
+                            )
+                            | (PlacementHomeVisit.corrective_action_status == "OVERDUE"),
+                        )
+                    )
+                    | PlacementHome.id.in_(
+                        select(PlacementHomeLicense.placement_home_id).where(
+                            PlacementHomeLicense.deleted_at.is_(None),
+                            PlacementHomeLicense.status == "ACTIVE",
+                            PlacementHomeLicense.expiry_date < today,
+                        )
+                    )
+                ),
+            )
+        )
+        non_comp_res = await self.session.execute(non_compliant_homes_stmt)
+        non_compliant_homes_count = int(non_comp_res.scalar() or 0)
+
         return ResourceDashboardMetrics(
             active_resource_homes=active_homes,
             available_beds=available_beds,
@@ -515,4 +629,12 @@ class ResourceRecruitmentService:
             applications_awaiting_review=awaiting_review,
             upcoming_home_renewals=upcoming_renewals,
             total_applications=total_applications,
+            clearances_expiring_30_days=clearances_expiring_30_days,
+            clearances_expired=clearances_expired,
+            training_due_30_days=training_due_30_days,
+            training_expired=training_expired,
+            licenses_nearing_renewal_90_days=upcoming_renewals,
+            inspections_overdue=inspections_overdue,
+            outstanding_corrective_actions=outstanding_corrective_actions,
+            non_compliant_homes_count=non_compliant_homes_count,
         )

@@ -24,8 +24,10 @@ from app.core.database import AuditMixin, Base, SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.assessment import Assessment
+    from app.models.caregiver_training import CaregiverTraining
+    from app.models.document import Document
     from app.models.person import Person
-    from app.models.placement import PlacementEpisode
+    from app.models.placement import BackgroundCheck, PlacementEpisode
     from app.models.provider import Provider
     from app.models.resource_recruitment import ResourceRecruitment
     from app.models.user import User
@@ -107,6 +109,12 @@ class PlacementHome(Base, AuditMixin, SoftDeleteMixin):
     recruitments: Mapped[list[ResourceRecruitment]] = relationship(
         "ResourceRecruitment", back_populates="resource_home", lazy="selectin"
     )
+    trainings: Mapped[list[CaregiverTraining]] = relationship(
+        "CaregiverTraining", back_populates="placement_home", cascade="all, delete-orphan", lazy="selectin"
+    )
+    background_checks: Mapped[list[BackgroundCheck]] = relationship(
+        "BackgroundCheck", back_populates="placement_home", cascade="all, delete-orphan", lazy="selectin"
+    )
 
 
 class PlacementHomeMember(Base, AuditMixin, SoftDeleteMixin):
@@ -160,11 +168,22 @@ class PlacementHomeLicense(Base, AuditMixin, SoftDeleteMixin):
         String(255), nullable=False, default="Ministry of Social Services / First Nation Authority"
     )
     max_capacity: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    placement_restrictions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    min_age: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_age: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True
+    )
     conditions: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     placement_home: Mapped[PlacementHome] = relationship("PlacementHome", back_populates="licenses")
+    approver: Mapped[User | None] = relationship("User", foreign_keys=[approved_by], lazy="joined")
+    document: Mapped[Document | None] = relationship("Document", foreign_keys=[document_id], lazy="joined")
 
 
 class PlacementHomeVisit(Base, AuditMixin, SoftDeleteMixin):
@@ -180,14 +199,25 @@ class PlacementHomeVisit(Base, AuditMixin, SoftDeleteMixin):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     visit_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    completed_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     visit_type: Mapped[str] = mapped_column(
         String(50), nullable=False, default="ROUTINE_INSPECTION"
     )  # ROUTINE_INSPECTION, ANNUAL_REVIEW, UNANNOUNCED_CHECK, INCIDENT_FOLLOWUP, SUPPORT_VISIT
     purpose: Mapped[str] = mapped_column(String(255), nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     observations: Mapped[str | None] = mapped_column(Text, nullable=True)
+    findings: Mapped[str | None] = mapped_column(Text, nullable=True)
+    deficiencies: Mapped[str | None] = mapped_column(Text, nullable=True)
+    corrective_actions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    corrective_action_due_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
+    corrective_action_status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="NONE"
+    )  # NONE, PENDING, COMPLETED, OVERDUE
     follow_up_required: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     follow_up_due_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True
+    )
     status: Mapped[str] = mapped_column(
         String(50), nullable=False, default="COMPLETED"
     )  # SCHEDULED, COMPLETED, CANCELLED
@@ -195,6 +225,7 @@ class PlacementHomeVisit(Base, AuditMixin, SoftDeleteMixin):
     # Relationships
     placement_home: Mapped[PlacementHome] = relationship("PlacementHome", back_populates="visits")
     worker: Mapped[User] = relationship("User", foreign_keys=[worker_id], lazy="joined")
+    document: Mapped[Document | None] = relationship("Document", foreign_keys=[document_id], lazy="joined")
 
 
 class PlacementHomeContactLog(Base, AuditMixin, SoftDeleteMixin):

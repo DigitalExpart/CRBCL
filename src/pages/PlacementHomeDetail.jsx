@@ -16,6 +16,12 @@ import {
   Phone,
   RefreshCw,
   Lock,
+  ShieldAlert,
+  GraduationCap,
+  Wrench,
+  CheckCircle,
+  XCircle,
+  FileText,
 } from "lucide-react";
 import { placementHomesApi } from "@/api/placementHomes";
 import { Button } from "@/components/ui/button";
@@ -36,6 +42,10 @@ export default function PlacementHomeDetail() {
   const [home, setHome] = useState(null);
   const [backgroundChecks, setBackgroundChecks] = useState([]);
   const [placementHistory, setPlacementHistory] = useState([]);
+  const [assessments, setAssessments] = useState([]);
+  const [clearances, setClearances] = useState([]);
+  const [trainings, setTrainings] = useState([]);
+  const [complianceSummary, setComplianceSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -56,6 +66,9 @@ export default function PlacementHomeDetail() {
     expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     issuing_authority: "Ministry of Social Services / First Nation Authority",
     max_capacity: 2,
+    placement_restrictions: "",
+    min_age: "",
+    max_age: "",
     conditions: "",
     notes: "",
   });
@@ -67,6 +80,11 @@ export default function PlacementHomeDetail() {
     purpose: "",
     summary: "",
     observations: "",
+    findings: "",
+    deficiencies: "",
+    corrective_actions: "",
+    corrective_action_due_date: "",
+    corrective_action_status: "NONE",
     follow_up_required: false,
     follow_up_due_date: "",
     status: "COMPLETED",
@@ -82,19 +100,78 @@ export default function PlacementHomeDetail() {
     follow_up_action: "",
   });
 
+  // Sprint 2 Modals State
+  const [showAssessModal, setShowAssessModal] = useState(false);
+  const [assessForm, setAssessForm] = useState({
+    title: "Caregiver & Home Study Assessment",
+    assessment_type: "HOME_STUDY",
+    primary_person_id: "",
+    notes: "",
+  });
+
+  const [showClearanceModal, setShowClearanceModal] = useState(false);
+  const [clearanceForm, setClearanceForm] = useState({
+    subject_id: "",
+    subject_name: "",
+    check_type: "CRIMINAL_RECORD_CHECK",
+    request_date: new Date().toISOString().split("T")[0],
+    conducted_by_agency: "RCMP / Regina Police Service",
+    clearance_reference_number: "",
+    risk_assessment_notes: "",
+  });
+
+  const [showTrainingModal, setShowTrainingModal] = useState(false);
+  const [trainingForm, setTrainingForm] = useState({
+    person_id: "",
+    training_type: "PRE_SERVICE_PRIDE",
+    course_name: "PRIDE Pre-Service Program",
+    provider_name: "Saskatchewan Foster Families Association",
+    completion_date: new Date().toISOString().split("T")[0],
+    expiry_date: "",
+    notes: "",
+  });
+
+  const [showCorrectiveModal, setShowCorrectiveModal] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState(null);
+  const [correctiveForm, setCorrectiveForm] = useState({
+    corrective_action_status: "COMPLETED",
+    findings: "",
+    deficiencies: "",
+    corrective_actions: "",
+    corrective_action_due_date: "",
+    completed_date: new Date().toISOString().split("T")[0],
+  });
+
   const [submitting, setSubmitting] = useState(false);
 
   const fetchHomeData = async () => {
     try {
       setLoading(true);
-      const [homeRes, bgRes, historyRes] = await Promise.all([
+      const [
+        homeRes,
+        bgRes,
+        historyRes,
+        assessRes,
+        clearancesRes,
+        trainingRes,
+        compRes,
+      ] = await Promise.all([
         placementHomesApi.get(id),
         placementHomesApi.getBackgroundChecks(id),
         placementHomesApi.getPlacementHistory(id),
+        placementHomesApi.getAssessments(id).catch(() => ({ data: [] })),
+        placementHomesApi.getClearances(id).catch(() => ({ data: [] })),
+        placementHomesApi.getTrainings(id).catch(() => ({ data: [] })),
+        placementHomesApi.getTrainingCompliance(id).catch(() => ({ data: null })),
       ]);
       setHome(homeRes.data);
       setBackgroundChecks(bgRes.data || []);
       setPlacementHistory(historyRes.data || []);
+      setAssessments(assessRes.data || []);
+      setClearances(clearancesRes.data || []);
+      setTrainings(trainingRes.data || []);
+      setComplianceSummary(compRes.data || null);
+
       if (homeRes.data.total_capacity) {
         setRenewForm((prev) => ({ ...prev, max_capacity: homeRes.data.total_capacity }));
       }
@@ -109,6 +186,113 @@ export default function PlacementHomeDetail() {
   useEffect(() => {
     fetchHomeData();
   }, [id]);
+
+  const handleCreateAssessment = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await placementHomesApi.createAssessment(id, {
+        title: assessForm.title,
+        assessment_type: assessForm.assessment_type,
+        placement_home_id: id,
+        primary_person_id: assessForm.primary_person_id || undefined,
+        notes: assessForm.notes || undefined,
+      });
+      toast.success("Caregiver assessment initiated.");
+      setShowAssessModal(false);
+      fetchHomeData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to initiate assessment.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateClearance = async (e) => {
+    e.preventDefault();
+    if (!clearanceForm.subject_id) {
+      toast.error("Caregiver Person ID is required for clearance.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await placementHomesApi.createClearance(id, {
+        subject_type: "PERSON",
+        subject_id: clearanceForm.subject_id,
+        subject_name: clearanceForm.subject_name || "Caregiver Subject",
+        check_type: clearanceForm.check_type,
+        placement_home_id: id,
+        request_date: clearanceForm.request_date,
+        conducted_by_agency: clearanceForm.conducted_by_agency,
+        clearance_reference_number: clearanceForm.clearance_reference_number,
+        risk_assessment_notes: clearanceForm.risk_assessment_notes,
+      });
+      toast.success("Clearance check requested.");
+      setShowClearanceModal(false);
+      fetchHomeData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to record clearance.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateTraining = async (e) => {
+    e.preventDefault();
+    if (!trainingForm.person_id) {
+      toast.error("Caregiver Person ID is required.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await placementHomesApi.createTraining(id, {
+        person_id: trainingForm.person_id,
+        placement_home_id: id,
+        training_type: trainingForm.training_type,
+        course_name: trainingForm.course_name,
+        provider_name: trainingForm.provider_name,
+        completion_date: trainingForm.completion_date,
+        expiry_date: trainingForm.expiry_date || undefined,
+        notes: trainingForm.notes || undefined,
+      });
+      toast.success("Caregiver training completion recorded.");
+      setShowTrainingModal(false);
+      fetchHomeData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to record training.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOpenCorrectiveModal = (visit) => {
+    setSelectedVisit(visit);
+    setCorrectiveForm({
+      corrective_action_status: visit.corrective_action_status || "COMPLETED",
+      findings: visit.findings || "",
+      deficiencies: visit.deficiencies || "",
+      corrective_actions: visit.corrective_actions || "",
+      corrective_action_due_date: visit.corrective_action_due_date || "",
+      completed_date: visit.completed_date || new Date().toISOString().split("T")[0],
+    });
+    setShowCorrectiveModal(true);
+  };
+
+  const handleUpdateCorrectiveAction = async (e) => {
+    e.preventDefault();
+    if (!selectedVisit) return;
+    try {
+      setSubmitting(true);
+      await placementHomesApi.updateCorrectiveAction(id, selectedVisit.id, correctiveForm);
+      toast.success("Inspection corrective action updated.");
+      setShowCorrectiveModal(false);
+      fetchHomeData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to update corrective action.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleAddMember = async (e) => {
     e.preventDefault();
@@ -274,7 +458,16 @@ export default function PlacementHomeDetail() {
                 <RefreshCw className="h-4 w-4" /> Renew Licence
               </Button>
               <Button size="sm" variant="outline" onClick={() => setShowVisitModal(true)} className="gap-1.5">
-                <Eye className="h-4 w-4" /> Log Visit
+                <Eye className="h-4 w-4" /> Log Inspection
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowAssessModal(true)} className="gap-1.5">
+                <ClipboardList className="h-4 w-4" /> New Assessment
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowClearanceModal(true)} className="gap-1.5">
+                <ShieldCheck className="h-4 w-4" /> Record Clearance
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowTrainingModal(true)} className="gap-1.5">
+                <GraduationCap className="h-4 w-4" /> Record Training
               </Button>
               <Button size="sm" variant="outline" onClick={() => setShowContactModal(true)} className="gap-1.5">
                 <PhoneCall className="h-4 w-4" /> Log Contact
@@ -310,10 +503,13 @@ export default function PlacementHomeDetail() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 flex-wrap h-auto">
           <TabsTrigger value="overview" className="gap-1.5"><Home className="h-4 w-4" /> Overview</TabsTrigger>
-          <TabsTrigger value="members" className="gap-1.5"><Users className="h-4 w-4" /> Members ({home.members?.length || 0})</TabsTrigger>
+          <TabsTrigger value="members" className="gap-1.5"><Users className="h-4 w-4" /> Caregivers & Household ({home.members?.length || 0})</TabsTrigger>
+          <TabsTrigger value="assessments" className="gap-1.5"><ClipboardList className="h-4 w-4" /> Assessments ({assessments.length})</TabsTrigger>
+          <TabsTrigger value="clearances" className="gap-1.5"><ShieldCheck className="h-4 w-4" /> Clearances ({clearances.length || backgroundChecks.length})</TabsTrigger>
+          <TabsTrigger value="training" className="gap-1.5"><GraduationCap className="h-4 w-4" /> Training ({trainings.length})</TabsTrigger>
           <TabsTrigger value="licensing" className="gap-1.5"><Award className="h-4 w-4" /> Licensing ({home.licenses?.length || 0})</TabsTrigger>
-          <TabsTrigger value="background" className="gap-1.5"><ShieldCheck className="h-4 w-4" /> Background Checks ({backgroundChecks.length})</TabsTrigger>
-          <TabsTrigger value="visits" className="gap-1.5"><Eye className="h-4 w-4" /> Visits & Inspections ({home.visits?.length || 0})</TabsTrigger>
+          <TabsTrigger value="visits" className="gap-1.5"><Eye className="h-4 w-4" /> Inspections ({home.visits?.length || 0})</TabsTrigger>
+          <TabsTrigger value="compliance" className="gap-1.5"><ShieldAlert className="h-4 w-4" /> Compliance</TabsTrigger>
           <TabsTrigger value="contacts" className="gap-1.5"><PhoneCall className="h-4 w-4" /> Contact Logs ({home.contact_logs?.length || 0})</TabsTrigger>
           <TabsTrigger value="placements" className="gap-1.5"><Bed className="h-4 w-4" /> Placements ({placementHistory.length})</TabsTrigger>
         </TabsList>
@@ -474,31 +670,111 @@ export default function PlacementHomeDetail() {
           </Card>
         </TabsContent>
 
-        {/* 4. BACKGROUND SCREENINGS TAB */}
-        <TabsContent value="background" className="space-y-4">
+        {/* 3. ASSESSMENTS TAB */}
+        <TabsContent value="assessments" className="space-y-4">
           <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-base">Household Background Screening Summary</CardTitle>
-              <CardDescription>Criminal record checks, child protection checks, and clearances for all home members.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-base">Caregiver & Home Study Assessments</CardTitle>
+                <CardDescription>
+                  Comprehensive parenting capacity, home environment, cultural safety, strengths, and recommendations.
+                </CardDescription>
+              </div>
+              <Button size="sm" onClick={() => setShowAssessModal(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" /> New Assessment
+              </Button>
             </CardHeader>
             <CardContent>
-              {backgroundChecks.length === 0 ? (
-                <div className="py-8 text-center text-slate-400">No background checks linked to members.</div>
+              {assessments.length === 0 ? (
+                <div className="py-8 text-center text-slate-400">No caregiver assessments recorded yet.</div>
               ) : (
                 <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {backgroundChecks.map((chk) => (
-                    <div key={chk.member_id} className="py-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-slate-900 dark:text-slate-100">{chk.member_name}</div>
-                        <div className="text-xs text-slate-500">Role: {chk.role} • Clearance #: {chk.clearance_number || "Pending"}</div>
-                        {chk.expiry_date && (
-                          <div className={`text-xs mt-1 ${chk.is_expired ? 'text-red-600 font-bold' : 'text-slate-500'}`}>
-                            Expiry: {chk.expiry_date} {chk.is_expired ? "(EXPIRED)" : ""}
+                  {assessments.map((a) => (
+                    <div key={a.id} className="py-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">{a.title}</span>
+                          <Badge variant="outline">{a.assessment_type}</Badge>
+                          <Badge
+                            className={
+                              a.status === "APPROVED" || a.status === "COMPLETED"
+                                ? "bg-emerald-500/10 text-emerald-700"
+                                : a.status === "IN_PROGRESS"
+                                ? "bg-blue-500/10 text-blue-700"
+                                : "bg-amber-500/10 text-amber-700"
+                            }
+                          >
+                            {a.status}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-slate-500 font-mono">
+                          {a.completed_date ? `Completed: ${a.completed_date}` : `Created: ${new Date(a.created_at).toLocaleDateString()}`}
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-4">
+                        <span>Assessor: {a.assessor_name || "Resource Worker"}</span>
+                        {a.sections_count && <span>Sections: {a.sections_count}</span>}
+                        {a.summary && <span className="italic truncate max-w-md">{a.summary}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 4. CLEARANCES TAB */}
+        <TabsContent value="clearances" className="space-y-4">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-base">Caregiver Screenings & Clearances</CardTitle>
+                <CardDescription>
+                  Criminal record checks, vulnerable sector checks, CARC, driver abstracts, and reference checks.
+                </CardDescription>
+              </div>
+              <Button size="sm" onClick={() => setShowClearanceModal(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" /> Record Clearance
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {clearances.length === 0 && backgroundChecks.length === 0 ? (
+                <div className="py-8 text-center text-slate-400">No clearance records logged for this home.</div>
+              ) : (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {(clearances.length > 0 ? clearances : backgroundChecks).map((c) => (
+                    <div key={c.id || c.member_id} className="py-3 flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">{c.person_name || c.member_name}</span>
+                          <Badge variant="outline">{c.check_type || "SCREENING"}</Badge>
+                          <Badge
+                            className={
+                              c.status === "PASSED" || c.status === "CLEARED" || c.status === "COMPLETED" || c.is_eligible
+                                ? "bg-emerald-500/10 text-emerald-700"
+                                : c.status === "PENDING"
+                                ? "bg-blue-500/10 text-blue-700"
+                                : "bg-rose-500/10 text-rose-700"
+                            }
+                          >
+                            {c.status || (c.is_eligible ? "CLEARED" : "PENDING")}
+                          </Badge>
+                          {c.renewal_status === "EXPIRED" && (
+                            <Badge className="bg-rose-600 text-white">EXPIRED</Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Ref: {c.clearance_reference_number || c.clearance_number || "—"} • Agency: {c.conducted_by_agency || "Police Service"} • Req: {c.request_date || "—"} {c.expiry_date ? `• Expiry: ${c.expiry_date}` : ""}
+                        </div>
+                        {c.risk_assessment_notes && (
+                          <div className="text-xs text-slate-600 dark:text-slate-400 italic">
+                            Notes: {c.risk_assessment_notes}
                           </div>
                         )}
                       </div>
-                      <Badge className={chk.is_eligible ? "bg-emerald-500/10 text-emerald-700" : "bg-red-500/10 text-red-700"}>
-                        {chk.is_eligible ? "Eligible for Placement" : "Screening Incomplete / Expired"}
+                      <Badge className={c.is_eligible_for_placement || c.is_eligible ? "bg-emerald-500/10 text-emerald-700" : "bg-red-500/10 text-red-700"}>
+                        {c.is_eligible_for_placement || c.is_eligible ? "Eligible" : "Not Cleared / Pending"}
                       </Badge>
                     </div>
                   ))}
@@ -508,16 +784,71 @@ export default function PlacementHomeDetail() {
           </Card>
         </TabsContent>
 
-        {/* 5. VISITS & INSPECTIONS TAB */}
+        {/* 5. TRAINING TAB */}
+        <TabsContent value="training" className="space-y-4">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-base">Caregiver Training Compliance</CardTitle>
+                <CardDescription>
+                  Tracking mandatory pre-service (PRIDE), CPR/First Aid, Trauma-Informed Care, and Cultural Safety certifications.
+                </CardDescription>
+              </div>
+              <Button size="sm" onClick={() => setShowTrainingModal(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" /> Record Training
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {trainings.length === 0 ? (
+                <div className="py-8 text-center text-slate-400">No training completions recorded yet.</div>
+              ) : (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {trainings.map((t) => (
+                    <div key={t.id} className="py-3 flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">{t.person_name || "Caregiver"}</span>
+                          <Badge variant="outline">{t.training_type}</Badge>
+                          <Badge
+                            className={
+                              t.status === "COMPLETED"
+                                ? "bg-emerald-500/10 text-emerald-700"
+                                : t.status === "EXPIRED"
+                                ? "bg-rose-500/10 text-rose-700"
+                                : "bg-amber-500/10 text-amber-700"
+                            }
+                          >
+                            {t.status}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {t.course_name && <span>{t.course_name} • </span>}
+                          Provider: {t.provider_name || "SFFA"} • Completed: {t.completion_date} {t.expiry_date ? `• Expiry: ${t.expiry_date}` : ""}
+                        </div>
+                        {t.verified_at && (
+                          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                            <CheckCircle className="h-3 w-3" /> Verified by Supervisor {t.verified_by_name || ""} on {new Date(t.verified_at).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 6. VISITS & INSPECTIONS TAB */}
         <TabsContent value="visits" className="space-y-4">
           <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
-                <CardTitle className="text-base">Inspections & Support Visits</CardTitle>
-                <CardDescription>Routine physical inspections, unannounced safety checks, and annual reviews.</CardDescription>
+                <CardTitle className="text-base">Physical Inspections & Monitoring Visits</CardTitle>
+                <CardDescription>Routine physical inspections, safety checks, deficiencies, and corrective action plans.</CardDescription>
               </div>
               <Button size="sm" onClick={() => setShowVisitModal(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" /> Log Visit
+                <Plus className="h-4 w-4" /> Log Inspection
               </Button>
             </CardHeader>
             <CardContent>
@@ -526,19 +857,44 @@ export default function PlacementHomeDetail() {
               ) : (
                 <div className="space-y-4">
                   {home.visits.map((v) => (
-                    <div key={v.id} className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1.5">
+                    <div key={v.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                           <span>{v.purpose}</span>
                           <Badge variant="outline">{v.visit_type}</Badge>
+                          {v.corrective_action_status && v.corrective_action_status !== "NONE" && (
+                            <Badge
+                              className={
+                                v.corrective_action_status === "COMPLETED"
+                                  ? "bg-emerald-500/10 text-emerald-700"
+                                  : v.corrective_action_status === "OVERDUE"
+                                  ? "bg-rose-500/10 text-rose-700"
+                                  : "bg-amber-500/10 text-amber-700"
+                              }
+                            >
+                              Action: {v.corrective_action_status}
+                            </Badge>
+                          )}
                         </div>
-                        <div className="text-xs text-slate-500 font-mono">Date: {v.visit_date}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500 font-mono">Date: {v.visit_date}</span>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleOpenCorrectiveModal(v)}>
+                            <Wrench className="h-3.5 w-3.5 mr-1" /> Corrective Action
+                          </Button>
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-600 dark:text-slate-400">Logged by: {v.worker_name || "Caseworker"}</div>
-                      <p className="text-xs text-slate-800 dark:text-slate-200 mt-1 whitespace-pre-wrap">{v.summary}</p>
-                      {v.follow_up_required && (
-                        <div className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 p-2 rounded mt-2 border border-amber-200 dark:border-amber-800 flex items-center gap-1.5">
-                          <AlertTriangle className="h-3.5 w-3.5" /> Follow-up Required by: {v.follow_up_due_date || "TBD"}
+                      <div className="text-xs text-slate-600 dark:text-slate-400">Inspector: {v.worker_name || "Caseworker"}</div>
+                      <p className="text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{v.summary}</p>
+                      {v.deficiencies && (
+                        <div className="text-xs bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 p-2.5 rounded border border-rose-200 dark:border-rose-900 space-y-1">
+                          <div className="font-bold flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5 text-rose-600" /> Deficiencies Identified:</div>
+                          <div>{v.deficiencies}</div>
+                          {v.corrective_actions && (
+                            <div className="mt-1 pt-1 border-t border-rose-200 dark:border-rose-800">
+                              <span className="font-semibold">Required Corrective Action:</span> {v.corrective_actions}
+                              {v.corrective_action_due_date && ` (Due: ${v.corrective_action_due_date})`}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -547,6 +903,86 @@ export default function PlacementHomeDetail() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* 7. COMPLIANCE TAB */}
+        <TabsContent value="compliance" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Overall Status */}
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Overall Home Compliance</div>
+              <div className="mt-2 flex items-center gap-2">
+                {complianceSummary?.overall_status === "COMPLIANT" ? (
+                  <>
+                    <CheckCircle className="h-6 w-6 text-emerald-600" />
+                    <span className="text-xl font-bold text-emerald-600">COMPLIANT</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-6 w-6 text-amber-600" />
+                    <span className="text-xl font-bold text-amber-600">
+                      {complianceSummary?.overall_status || "PENDING REVIEW"}
+                    </span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 mt-2">Active license, clear background screenings, and mandatory training compliance.</p>
+            </Card>
+
+            {/* Training Compliance */}
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Caregiver Training Status</div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  {complianceSummary?.compliant_caregivers || 0} / {complianceSummary?.total_caregivers || home.members?.length || 0}
+                </span>
+                <span className="text-xs text-slate-500">caregivers certified</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-2">PRIDE, CPR/First Aid, Trauma-Informed, Cultural Safety.</p>
+            </Card>
+
+            {/* Clearances Status */}
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Screenings</div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  {clearances.filter((c) => c.is_eligible_for_placement).length || backgroundChecks.filter((c) => c.is_eligible).length}
+                </span>
+                <span className="text-xs text-slate-500">eligible clearances</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-2">Annual police record and vulnerable sector verification.</p>
+            </Card>
+          </div>
+
+          {/* Member Training Breakdown */}
+          {complianceSummary?.member_summaries && complianceSummary.member_summaries.length > 0 && (
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <CardHeader>
+                <CardTitle className="text-base">Caregiver Training Matrix</CardTitle>
+                <CardDescription>Mandatory module status per household member.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {complianceSummary.member_summaries.map((m) => (
+                    <div key={m.person_id} className="py-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">{m.person_name}</div>
+                        <div className="text-xs text-slate-500">Role: {m.role}</div>
+                        {m.mandatory_missing?.length > 0 && (
+                          <div className="text-xs text-rose-600 font-medium mt-1">
+                            Missing: {m.mandatory_missing.join(", ")}
+                          </div>
+                        )}
+                      </div>
+                      <Badge className={m.is_compliant ? "bg-emerald-500/10 text-emerald-700" : "bg-amber-500/10 text-amber-700"}>
+                        {m.is_compliant ? "Fully Trained" : "Requirements Incomplete"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* 6. CONTACT LOGS TAB */}
@@ -888,6 +1324,307 @@ export default function PlacementHomeDetail() {
             <DialogFooter className="pt-3">
               <Button type="button" variant="outline" onClick={() => setShowContactModal(false)}>Cancel</Button>
               <Button type="submit" disabled={submitting}>Save Contact Log</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sprint 2: New Assessment Modal */}
+      <Dialog open={showAssessModal} onOpenChange={setShowAssessModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Initiate Caregiver Assessment</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateAssessment} className="space-y-3 pt-2">
+            <div className="space-y-1">
+              <Label>Assessment Title *</Label>
+              <Input
+                required
+                value={assessForm.title}
+                onChange={(e) => setAssessForm({ ...assessForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Assessment Type</Label>
+              <Select value={assessForm.assessment_type} onValueChange={(v) => setAssessForm({ ...assessForm, assessment_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HOME_STUDY">Home Study Assessment</SelectItem>
+                  <SelectItem value="CAREGIVER_INTERVIEW">Caregiver Interview</SelectItem>
+                  <SelectItem value="CULTURAL_ASSESSMENT">Cultural Safety Assessment</SelectItem>
+                  <SelectItem value="PARENTING_CAPACITY">Parenting Capacity</SelectItem>
+                  <SelectItem value="SUPPORT_NETWORK">Support Network Assessment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Subject Caregiver</Label>
+              <Select
+                value={assessForm.primary_person_id}
+                onValueChange={(v) => setAssessForm({ ...assessForm, primary_person_id: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Select household member" /></SelectTrigger>
+                <SelectContent>
+                  {home.members?.map((m) => (
+                    <SelectItem key={m.person_id} value={m.person_id}>
+                      {m.person_name || m.person_id} ({m.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Notes & Scope</Label>
+              <Textarea
+                placeholder="Initial assessment goals, background context, or recommendations..."
+                value={assessForm.notes}
+                onChange={(e) => setAssessForm({ ...assessForm, notes: e.target.value })}
+              />
+            </div>
+            <DialogFooter className="pt-3">
+              <Button type="button" variant="outline" onClick={() => setShowAssessModal(false)}>Cancel</Button>
+              <Button type="submit" disabled={submitting}>Start Assessment</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sprint 2: Record Screening / Clearance Modal */}
+      <Dialog open={showClearanceModal} onOpenChange={setShowClearanceModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record Screening & Clearance Check</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateClearance} className="space-y-3 pt-2">
+            <div className="space-y-1">
+              <Label>Subject Caregiver *</Label>
+              <Select
+                value={clearanceForm.subject_id}
+                onValueChange={(v) => {
+                  const m = home.members?.find((x) => x.person_id === v);
+                  setClearanceForm({
+                    ...clearanceForm,
+                    subject_id: v,
+                    subject_name: m ? m.person_name : clearanceForm.subject_name,
+                  });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Select household member" /></SelectTrigger>
+                <SelectContent>
+                  {home.members?.map((m) => (
+                    <SelectItem key={m.person_id} value={m.person_id}>
+                      {m.person_name || m.person_id} ({m.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Clearance Type *</Label>
+              <Select value={clearanceForm.check_type} onValueChange={(v) => setClearanceForm({ ...clearanceForm, check_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CRIMINAL_RECORD_CHECK">Criminal Record Check</SelectItem>
+                  <SelectItem value="VULNERABLE_SECTOR">Vulnerable Sector Check</SelectItem>
+                  <SelectItem value="CHILD_ABUSE_REGISTRY">Child Abuse Registry Check</SelectItem>
+                  <SelectItem value="DRIVER_ABSTRACT">Driver Abstract</SelectItem>
+                  <SelectItem value="REFERENCE_CHECK">Reference Check</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Request Date</Label>
+                <Input
+                  type="date"
+                  value={clearanceForm.request_date}
+                  onChange={(e) => setClearanceForm({ ...clearanceForm, request_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Reference Number</Label>
+                <Input
+                  placeholder="e.g. CRC-2026-8812"
+                  value={clearanceForm.clearance_reference_number}
+                  onChange={(e) => setClearanceForm({ ...clearanceForm, clearance_reference_number: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Conducted By Agency</Label>
+              <Input
+                placeholder="e.g. Regina Police Service / RCMP"
+                value={clearanceForm.conducted_by_agency}
+                onChange={(e) => setClearanceForm({ ...clearanceForm, conducted_by_agency: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Notes</Label>
+              <Textarea
+                placeholder="Confidential verification or tracking notes..."
+                value={clearanceForm.risk_assessment_notes}
+                onChange={(e) => setClearanceForm({ ...clearanceForm, risk_assessment_notes: e.target.value })}
+              />
+            </div>
+            <DialogFooter className="pt-3">
+              <Button type="button" variant="outline" onClick={() => setShowClearanceModal(false)}>Cancel</Button>
+              <Button type="submit" disabled={submitting}>Save Clearance</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sprint 2: Record Training Modal */}
+      <Dialog open={showTrainingModal} onOpenChange={setShowTrainingModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record Caregiver Training</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateTraining} className="space-y-3 pt-2">
+            <div className="space-y-1">
+              <Label>Caregiver Person *</Label>
+              <Select
+                value={trainingForm.person_id}
+                onValueChange={(v) => setTrainingForm({ ...trainingForm, person_id: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Select caregiver" /></SelectTrigger>
+                <SelectContent>
+                  {home.members?.map((m) => (
+                    <SelectItem key={m.person_id} value={m.person_id}>
+                      {m.person_name || m.person_id} ({m.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Training Module *</Label>
+              <Select
+                value={trainingForm.training_type}
+                onValueChange={(v) => {
+                  let defaultCourse = "PRIDE Pre-Service Program";
+                  if (v === "CPR_FIRST_AID") defaultCourse = "Standard First Aid & CPR-C";
+                  if (v === "TRAUMA_INFORMED_CARE") defaultCourse = "Trauma-Informed Care for Foster Families";
+                  if (v === "CULTURAL_SAFETY") defaultCourse = "Indigenous Cultural Safety & Reconciliation";
+                  setTrainingForm({ ...trainingForm, training_type: v, course_name: defaultCourse });
+                }}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PRE_SERVICE_PRIDE">Pre-Service / PRIDE</SelectItem>
+                  <SelectItem value="CPR_FIRST_AID">CPR & First Aid</SelectItem>
+                  <SelectItem value="TRAUMA_INFORMED_CARE">Trauma-Informed Care</SelectItem>
+                  <SelectItem value="CULTURAL_SAFETY">Cultural Safety</SelectItem>
+                  <SelectItem value="SUICIDE_PREVENTION">Suicide Prevention (ASIST / safeTALK)</SelectItem>
+                  <SelectItem value="MEDICATION_ADMINISTRATION">Medication Administration</SelectItem>
+                  <SelectItem value="OTHER">Other Configurable Training</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Completion Date *</Label>
+                <Input
+                  type="date"
+                  required
+                  value={trainingForm.completion_date}
+                  onChange={(e) => setTrainingForm({ ...trainingForm, completion_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Expiry Date (if applicable)</Label>
+                <Input
+                  type="date"
+                  value={trainingForm.expiry_date}
+                  onChange={(e) => setTrainingForm({ ...trainingForm, expiry_date: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Provider</Label>
+              <Input
+                placeholder="e.g. Saskatchewan Foster Families Association"
+                value={trainingForm.provider_name}
+                onChange={(e) => setTrainingForm({ ...trainingForm, provider_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Notes</Label>
+              <Textarea
+                placeholder="Certificate number or verification notes..."
+                value={trainingForm.notes}
+                onChange={(e) => setTrainingForm({ ...trainingForm, notes: e.target.value })}
+              />
+            </div>
+            <DialogFooter className="pt-3">
+              <Button type="button" variant="outline" onClick={() => setShowTrainingModal(false)}>Cancel</Button>
+              <Button type="submit" disabled={submitting}>Record Training</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sprint 2: Corrective Action Modal */}
+      <Dialog open={showCorrectiveModal} onOpenChange={setShowCorrectiveModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Inspection Findings & Corrective Action</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateCorrectiveAction} className="space-y-3 pt-2">
+            <div className="space-y-1">
+              <Label>Resolution Status *</Label>
+              <Select
+                value={correctiveForm.corrective_action_status}
+                onValueChange={(v) => setCorrectiveForm({ ...correctiveForm, corrective_action_status: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="REQUIRED">Required (New Deficiencies)</SelectItem>
+                  <SelectItem value="PENDING">Pending Action Plan</SelectItem>
+                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                  <SelectItem value="COMPLETED">Completed / Remediated</SelectItem>
+                  <SelectItem value="OVERDUE">Overdue</SelectItem>
+                  <SelectItem value="NONE">None Required</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Deficiencies Identified</Label>
+              <Textarea
+                placeholder="List physical or compliance deficiencies..."
+                value={correctiveForm.deficiencies}
+                onChange={(e) => setCorrectiveForm({ ...correctiveForm, deficiencies: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Corrective Action Required</Label>
+              <Textarea
+                placeholder="Action required from caregiver/home..."
+                value={correctiveForm.corrective_actions}
+                onChange={(e) => setCorrectiveForm({ ...correctiveForm, corrective_actions: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Due Date</Label>
+                <Input
+                  type="date"
+                  value={correctiveForm.corrective_action_due_date}
+                  onChange={(e) => setCorrectiveForm({ ...correctiveForm, corrective_action_due_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Completed Date</Label>
+                <Input
+                  type="date"
+                  value={correctiveForm.completed_date}
+                  onChange={(e) => setCorrectiveForm({ ...correctiveForm, completed_date: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter className="pt-3">
+              <Button type="button" variant="outline" onClick={() => setShowCorrectiveModal(false)}>Cancel</Button>
+              <Button type="submit" disabled={submitting}>Update Corrective Action</Button>
             </DialogFooter>
           </form>
         </DialogContent>

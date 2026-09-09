@@ -240,13 +240,18 @@ class Permissions(StrEnum):
     PLACEMENT_HOME_CAPACITY_MANAGE = "placement_home.capacity.manage"
     PLACEMENT_HOME_MAP_READ = "placement_home.map.read"
 
-    # Resource Unit & Recruitment (Sprint 1)
+    # Resource Unit & Recruitment (Sprint 1 & 2)
     RESOURCE_HOME_READ = "resource_home.read"
     RESOURCE_HOME_WRITE = "resource_home.write"
     RESOURCE_RECRUITMENT_READ = "resource_recruitment.read"
     RESOURCE_RECRUITMENT_WRITE = "resource_recruitment.write"
     RESOURCE_RECRUITMENT_APPROVE = "resource_recruitment.approve"
     RESOURCE_DASHBOARD_READ = "resource_dashboard.read"
+    CAREGIVER_TRAINING_READ = "caregiver_training.read"
+    CAREGIVER_TRAINING_WRITE = "caregiver_training.write"
+    CAREGIVER_TRAINING_VERIFY = "caregiver_training.verify"
+    RESOURCE_CLEARANCE_ADJUDICATE = "resource_clearance.adjudicate"
+    PLACEMENT_HOME_INSPECTION_MANAGE = "placement_home.inspection.manage"
 
     # Scheduling, Staffing & Notifications (Phase 9)
     CALENDAR_READ_OWN = "calendar.read_own"

@@ -84,6 +84,7 @@ class PlacementRepository:
         subject_id: uuid.UUID | None = None,
         status: str | None = None,
         check_type: str | None = None,
+        placement_home_id: uuid.UUID | None = None,
         page: int = 1,
         page_size: int = 50,
     ) -> tuple[list[BackgroundCheck], int]:
@@ -96,6 +97,8 @@ class PlacementRepository:
             filters.append(BackgroundCheck.status == status.upper())
         if check_type:
             filters.append(BackgroundCheck.check_type == check_type.upper())
+        if placement_home_id:
+            filters.append(BackgroundCheck.placement_home_id == placement_home_id)
 
         count_stmt = select(func.count()).select_from(BackgroundCheck).where(*filters)
         count_res = await self.db.execute(count_stmt)

@@ -203,7 +203,7 @@ async def test_placement_home_licensing_and_renewal_history(
     all_licenses = home_detail["licenses"]
     assert len(all_licenses) == 2
     lic_a_retrieved = next(lic for lic in all_licenses if lic["id"] == lic_a_id)
-    assert lic_a_retrieved["status"] == "EXPIRED"
+    assert lic_a_retrieved["status"] == "SUPERSEDED"
     assert lic_a_retrieved["license_number"] == "LIC-2025-001"
 
 

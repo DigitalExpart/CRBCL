@@ -177,8 +177,8 @@ class Assessment(Base, AuditMixin, SoftDeleteMixin):
     __tablename__ = "assessments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    case_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("cases.id", ondelete="RESTRICT"), nullable=False, index=True
+    case_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("cases.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     person_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("persons.id", ondelete="SET NULL"), nullable=True, index=True
@@ -227,7 +227,7 @@ class Assessment(Base, AuditMixin, SoftDeleteMixin):
     metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata_", JSONB, nullable=True)
 
     # Relationships
-    case: Mapped[Case] = relationship("Case", foreign_keys=[case_id], lazy="joined")
+    case: Mapped[Case | None] = relationship("Case", foreign_keys=[case_id], lazy="joined")
     person: Mapped[Person | None] = relationship("Person", foreign_keys=[person_id], lazy="joined")
     client: Mapped[Client | None] = relationship("Client", foreign_keys=[client_id], lazy="joined")
     family: Mapped[Family | None] = relationship("Family", foreign_keys=[family_id], lazy="joined")

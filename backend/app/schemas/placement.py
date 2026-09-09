@@ -67,9 +67,12 @@ class BackgroundCheckCreate(BaseModel):
     subject_id: uuid.UUID | None = None
     subject_name: str = Field(..., min_length=1, max_length=255)
     check_type: str = Field(
-        ..., description="CRIMINAL_RECORD, CHILD_ABUSE_REGISTRY, VULNERABLE_SECTOR, REFERENCE_CHECK"
+        ..., description="CRIMINAL_RECORD, CHILD_ABUSE_REGISTRY, VULNERABLE_SECTOR, REFERENCE_CHECK, DRIVER_ABSTRACT"
     )
     request_date: date
+    placement_home_id: uuid.UUID | None = None
+    document_id: uuid.UUID | None = None
+    renewal_status: str | None = None
     conducted_by_agency: str | None = None
     clearance_reference_number: str | None = None
     risk_assessment_notes: str | None = None
@@ -83,6 +86,9 @@ class BackgroundCheckUpdate(BaseModel):
     request_date: date | None = None
     completion_date: date | None = None
     expiry_date: date | None = None
+    placement_home_id: uuid.UUID | None = None
+    document_id: uuid.UUID | None = None
+    renewal_status: str | None = None
     conducted_by_agency: str | None = None
     clearance_reference_number: str | None = None
     risk_assessment_notes: str | None = None
@@ -108,6 +114,9 @@ class BackgroundCheckResponse(BaseModel):
     request_date: date
     completion_date: date | None = None
     expiry_date: date | None = None
+    placement_home_id: uuid.UUID | None = None
+    document_id: uuid.UUID | None = None
+    renewal_status: str | None = None
     conducted_by_agency: str | None = None
     clearance_reference_number: str | None = None
     risk_assessment_notes: str | None = None

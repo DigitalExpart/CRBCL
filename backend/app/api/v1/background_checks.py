@@ -44,6 +44,7 @@ async def list_background_checks(
     db: Annotated[AsyncSession, Depends(get_db)],
     subject_type: str | None = Query(None),
     subject_id: uuid.UUID | None = Query(None),
+    placement_home_id: uuid.UUID | None = Query(None),
     status_filter: str | None = Query(None, alias="status"),
     check_type: str | None = Query(None),
     page: int = Query(1, ge=1),
@@ -56,6 +57,7 @@ async def list_background_checks(
         subject_id=subject_id,
         status_filter=status_filter,
         check_type=check_type,
+        placement_home_id=placement_home_id,
         page=page,
         page_size=page_size,
     )

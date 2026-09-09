@@ -21,6 +21,7 @@ from app.models.calendar import (  # noqa: F401
     CalendarEvent,
     CalendarRecurrenceRule,
 )
+from app.models.caregiver_training import CaregiverTraining  # noqa: F401
 from app.models.case import Case  # noqa: F401
 from app.models.case_management import (  # noqa: F401
     CaseAssignment,

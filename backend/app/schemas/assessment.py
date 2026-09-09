@@ -231,7 +231,8 @@ class AssessmentAnswersSaveRequest(BaseModel):
 
 
 class AssessmentCreate(BaseModel):
-    case_id: uuid.UUID
+    case_id: uuid.UUID | None = None
+    placement_home_id: uuid.UUID | None = None
     template_key: str
     template_version_id: uuid.UUID | None = None  # Defaults to active published version
     person_id: uuid.UUID | None = None
@@ -242,6 +243,12 @@ class AssessmentCreate(BaseModel):
     conducted_at: datetime | None = None
     summary: str | None = None
     metadata_: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def validate_case_or_home(self) -> AssessmentCreate:
+        if not self.case_id and not self.placement_home_id:
+            raise ValueError("Either case_id or placement_home_id must be provided.")
+        return self
 
 
 class AssessmentUpdate(BaseModel):
@@ -322,7 +329,8 @@ class AssessmentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    case_id: uuid.UUID
+    case_id: uuid.UUID | None = None
+    placement_home_id: uuid.UUID | None = None
     case_number: str | None = None
     person_id: uuid.UUID | None = None
     person_name: str | None = None
@@ -334,14 +342,14 @@ class AssessmentResponse(BaseModel):
     template_key: str | None = None
     template_name: str | None = None
     template_category: str | None = None
-    template_version_id: uuid.UUID
+    template_version_id: uuid.UUID | None = None
     version_number: int | None = None
     assessment_number: str
     title: str
     status: str
     determination: str | None = None
     determination_notes: str | None = None
-    conducted_by: uuid.UUID
+    conducted_by: uuid.UUID | None = None
     conducted_by_name: str | None = None
     conducted_at: datetime
     completed_at: datetime | None = None

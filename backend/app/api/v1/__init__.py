@@ -8,6 +8,7 @@ from app.api.v1.assessment_templates import router as assessment_templates_route
 from app.api.v1.assessments import router as assessments_router
 from app.api.v1.background_checks import router as background_checks_router
 from app.api.v1.calendar import router as calendar_router
+from app.api.v1.caregiver_training import router as caregiver_training_router
 from app.api.v1.case_notes import router as case_notes_router
 from app.api.v1.cases import router as cases_router
 from app.api.v1.clients import router as clients_router
@@ -91,4 +92,5 @@ api_v1_router.include_router(ocr_router)
 api_v1_router.include_router(ask_red_bear_router)
 api_v1_router.include_router(communications_router)
 api_v1_router.include_router(resource_recruitments_router)
+api_v1_router.include_router(caregiver_training_router)
 api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])

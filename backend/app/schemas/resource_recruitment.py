@@ -158,3 +158,29 @@ class ResourceDashboardMetrics(BaseModel):
         ..., description="Active home licenses expiring within the next 90 days"
     )
     total_applications: int = Field(..., description="Total recruitment applications in system")
+
+    # Sprint 2 Compliance Metrics
+    clearances_expiring_30_days: int = Field(
+        default=0, description="Clearances/screenings expiring within 30 days"
+    )
+    clearances_expired: int = Field(
+        default=0, description="Clearances/screenings past their expiry date"
+    )
+    training_due_30_days: int = Field(
+        default=0, description="Caregiver training due or expiring within 30 days"
+    )
+    training_expired: int = Field(
+        default=0, description="Caregiver training certificates currently expired"
+    )
+    licenses_nearing_renewal_90_days: int = Field(
+        default=0, description="Placement home licenses expiring within 90 days"
+    )
+    inspections_overdue: int = Field(
+        default=0, description="Scheduled inspections past their target date without completion"
+    )
+    outstanding_corrective_actions: int = Field(
+        default=0, description="Visits/inspections with active/pending corrective action requirements"
+    )
+    non_compliant_homes_count: int = Field(
+        default=0, description="Active placement homes with non-compliant clearances, licenses, or inspections"
+    )

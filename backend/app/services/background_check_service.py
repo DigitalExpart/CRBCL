@@ -47,6 +47,9 @@ class BackgroundCheckService:
             subject_id=data.subject_id,
             subject_name=data.subject_name,
             check_type=data.check_type.upper(),
+            placement_home_id=data.placement_home_id,
+            document_id=data.document_id,
+            renewal_status=data.renewal_status or "CURRENT",
             status="PENDING",
             request_date=data.request_date,
             conducted_by_agency=data.conducted_by_agency,
@@ -67,6 +70,7 @@ class BackgroundCheckService:
                 "subject_type": created.subject_type,
                 "subject_name": created.subject_name,
                 "check_type": created.check_type,
+                "placement_home_id": str(created.placement_home_id) if created.placement_home_id else None,
             },
         )
         await self.outbox.publish_event(
@@ -78,15 +82,31 @@ class BackgroundCheckService:
                 "subject_type": created.subject_type,
                 "subject_name": created.subject_name,
                 "check_type": created.check_type,
+                "placement_home_id": str(created.placement_home_id) if created.placement_home_id else None,
             },
         )
         return created
 
     async def get_background_check(self, user: User, check_id: uuid.UUID) -> BackgroundCheck:
-        await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_READ)
         check = await self.repo.get_background_check_by_id(check_id)
-        if not check:
+        if not check or check.deleted_at is not None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Background check record not found.")
+
+        # Object-aware read privacy:
+        if check.placement_home_id is not None:
+            has_perm = (
+                await self.perm.user_has_permission(user.id, Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_READ)
+                or await self.perm.user_has_permission(user.id, Permissions.RESOURCE_HOME_READ)
+                or await self.perm.user_has_permission(user.id, Permissions.RESOURCE_CLEARANCE_ADJUDICATE)
+            )
+            if not has_perm:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have permission to access protected Resource caregiver clearance records.",
+                )
+        else:
+            await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_READ)
+
         return check
 
     async def list_background_checks(
@@ -96,26 +116,64 @@ class BackgroundCheckService:
         subject_id: uuid.UUID | None = None,
         status_filter: str | None = None,
         check_type: str | None = None,
+        placement_home_id: uuid.UUID | None = None,
         page: int = 1,
         page_size: int = 50,
     ) -> tuple[list[BackgroundCheck], int]:
-        await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_READ)
-        return await self.repo.list_background_checks(
+        if placement_home_id is not None:
+            has_perm = (
+                await self.perm.user_has_permission(user.id, Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_READ)
+                or await self.perm.user_has_permission(user.id, Permissions.RESOURCE_HOME_READ)
+                or await self.perm.user_has_permission(user.id, Permissions.RESOURCE_CLEARANCE_ADJUDICATE)
+            )
+            if not has_perm:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have permission to access protected Resource caregiver clearances.",
+                )
+        else:
+            await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_READ)
+
+        items, total = await self.repo.list_background_checks(
             subject_type=subject_type,
             subject_id=subject_id,
             status=status_filter,
             check_type=check_type,
+            placement_home_id=placement_home_id,
             page=page,
             page_size=page_size,
         )
+        # Redact/filter out Resource checks if user lacks Resource clearance read authority
+        if placement_home_id is None:
+            has_resource_read = (
+                await self.perm.user_has_permission(user.id, Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_READ)
+                or await self.perm.user_has_permission(user.id, Permissions.RESOURCE_HOME_READ)
+                or await self.perm.user_has_permission(user.id, Permissions.RESOURCE_CLEARANCE_ADJUDICATE)
+            )
+            if not has_resource_read:
+                items = [chk for chk in items if chk.placement_home_id is None]
+        return items, total
 
     async def update_background_check(
         self, user: User, check_id: uuid.UUID, data: BackgroundCheckUpdate
     ) -> BackgroundCheck:
-        await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_WRITE)
         check = await self.repo.get_background_check_by_id(check_id)
-        if not check:
+        if not check or check.deleted_at is not None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Background check record not found.")
+
+        if check.placement_home_id is not None:
+            has_perm = (
+                await self.perm.user_has_permission(user.id, Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_MANAGE)
+                or await self.perm.user_has_permission(user.id, Permissions.RESOURCE_HOME_WRITE)
+                or await self.perm.user_has_permission(user.id, Permissions.RESOURCE_CLEARANCE_ADJUDICATE)
+            )
+            if not has_perm:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have permission to manage protected Resource caregiver clearances.",
+                )
+        else:
+            await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_WRITE)
 
         update_fields = data.model_dump(exclude_unset=True)
         if update_fields.get("subject_type"):
@@ -140,10 +198,17 @@ class BackgroundCheckService:
     async def adjudicate_background_check(
         self, user: User, check_id: uuid.UUID, data: BackgroundCheckAdjudicate
     ) -> BackgroundCheck:
-        await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_ADJUDICATE)
         check = await self.repo.get_background_check_by_id(check_id)
-        if not check:
+        if not check or check.deleted_at is not None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Background check record not found.")
+
+        # Object-aware authorization:
+        # If the BackgroundCheck is Resource-related, require Resource clearance adjudication capability.
+        # Otherwise preserve existing background_check.adjudicate behavior for established child-welfare checks.
+        if check.placement_home_id is not None:
+            await self._require_perm(user.id, Permissions.RESOURCE_CLEARANCE_ADJUDICATE)
+        else:
+            await self._require_perm(user.id, Permissions.BACKGROUND_CHECK_ADJUDICATE)
 
         check.status = data.status.upper()
         check.is_eligible_for_placement = data.is_eligible_for_placement

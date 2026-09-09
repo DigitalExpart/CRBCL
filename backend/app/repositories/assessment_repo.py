@@ -130,6 +130,40 @@ class AssessmentRepository(BaseRepository[Assessment]):
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
 
+    async def list_by_placement_home(
+        self,
+        placement_home_id: uuid.UUID,
+        template_key: str | None = None,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[Assessment], int]:
+        stmt = (
+            select(Assessment)
+            .where(Assessment.placement_home_id == placement_home_id, Assessment.deleted_at.is_(None))
+            .options(
+                joinedload(Assessment.template),
+                joinedload(Assessment.template_version),
+                joinedload(Assessment.person),
+                joinedload(Assessment.conductor),
+            )
+            .order_by(Assessment.conducted_at.desc(), Assessment.created_at.desc())
+        )
+        if template_key:
+            stmt = stmt.join(AssessmentTemplate, AssessmentTemplate.id == Assessment.template_id).where(
+                AssessmentTemplate.key == template_key
+            )
+        if status:
+            stmt = stmt.where(Assessment.status == status)
+
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total_res = await self.db.execute(count_stmt)
+        total = total_res.scalar_one()
+
+        paginated = stmt.offset(offset).limit(limit)
+        res = await self.db.execute(paginated)
+        return list(res.scalars().all()), total
+
     async def save_answers(
         self,
         assessment_id: uuid.UUID,

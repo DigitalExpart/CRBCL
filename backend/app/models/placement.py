@@ -73,12 +73,21 @@ class BackgroundCheck(Base, AuditMixin, SoftDeleteMixin):
     clearance_reference_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     risk_assessment_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_eligible_for_placement: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    placement_home_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("placement_homes.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True
+    )
+    renewal_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
     adjudicated_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     adjudicated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     adjudicator = relationship("User", foreign_keys=[adjudicated_by])
+    placement_home = relationship("PlacementHome", back_populates="background_checks", foreign_keys=[placement_home_id], lazy="joined")
+    document = relationship("Document", foreign_keys=[document_id], lazy="joined")
 
 
 class InHomePlacement(Base, AuditMixin, SoftDeleteMixin):

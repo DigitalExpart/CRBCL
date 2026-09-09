@@ -29,6 +29,27 @@ export const placementHomesApi = {
   
   // Longitudinal Placement History with redaction
   getPlacementHistory: (homeId) => api.get(`/placement-homes/${homeId}/placements`),
+
+  // Sprint 2: Inspections & Corrective Actions
+  updateCorrectiveAction: (homeId, visitId, data) =>
+    api.patch(`/placement-homes/${homeId}/visits/${visitId}/corrective-action`, data),
+
+  // Sprint 2: Screenings & Clearances
+  getClearances: (homeId) => api.get(`/placement-homes/${homeId}/clearances`),
+  createClearance: (homeId, data) => api.post(`/placement-homes/${homeId}/clearances`, data),
+  adjudicateBackgroundCheck: (checkId, data) =>
+    api.post(`/background-checks/${checkId}/adjudicate`, data),
+
+  // Sprint 2: Caregiver Assessments
+  getAssessments: (homeId) => api.get(`/placement-homes/${homeId}/assessments`),
+  createAssessment: (homeId, data) => api.post(`/placement-homes/${homeId}/assessments`, data),
+
+  // Sprint 2: Training & Compliance
+  getTrainings: (homeId) => api.get(`/placement-homes/${homeId}/training`),
+  getTrainingCompliance: (homeId) => api.get(`/placement-homes/${homeId}/training/compliance`),
+  createTraining: (homeId, data) => api.post(`/placement-homes/${homeId}/training`, data),
+  verifyTraining: (trainingId, data) =>
+    api.post(`/caregiver-trainings/${trainingId}/verify`, data),
 };
 
 export default placementHomesApi;

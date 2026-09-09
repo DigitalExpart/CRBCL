@@ -60,7 +60,7 @@ class AssessmentService:
         if not assessment:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found.")
 
-        if current_user and await self.perm_service.is_user_restricted_from_case(current_user.id, assessment.case_id):
+        if current_user and assessment.case_id and await self.perm_service.is_user_restricted_from_case(current_user.id, assessment.case_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied: Case restriction active.",
@@ -152,19 +152,30 @@ class AssessmentService:
         payload: AssessmentCreate,
         current_user: User,
     ) -> Assessment:
-        # 1. Check Case Restriction (ADR-010)
-        if await self.perm_service.is_user_restricted_from_case(current_user.id, payload.case_id):
+        # 1. Check Case or Home
+        case = None
+        if payload.case_id:
+            if await self.perm_service.is_user_restricted_from_case(current_user.id, payload.case_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied: Case restriction active.",
+                )
+            case = await self.db.get(Case, payload.case_id)
+            if not case or case.deleted_at is not None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found.")
+        elif payload.placement_home_id:
+            from app.models.placement_home import PlacementHome
+
+            home = await self.db.get(PlacementHome, payload.placement_home_id)
+            if not home or home.deleted_at is not None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Placement Home not found.")
+        else:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: Case restriction active.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either case_id or placement_home_id must be provided.",
             )
 
-        # 2. Verify Case exists
-        case = await self.db.get(Case, payload.case_id)
-        if not case or case.deleted_at is not None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found.")
-
-        # 3. Load Template & Version
+        # 2. Load Template & Version
         if payload.template_version_id:
             version = await self.template_repo.get_version_with_full_structure(payload.template_version_id)
             if not version:
@@ -184,17 +195,22 @@ class AssessmentService:
         if not template:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment template not found.")
 
-        # 4. Generate Assessment Sequence Number
+        # 3. Generate Assessment Sequence Number
         conducted_at = payload.conducted_at or datetime.now(UTC)
         asm_number = await self.repo.generate_assessment_number(conducted_at)
 
         title = payload.title or f"{template.name} ({conducted_at.strftime('%Y-%m-%d')})"
 
+        person_id = payload.person_id or (case.client_id if case else None)
+        client_id = payload.client_id or (case.client_id if case else None)
+        family_id = payload.family_id or (case.family_id if case else None)
+
         assessment = Assessment(
             case_id=payload.case_id,
-            person_id=payload.person_id or case.client_id,
-            client_id=payload.client_id or case.client_id,
-            family_id=payload.family_id or case.family_id,
+            placement_home_id=payload.placement_home_id,
+            person_id=person_id,
+            client_id=client_id,
+            family_id=family_id,
             household_id=payload.household_id,
             template_id=template.id,
             template_version_id=version.id,
@@ -220,27 +236,50 @@ class AssessmentService:
         )
 
         # Record Timeline & Audit
-        await self.timeline.record_event(
-            event_type="ASSESSMENT_STARTED",
-            title=f"{template.name} Started ({asm_number})",
-            description=f"Assessment initialized under version {version.version_number}.",
-            entity_type="assessment",
-            entity_id=assessment.id,
-            case_id=assessment.case_id,
-            client_id=assessment.client_id,
-            family_id=assessment.family_id,
-            created_by=current_user.id,
-        )
+        if assessment.case_id:
+            await self.timeline.record_event(
+                event_type="ASSESSMENT_STARTED",
+                title=f"{template.name} Started ({asm_number})",
+                description=f"Assessment initialized under version {version.version_number}.",
+                entity_type="assessment",
+                entity_id=assessment.id,
+                case_id=assessment.case_id,
+                client_id=assessment.client_id,
+                family_id=assessment.family_id,
+                created_by=current_user.id,
+            )
 
         await self.audit.log_event(
             event_type="ASSESSMENT_CREATED",
             user_id=current_user.id,
             entity_type="assessment",
             entity_id=assessment.id,
-            metadata={"assessment_number": asm_number, "template_key": template.key, "case_id": str(case.id)},
+            metadata={
+                "assessment_number": asm_number,
+                "template_key": template.key,
+                "case_id": str(case.id) if case else None,
+                "placement_home_id": str(payload.placement_home_id) if payload.placement_home_id else None,
+            },
         )
 
         return await self.get_assessment_or_404(assessment.id, current_user=current_user)
+
+    async def list_placement_home_assessments(
+        self,
+        placement_home_id: uuid.UUID,
+        current_user: User,
+        template_key: str | None = None,
+        status_filter: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[list[Assessment], int]:
+        return await self.repo.list_by_placement_home(
+            placement_home_id=placement_home_id,
+            template_key=template_key,
+            status=status_filter,
+            limit=limit,
+            offset=offset,
+        )
 
     async def list_case_assessments(
         self,

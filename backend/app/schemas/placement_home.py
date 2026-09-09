@@ -56,6 +56,11 @@ class PlacementHomeLicenseBase(BaseModel):
     renewal_date: date | None = None
     issuing_authority: str = "Ministry of Social Services / First Nation Authority"
     max_capacity: int | None = None
+    placement_restrictions: str | None = None
+    min_age: int | None = None
+    max_age: int | None = None
+    approved_by: uuid.UUID | None = None
+    document_id: uuid.UUID | None = None
     conditions: str | None = None
     notes: str | None = None
 
@@ -75,6 +80,11 @@ class PlacementHomeLicenseUpdate(BaseModel):
     renewal_date: date | None = None
     issuing_authority: str | None = None
     max_capacity: int | None = None
+    placement_restrictions: str | None = None
+    min_age: int | None = None
+    max_age: int | None = None
+    approved_by: uuid.UUID | None = None
+    document_id: uuid.UUID | None = None
     conditions: str | None = None
     notes: str | None = None
 
@@ -86,6 +96,11 @@ class PlacementHomeLicenseRenew(BaseModel):
     license_type: str = "STANDARD_FOSTER"
     issuing_authority: str = "Ministry of Social Services / First Nation Authority"
     max_capacity: int | None = None
+    placement_restrictions: str | None = None
+    min_age: int | None = None
+    max_age: int | None = None
+    approved_by: uuid.UUID | None = None
+    document_id: uuid.UUID | None = None
     conditions: str | None = None
     notes: str | None = None
 
@@ -95,17 +110,25 @@ class PlacementHomeLicenseRead(PlacementHomeLicenseBase):
 
     id: uuid.UUID
     placement_home_id: uuid.UUID
+    approver_name: str | None = None
     created_at: datetime
     updated_at: datetime
 
 
-# ── Placement Home Visit Schemas ────────────────────────────
+# ── Placement Home Visit & Inspection Schemas ───────────────
 class PlacementHomeVisitBase(BaseModel):
     visit_date: date = Field(default_factory=date.today)
+    completed_date: date | None = None
     visit_type: str = "ROUTINE_INSPECTION"
     purpose: str
     summary: str
     observations: str | None = None
+    findings: str | None = None
+    deficiencies: str | None = None
+    corrective_actions: str | None = None
+    corrective_action_due_date: date | None = None
+    corrective_action_status: str = "NONE"
+    document_id: uuid.UUID | None = None
     follow_up_required: bool = False
     follow_up_due_date: date | None = None
     status: str = "COMPLETED"
@@ -117,13 +140,29 @@ class PlacementHomeVisitCreate(PlacementHomeVisitBase):
 
 class PlacementHomeVisitUpdate(BaseModel):
     visit_date: date | None = None
+    completed_date: date | None = None
     visit_type: str | None = None
     purpose: str | None = None
     summary: str | None = None
     observations: str | None = None
+    findings: str | None = None
+    deficiencies: str | None = None
+    corrective_actions: str | None = None
+    corrective_action_due_date: date | None = None
+    corrective_action_status: str | None = None
+    document_id: uuid.UUID | None = None
     follow_up_required: bool | None = None
     follow_up_due_date: date | None = None
     status: str | None = None
+
+
+class CorrectiveActionUpdate(BaseModel):
+    corrective_action_status: str = Field(..., description="NONE, PENDING, COMPLETED, OVERDUE")
+    findings: str | None = None
+    deficiencies: str | None = None
+    corrective_actions: str | None = None
+    corrective_action_due_date: date | None = None
+    completed_date: date | None = None
 
 
 class PlacementHomeVisitRead(PlacementHomeVisitBase):
@@ -330,6 +369,7 @@ class PlacementHistoryItemRead(BaseModel):
 
 class HomeBackgroundCheckSummary(BaseModel):
     member_id: uuid.UUID
+    person_id: uuid.UUID | None = None
     member_name: str
     role: str
     check_id: uuid.UUID | None = None
@@ -340,3 +380,26 @@ class HomeBackgroundCheckSummary(BaseModel):
     expiry_date: date | None = None
     is_expired: bool = False
     is_eligible: bool = False
+    document_id: uuid.UUID | None = None
+    renewal_status: str | None = None
+
+
+class HomeClearanceItem(BaseModel):
+    id: uuid.UUID
+    placement_home_id: uuid.UUID | None = None
+    subject_id: uuid.UUID | None = None
+    subject_name: str
+    check_type: str
+    status: str
+    request_date: date
+    completion_date: date | None = None
+    expiry_date: date | None = None
+    renewal_status: str | None = None
+    clearance_reference_number: str | None = None
+    conducted_by_agency: str | None = None
+    is_eligible_for_placement: bool = False
+    is_expired: bool = False
+    document_id: uuid.UUID | None = None
+    adjudicated_by: uuid.UUID | None = None
+    adjudicated_at: datetime | None = None
+    risk_assessment_notes: str | None = None

@@ -12,8 +12,17 @@ from app.core.database import get_db
 from app.models.user import User
 from app.permissions.constants import Permissions
 from app.permissions.dependencies import require_permission
+from app.schemas.assessment import AssessmentCreate, AssessmentResponse
+from app.schemas.caregiver_training import (
+    CaregiverTrainingCreate,
+    CaregiverTrainingResponse,
+    HomeTrainingComplianceSummary,
+)
+from app.schemas.placement import BackgroundCheckCreate, BackgroundCheckResponse
 from app.schemas.placement_home import (
+    CorrectiveActionUpdate,
     HomeBackgroundCheckSummary,
+    HomeClearanceItem,
     PlacementHistoryItemRead,
     PlacementHomeContactLogCreate,
     PlacementHomeContactLogRead,
@@ -32,6 +41,9 @@ from app.schemas.placement_home import (
     PlacementHomeVisitCreate,
     PlacementHomeVisitRead,
 )
+from app.services.assessment_service import AssessmentService
+from app.services.background_check_service import BackgroundCheckService
+from app.services.caregiver_training_service import CaregiverTrainingService
 from app.services.placement_home_service import PlacementHomeService
 
 router = APIRouter(prefix="/placement-homes", tags=["Placement Homes"])
@@ -243,23 +255,7 @@ async def create_home_visit(
     """Log an inspection or support visit to a placement home."""
     service = PlacementHomeService(db)
     visit = await service.create_visit(home_id, payload, current_user.id)
-    worker_name = visit.worker.display_name or visit.worker.full_name or visit.worker.email if visit.worker else None
-    return {
-        "id": visit.id,
-        "placement_home_id": visit.placement_home_id,
-        "worker_id": visit.worker_id,
-        "worker_name": worker_name,
-        "visit_date": visit.visit_date,
-        "visit_type": visit.visit_type,
-        "purpose": visit.purpose,
-        "summary": visit.summary,
-        "observations": visit.observations,
-        "follow_up_required": visit.follow_up_required,
-        "follow_up_due_date": visit.follow_up_due_date,
-        "status": visit.status,
-        "created_at": visit.created_at,
-        "updated_at": visit.updated_at,
-    }
+    return PlacementHomeVisitRead.model_validate(visit)
 
 
 # ── Contact Logs Endpoints ─────────────────────────────────────
@@ -319,3 +315,113 @@ async def get_home_placements_history(
     """Retrieve placement history. Redacts sensitive child/case identities if the requesting user is restricted."""
     service = PlacementHomeService(db)
     return await service.get_placement_history(home_id, current_user.id)
+
+
+# ── Sprint 2: Inspections & Corrective Actions ──────────────────
+@router.patch("/{home_id}/visits/{visit_id}/corrective-action", response_model=PlacementHomeVisitRead)
+async def update_home_corrective_action(
+    home_id: uuid.UUID,
+    visit_id: uuid.UUID,
+    payload: CorrectiveActionUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.PLACEMENT_HOME_VISIT_CREATE)),
+):
+    """Update inspection findings, deficiencies, and corrective action resolution status."""
+    service = PlacementHomeService(db)
+    visit = await service.update_corrective_action(home_id, visit_id, payload, current_user.id)
+    return PlacementHomeVisitRead.model_validate(visit)
+
+
+# ── Sprint 2: Screenings & Clearances ───────────────────────────
+@router.get("/{home_id}/clearances", response_model=list[HomeClearanceItem])
+async def list_home_clearances(
+    home_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.PLACEMENT_HOME_BACKGROUND_CHECK_READ)),
+):
+    """List all background clearances for members of a Resource Home."""
+    service = PlacementHomeService(db)
+    return await service.list_home_clearances(home_id)
+
+
+@router.post("/{home_id}/clearances", response_model=BackgroundCheckResponse, status_code=status.HTTP_201_CREATED)
+async def create_home_clearance(
+    home_id: uuid.UUID,
+    payload: BackgroundCheckCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.BACKGROUND_CHECK_WRITE)),
+):
+    """Record a screening/clearance check for a member of this Resource Home."""
+    payload.placement_home_id = home_id
+    service = BackgroundCheckService(db)
+    check = await service.create_background_check(current_user, payload)
+    return BackgroundCheckResponse.model_validate(check)
+
+
+# ── Sprint 2: Caregiver Assessments ─────────────────────────────
+@router.get("/{home_id}/assessments", response_model=list[AssessmentResponse])
+async def list_home_assessments(
+    home_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.ASSESSMENT_READ)),
+):
+    """List historical caregiver and home study assessments for a Resource Home."""
+    service = AssessmentService(db)
+    items, _ = await service.list_placement_home_assessments(home_id, current_user)
+    return [AssessmentResponse.model_validate(a) for a in items]
+
+
+@router.post("/{home_id}/assessments", response_model=AssessmentResponse, status_code=status.HTTP_201_CREATED)
+async def create_home_assessment(
+    home_id: uuid.UUID,
+    body: dict[str, Any],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.ASSESSMENT_CREATE)),
+):
+    """Initiate a caregiver or home assessment under this Resource Home."""
+    # Inject placement_home_id from path before Pydantic validates the payload,
+    # so the model_validator (which requires case_id OR placement_home_id) passes.
+    body["placement_home_id"] = str(home_id)
+    payload = AssessmentCreate.model_validate(body)
+    service = AssessmentService(db)
+    assessment = await service.create_assessment(payload, current_user)
+    return AssessmentResponse.model_validate(assessment)
+
+
+# ── Sprint 2: Caregiver Training Compliance ────────────────────
+@router.get("/{home_id}/training", response_model=list[CaregiverTrainingResponse])
+async def list_home_trainings(
+    home_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.CAREGIVER_TRAINING_READ)),
+):
+    """List all training records for caregivers belonging to this Resource Home."""
+    service = CaregiverTrainingService(db)
+    items, _ = await service.list_trainings(current_user, placement_home_id=home_id)
+    return [CaregiverTrainingResponse.model_validate(item) for item in items]
+
+
+@router.get("/{home_id}/training/compliance", response_model=HomeTrainingComplianceSummary)
+async def get_home_training_compliance(
+    home_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.CAREGIVER_TRAINING_READ)),
+):
+    """Get training compliance breakdown and mandatory course status for a Resource Home."""
+    service = CaregiverTrainingService(db)
+    return await service.get_home_training_summary(current_user, home_id)
+
+
+@router.post("/{home_id}/training", response_model=CaregiverTrainingResponse, status_code=status.HTTP_201_CREATED)
+async def create_home_caregiver_training(
+    home_id: uuid.UUID,
+    payload: CaregiverTrainingCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(Permissions.CAREGIVER_TRAINING_WRITE)),
+):
+    """Record caregiver training completion associated with this Resource Home."""
+    payload.placement_home_id = home_id
+    service = CaregiverTrainingService(db)
+    training = await service.create_training(current_user, payload)
+    return CaregiverTrainingResponse.model_validate(training)
+

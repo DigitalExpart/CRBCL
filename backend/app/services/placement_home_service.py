@@ -22,6 +22,7 @@ from app.models.placement_home import (
 )
 from app.repositories.placement_home_repo import PlacementHomeRepository
 from app.schemas.placement_home import (
+    CorrectiveActionUpdate,
     HomeBackgroundCheckSummary,
     PlacementHistoryItemRead,
     PlacementHomeContactLogCreate,
@@ -378,6 +379,11 @@ class PlacementHomeService:
             renewal_date=payload.renewal_date,
             issuing_authority=payload.issuing_authority,
             max_capacity=payload.max_capacity,
+            placement_restrictions=payload.placement_restrictions,
+            min_age=payload.min_age,
+            max_age=payload.max_age,
+            approved_by=payload.approved_by,
+            document_id=payload.document_id,
             conditions=payload.conditions,
             notes=payload.notes,
             created_by=user_id,
@@ -414,7 +420,7 @@ class PlacementHomeService:
         # 1. Supersede previous active licenses
         for lic in home.licenses:
             if lic.status == "ACTIVE" and lic.deleted_at is None:
-                lic.status = "EXPIRED"
+                lic.status = "SUPERSEDED"
                 lic.updated_by = user_id
 
         # 2. Insert new active license record
@@ -428,6 +434,11 @@ class PlacementHomeService:
             renewal_date=payload.effective_date,
             issuing_authority=payload.issuing_authority,
             max_capacity=payload.max_capacity,
+            placement_restrictions=payload.placement_restrictions,
+            min_age=payload.min_age,
+            max_age=payload.max_age,
+            approved_by=payload.approved_by,
+            document_id=payload.document_id,
             conditions=payload.conditions,
             notes=payload.notes,
             created_by=user_id,
@@ -467,10 +478,17 @@ class PlacementHomeService:
             placement_home_id=home.id,
             worker_id=user_id,
             visit_date=payload.visit_date,
+            completed_date=payload.completed_date,
             visit_type=payload.visit_type,
             purpose=payload.purpose,
             summary=payload.summary,
             observations=payload.observations,
+            findings=payload.findings,
+            deficiencies=payload.deficiencies,
+            corrective_actions=payload.corrective_actions,
+            corrective_action_due_date=payload.corrective_action_due_date,
+            corrective_action_status=payload.corrective_action_status,
+            document_id=payload.document_id,
             follow_up_required=payload.follow_up_required,
             follow_up_due_date=payload.follow_up_due_date,
             status=payload.status,
@@ -488,9 +506,62 @@ class PlacementHomeService:
                 "visit_date": str(payload.visit_date),
                 "visit_type": payload.visit_type,
                 "follow_up_required": payload.follow_up_required,
+                "corrective_action_status": payload.corrective_action_status,
             },
         )
         return await self.repo.get_visit(visit.id)
+
+    async def update_corrective_action(
+        self,
+        home_id: uuid.UUID,
+        visit_id: uuid.UUID,
+        payload: CorrectiveActionUpdate,
+        user_id: uuid.UUID,
+    ) -> PlacementHomeVisit:
+        """Update inspection findings, deficiencies, and corrective action resolution status."""
+        home = await self.get_home(home_id)
+        visit = await self.repo.get_visit(visit_id)
+        if not visit or visit.placement_home_id != home.id or visit.deleted_at is not None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inspection visit record not found.")
+
+        visit.corrective_action_status = payload.corrective_action_status.upper()
+        if payload.findings is not None:
+            visit.findings = payload.findings
+        if payload.deficiencies is not None:
+            visit.deficiencies = payload.deficiencies
+        if payload.corrective_actions is not None:
+            visit.corrective_actions = payload.corrective_actions
+        if payload.corrective_action_due_date is not None:
+            visit.corrective_action_due_date = payload.corrective_action_due_date
+        if payload.completed_date is not None:
+            visit.completed_date = payload.completed_date
+        visit.updated_by = user_id
+
+        await self.audit.log(
+            event_type="PLACEMENT_HOME_CORRECTIVE_ACTION_UPDATED",
+            user_id=user_id,
+            entity_type="placement_home",
+            entity_id=home.id,
+            after_data={
+                "visit_id": str(visit.id),
+                "corrective_action_status": visit.corrective_action_status,
+                "corrective_action_due_date": str(visit.corrective_action_due_date) if visit.corrective_action_due_date else None,
+            },
+        )
+        if visit.corrective_action_status in ("PENDING", "OVERDUE"):
+            await self.outbox.enqueue(
+                event_type="placement_home.corrective_action_due",
+                aggregate_type="placement_home_visit",
+                aggregate_id=visit.id,
+                payload={
+                    "home_id": str(home.id),
+                    "visit_id": str(visit.id),
+                    "status": visit.corrective_action_status,
+                    "due_date": str(visit.corrective_action_due_date),
+                },
+            )
+        await self.session.flush()
+        return visit
 
     # ── Contact Logs ───────────────────────────────────────────
     async def create_contact_log(
@@ -561,6 +632,7 @@ class PlacementHomeService:
                 summaries.append(
                     HomeBackgroundCheckSummary(
                         member_id=m.id,
+                        person_id=m.person_id,
                         member_name=person_name,
                         role=m.role,
                         status="NOT_STARTED",
@@ -573,6 +645,7 @@ class PlacementHomeService:
                 summaries.append(
                     HomeBackgroundCheckSummary(
                         member_id=m.id,
+                        person_id=m.person_id,
                         member_name=person_name,
                         role=m.role,
                         check_id=latest_chk.id,
@@ -583,10 +656,24 @@ class PlacementHomeService:
                         expiry_date=latest_chk.expiry_date,
                         is_expired=is_exp,
                         is_eligible=latest_chk.is_eligible_for_placement and not is_exp,
+                        document_id=latest_chk.document_id,
+                        renewal_status=latest_chk.renewal_status,
                     )
                 )
 
         return summaries
+
+    async def list_home_clearances(self, home_id: uuid.UUID) -> list[BackgroundCheck]:
+        """Fetch all clearances linked directly to this placement home or its household members."""
+        home = await self.get_home(home_id)
+        person_ids = [m.person_id for m in home.members if m.deleted_at is None]
+
+        stmt = select(BackgroundCheck).where(
+            (BackgroundCheck.placement_home_id == home.id) | (BackgroundCheck.subject_id.in_(person_ids)),
+            BackgroundCheck.deleted_at.is_(None),
+        ).order_by(BackgroundCheck.request_date.desc())
+        res = await self.session.execute(stmt)
+        return list(res.scalars().all())
 
     # ── Placement History with Privacy Redaction ───────────────
     async def get_placement_history(
