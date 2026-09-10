@@ -50,6 +50,35 @@ export const placementHomesApi = {
   createTraining: (homeId, data) => api.post(`/placement-homes/${homeId}/training`, data),
   verifyTraining: (trainingId, data) =>
     api.post(`/caregiver-trainings/${trainingId}/verify`, data),
+
+  // Sprint 3: Placement Matching (Assistive Decision Support)
+  evaluateMatches: (profile) => api.post('/placement-matching/evaluate', profile),
+
+  // Sprint 3: Ongoing Home Monitoring
+  getMonitoring: (params = {}) => api.get('/resource-monitoring', { params }),
+  createMonitoring: (data) => api.post('/resource-monitoring', data),
+  getOverdueMonitoringCount: () => api.get('/resource-monitoring/overdue-count'),
+
+  // Sprint 3: Complaints & Investigations
+  getComplaints: (params = {}) => api.get('/resource-complaints', { params }),
+  getComplaint: (id) => api.get(`/resource-complaints/${id}`),
+  createComplaint: (data) => api.post('/resource-complaints', data),
+  updateInvestigation: (id, data) => api.patch(`/resource-complaints/${id}/investigation`, data),
+  recordDisposition: (id, data) => api.post(`/resource-complaints/${id}/disposition`, data),
+
+  // Sprint 3: Caregiver & Home Supports
+  getSupports: (params = {}) => api.get('/caregiver-supports', { params }),
+  createSupport: (data) => api.post('/caregiver-supports', data),
+  updateSupport: (id, data) => api.patch(`/caregiver-supports/${id}`, data),
+
+  // Sprint 3: Resource Finance Integration
+  getFinanceSummary: (homeId) => api.get(`/resource-finance/homes/${homeId}`),
+
+  // Sprint 3: Strategic Outcomes
+  getOutcomes: () => api.get('/resource-outcomes'),
+
+  // Sprint 3: Resource Canned Reports
+  getResourceReport: (reportKey, params = {}) => api.get(`/reports/canned/${reportKey}`, { params }),
 };
 
 export default placementHomesApi;

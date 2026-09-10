@@ -184,3 +184,16 @@ class ResourceDashboardMetrics(BaseModel):
     non_compliant_homes_count: int = Field(
         default=0, description="Active placement homes with non-compliant clearances, licenses, or inspections"
     )
+
+    # Sprint 3 Operational & Strategic Telemetry
+    monitoring_due_30_days: int = Field(default=0, description="Ongoing monitoring reviews due in next 30 days")
+    monitoring_overdue: int = Field(default=0, description="Active homes with overdue periodic monitoring")
+    open_complaints_count: int = Field(default=0, description="Complaints currently open or under review")
+    active_investigations_count: int = Field(default=0, description="Complaints currently under active investigation")
+    caregiver_supports_active: int = Field(default=0, description="Caregiver supports requested or in progress")
+    placement_stability_pct: float = Field(default=0.0, description="Percentage of placements completed without disruption")
+    retention_rate_pct: float = Field(default=0.0, description="Percentage of active homes open > 1 year")
+    recruitment_conversion_rate_pct: float = Field(default=0.0, description="Percentage of applicants approved")
+    finance_summary: dict | None = Field(
+        default=None, description="Financial roll-up visible ONLY to users with finance permissions"
+    )

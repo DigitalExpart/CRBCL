@@ -88,11 +88,12 @@ const Volunteers = lazy(() => import('@/pages/Volunteers'));
 const ClinicalNotes = lazy(() => import('@/pages/ClinicalNotes'));
 const AdminTerminology = lazy(() => import('@/pages/AdminTerminology'));
 
-// Resource Unit & Recruitment (Sprint 1)
+// Resource Unit & Recruitment (Sprint 1 & 3)
 const ResourceDashboard = lazy(() => import('@/pages/ResourceDashboard'));
 const RecruitmentPipeline = lazy(() => import('@/pages/RecruitmentPipeline'));
 const RecruitmentDetail = lazy(() => import('@/pages/RecruitmentDetail'));
 const RecruitmentNew = lazy(() => import('@/pages/RecruitmentNew'));
+const PlacementMatching = lazy(() => import('@/pages/PlacementMatching'));
 
 
 
@@ -184,11 +185,13 @@ const AuthenticatedApp = () => {
             <Route path="/placement-homes" element={<PlacementHomesList />} />
             <Route path="/placement-homes/:id" element={<PlacementHomeDetail />} />
 
-            {/* Resource Unit & Caregiver Recruitment Routes (Sprint 1) */}
+            {/* Resource Unit & Caregiver Recruitment Routes (Sprint 1 & 3) */}
             <Route path="/resource-team" element={<ResourceDashboard />} />
             <Route path="/resource-team/recruitment" element={<RecruitmentPipeline />} />
             <Route path="/resource-team/recruitment/new" element={<RecruitmentNew />} />
             <Route path="/resource-team/recruitment/:id" element={<RecruitmentDetail />} />
+            <Route path="/resource-team/matching" element={<PlacementMatching />} />
+            <Route path="/placement-matching" element={<PlacementMatching />} />
             <Route path="/schedule" element={<MySchedule />} />
             <Route path="/schedule/team" element={<TeamSchedule />} />
             <Route path="/staffing" element={<StaffingFacilitator />} />

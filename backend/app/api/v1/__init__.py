@@ -8,6 +8,7 @@ from app.api.v1.assessment_templates import router as assessment_templates_route
 from app.api.v1.assessments import router as assessments_router
 from app.api.v1.background_checks import router as background_checks_router
 from app.api.v1.calendar import router as calendar_router
+from app.api.v1.caregiver_supports import router as caregiver_supports_router
 from app.api.v1.caregiver_training import router as caregiver_training_router
 from app.api.v1.case_notes import router as case_notes_router
 from app.api.v1.cases import router as cases_router
@@ -31,6 +32,7 @@ from app.api.v1.org_ops import router as org_ops_router
 from app.api.v1.passports import router as passports_router
 from app.api.v1.permanency_plans import router as permanency_plans_router
 from app.api.v1.placement_homes import router as placement_homes_router
+from app.api.v1.placement_matching import router as placement_matching_router
 from app.api.v1.placements import router as placements_router
 from app.api.v1.plans import router as plans_router
 from app.api.v1.providers import router as providers_router
@@ -38,6 +40,10 @@ from app.api.v1.qa import router as qa_router
 from app.api.v1.referrals import router as referrals_router
 from app.api.v1.removals import router as removals_router
 from app.api.v1.reporting import router as reporting_router
+from app.api.v1.resource_complaints import router as resource_complaints_router
+from app.api.v1.resource_finance import router as resource_finance_router
+from app.api.v1.resource_monitoring import router as resource_monitoring_router
+from app.api.v1.resource_outcomes import router as resource_outcomes_router
 from app.api.v1.resource_recruitments import router as resource_recruitments_router
 from app.api.v1.schools import router as schools_router
 from app.api.v1.sprint_b_legacy import router as sprint_b_legacy_router
@@ -93,4 +99,10 @@ api_v1_router.include_router(ask_red_bear_router)
 api_v1_router.include_router(communications_router)
 api_v1_router.include_router(resource_recruitments_router)
 api_v1_router.include_router(caregiver_training_router)
+api_v1_router.include_router(placement_matching_router)
+api_v1_router.include_router(resource_monitoring_router)
+api_v1_router.include_router(resource_complaints_router)
+api_v1_router.include_router(caregiver_supports_router)
+api_v1_router.include_router(resource_finance_router)
+api_v1_router.include_router(resource_outcomes_router)
 api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])

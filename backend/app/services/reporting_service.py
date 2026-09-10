@@ -146,6 +146,61 @@ class ReportingCatalogue:
                 "insurance_expiry": {"label": "Insurance Expiry", "type": "date", "groupable": False, "sortable": True},
             },
         },
+        "resource_homes": {
+            "label": "Resource Homes Directory",
+            "description": "Placement homes, active licenses, capacity, and operational status",
+            "required_permission": Permissions.RESOURCE_REPORTING_READ,
+            "fields": {
+                "home_code": {"label": "Home Code", "type": "string", "groupable": True, "sortable": True},
+                "name": {"label": "Home Name", "type": "string", "groupable": False, "sortable": True},
+                "home_type": {"label": "Home Type", "type": "string", "groupable": True, "sortable": True},
+                "status": {"label": "Status", "type": "string", "groupable": True, "sortable": True},
+                "licensing_status": {"label": "Licensing Status", "type": "string", "groupable": True, "sortable": True},
+                "total_capacity": {"label": "Total Capacity", "type": "number", "groupable": True, "sortable": True, "aggregatable": True},
+                "city": {"label": "City", "type": "string", "groupable": True, "sortable": True},
+                "community": {"label": "Community", "type": "string", "groupable": True, "sortable": True},
+            },
+        },
+        "resource_monitoring": {
+            "label": "Resource Home Ongoing Monitoring",
+            "description": "Periodic contact logs, interview completion, and follow-ups",
+            "required_permission": Permissions.RESOURCE_REPORTING_READ,
+            "fields": {
+                "contact_date": {"label": "Contact Date", "type": "date", "groupable": False, "sortable": True},
+                "contact_type": {"label": "Contact Type", "type": "string", "groupable": True, "sortable": True},
+                "status": {"label": "Status", "type": "string", "groupable": True, "sortable": True},
+                "next_review_date": {"label": "Next Review Date", "type": "date", "groupable": False, "sortable": True},
+                "follow_up_required": {"label": "Follow-Up Required", "type": "boolean", "groupable": True, "sortable": True},
+            },
+        },
+        "resource_complaints": {
+            "label": "Resource Complaints & Investigations",
+            "description": "Complaints, severities, investigation status, and dispositions",
+            "required_permission": Permissions.RESOURCE_REPORTING_READ,
+            "fields": {
+                "complaint_number": {"label": "Complaint Number", "type": "string", "groupable": True, "sortable": True},
+                "complainant_category": {"label": "Complainant Category", "type": "string", "groupable": True, "sortable": True},
+                "received_date": {"label": "Received Date", "type": "date", "groupable": False, "sortable": True},
+                "complaint_type": {"label": "Complaint Type", "type": "string", "groupable": True, "sortable": True},
+                "severity": {"label": "Severity", "type": "string", "groupable": True, "sortable": True},
+                "status": {"label": "Status", "type": "string", "groupable": True, "sortable": True},
+                "disposition": {"label": "Disposition", "type": "string", "groupable": True, "sortable": True},
+            },
+        },
+        "caregiver_supports": {
+            "label": "Caregiver & Home Supports",
+            "description": "Respite, clinical, cultural, and financial supports provided to caregivers",
+            "required_permission": Permissions.RESOURCE_REPORTING_READ,
+            "fields": {
+                "support_number": {"label": "Support Number", "type": "string", "groupable": True, "sortable": True},
+                "support_type": {"label": "Support Type", "type": "string", "groupable": True, "sortable": True},
+                "title": {"label": "Title", "type": "string", "groupable": False, "sortable": True},
+                "requested_date": {"label": "Requested Date", "type": "date", "groupable": False, "sortable": True},
+                "provided_date": {"label": "Provided Date", "type": "date", "groupable": False, "sortable": True},
+                "status": {"label": "Status", "type": "string", "groupable": True, "sortable": True},
+                "amount": {"label": "Amount", "type": "number", "groupable": False, "sortable": True, "aggregatable": True},
+            },
+        },
     }
 
 

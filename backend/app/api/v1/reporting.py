@@ -13,6 +13,7 @@ from app.permissions.dependencies import get_current_user_permissions, require_p
 from app.repositories.reporting_qa_repo import ReportingQARepository
 from app.schemas.reporting_qa import AdHocReportRequest, ReportExportRequest, SavedReportCreate, SavedReportResponse
 from app.services.reporting_service import ReportingService
+from app.services.resource_reports_service import ResourceReportsService
 
 router = APIRouter(prefix="/reports", tags=["Reporting & Analytics"])
 
@@ -83,6 +84,112 @@ async def get_financial_summary_report(
     db: AsyncSession = Depends(get_db),
 ):
     return await ReportingService.run_financial_summary_report(db)
+
+
+# ── Resource Unit Canned Reports (Sprint 3) ────────────────────
+@router.get("/canned/resource-directory")
+async def get_resource_directory_report(
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    can_contact = bool(
+        user_perms
+        & {
+            Permissions.RESOURCE_HOME_READ,
+            Permissions.PLACEMENT_HOME_READ,
+            Permissions.PLACEMENT_HOME_CONTACT_READ,
+        }
+    )
+    return await ResourceReportsService.run_home_directory_report(db, can_read_contact=can_contact)
+
+
+@router.get("/canned/resource-capacity")
+async def get_resource_capacity_report(
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    return await ResourceReportsService.run_available_capacity_report(db)
+
+
+@router.get("/canned/resource-recruitment")
+async def get_resource_recruitment_report(
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    return await ResourceReportsService.run_recruitment_conversion_report(db)
+
+
+@router.get("/canned/resource-compliance-expiring")
+async def get_resource_compliance_expiring_report(
+    days_ahead: int = Query(30, ge=1, le=365),
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    return await ResourceReportsService.run_compliance_expiring_report(db, days_ahead=days_ahead)
+
+
+@router.get("/canned/resource-training-compliance")
+async def get_resource_training_compliance_report(
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    return await ResourceReportsService.run_caregiver_training_report(db)
+
+
+@router.get("/canned/resource-licensing-renewal")
+async def get_resource_licensing_renewal_report(
+    days_ahead: int = Query(90, ge=1, le=365),
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    return await ResourceReportsService.run_licensing_renewal_report(db, days_ahead=days_ahead)
+
+
+@router.get("/canned/resource-monitoring")
+async def get_resource_monitoring_report(
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    return await ResourceReportsService.run_home_monitoring_report(db)
+
+
+@router.get("/canned/resource-complaints")
+async def get_resource_complaints_report(
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    can_sensitive = Permissions.RESOURCE_COMPLAINT_SENSITIVE_READ in user_perms
+    return await ResourceReportsService.run_complaints_report(db, can_read_sensitive=can_sensitive)
+
+
+@router.get("/canned/resource-supports")
+async def get_resource_supports_report(
+    db: AsyncSession = Depends(get_db),
+    user_perms: set[str] = Depends(get_current_user_permissions),
+):
+    if Permissions.RESOURCE_REPORTING_READ not in user_perms and Permissions.REPORT_READ not in user_perms:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: Resource reporting permission required.")
+    can_financial = bool(
+        user_perms & {Permissions.FINANCE_REQUEST_READ, Permissions.FINANCE_INVOICE_READ}
+    )
+    return await ResourceReportsService.run_caregiver_supports_report(db, can_read_financial=can_financial)
+
 
 
 # ── Ad-Hoc Report Engine ───────────────────────────────────────

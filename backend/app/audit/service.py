@@ -47,7 +47,7 @@ class AuditService:
 
     async def log_event(
         self,
-        event_type: str,
+        event_type: str | None = None,
         user_id: uuid.UUID | None = None,
         entity_type: str | None = None,
         entity_id: uuid.UUID | None = None,
@@ -58,16 +58,25 @@ class AuditService:
         session_id: uuid.UUID | None = None,
         source: str = "api",
         ip_address: str | None = None,
+        action: str | None = None,
+        resource_type: str | None = None,
+        resource_id: uuid.UUID | None = None,
+        details: dict | None = None,
     ) -> AuditEvent:
         """Create an append-only audit event. Never logs credentials or secrets."""
+        evt = event_type or action or "AUDIT_EVENT"
+        ent = entity_type or resource_type
+        eid = entity_id or resource_id
+        meta = metadata if metadata is not None else details
+
         event = AuditEvent(
-            event_type=event_type,
+            event_type=evt,
             user_id=user_id,
-            entity_type=entity_type,
-            entity_id=entity_id,
+            entity_type=ent,
+            entity_id=eid,
             before_data=_sanitize_dict(before_data),
             after_data=_sanitize_dict(after_data),
-            metadata_=_sanitize_dict(metadata),
+            metadata_=_sanitize_dict(meta),
             request_id=request_id,
             session_id=session_id,
             source=source,

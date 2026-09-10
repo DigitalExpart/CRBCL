@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.audit.service import AuditService
+from app.models.caregiver_support import CaregiverSupport
 from app.models.caregiver_training import CaregiverTraining
 from app.models.person import Person
 from app.models.placement import BackgroundCheck, PlacementEpisode
@@ -29,12 +30,15 @@ from app.models.placement_home import (
     PlacementHomeMember,
     PlacementHomeVisit,
 )
+from app.models.resource_complaint import ResourceComplaint
+from app.models.resource_monitoring import ResourceHomeMonitoring
 from app.models.resource_recruitment import (
     RecruitmentState,
     ResourceRecruitment,
     ResourceRecruitmentApplicant,
     ResourceRecruitmentHistory,
 )
+from app.models.user import User
 from app.permissions.constants import Permissions
 from app.permissions.service import PermissionService
 from app.schemas.resource_recruitment import (
@@ -436,7 +440,9 @@ class ResourceRecruitmentService:
 
     # ── Authoritative Dashboard Queries ────────────────────────────────
 
-    async def get_dashboard_metrics(self) -> ResourceDashboardMetrics:
+    async def get_dashboard_metrics(
+        self, current_user: User | None = None
+    ) -> ResourceDashboardMetrics:
         """Calculate authoritative operational metrics using live queries (no aggregate tables)."""
         # 1. Active homes and total capacity
         homes_stmt = select(
@@ -620,6 +626,87 @@ class ResourceRecruitmentService:
         non_comp_res = await self.session.execute(non_compliant_homes_stmt)
         non_compliant_homes_count = int(non_comp_res.scalar() or 0)
 
+        # 8. Sprint 3 Operational & Strategic Telemetry
+        # 8a. Monitoring due in 30 days
+        monitoring_due_stmt = select(func.count(ResourceHomeMonitoring.id)).where(
+            ResourceHomeMonitoring.deleted_at.is_(None),
+            ResourceHomeMonitoring.next_review_date.isnot(None),
+            ResourceHomeMonitoring.next_review_date >= today,
+            ResourceHomeMonitoring.next_review_date <= thirty_days,
+        )
+        monitoring_due_30_days = int((await self.session.execute(monitoring_due_stmt)).scalar() or 0)
+
+        # 8b. Monitoring overdue
+        from app.services.resource_monitoring_service import ResourceMonitoringService
+        monitoring_service = ResourceMonitoringService(self.session)
+        monitoring_overdue = await monitoring_service.get_overdue_monitoring_homes_count()
+
+        # 8c. Open complaints & active investigations
+        open_complaints_stmt = select(func.count(ResourceComplaint.id)).where(
+            ResourceComplaint.deleted_at.is_(None),
+            ResourceComplaint.status.notin_(["RESOLVED", "CLOSED"]),
+        )
+        open_complaints_count = int((await self.session.execute(open_complaints_stmt)).scalar() or 0)
+
+        active_inv_stmt = select(func.count(ResourceComplaint.id)).where(
+            ResourceComplaint.deleted_at.is_(None),
+            ResourceComplaint.status.in_(["ASSIGNED", "UNDER_INVESTIGATION", "FINDINGS_PENDING"]),
+        )
+        active_investigations_count = int((await self.session.execute(active_inv_stmt)).scalar() or 0)
+
+        # 8d. Active caregiver supports
+        active_supports_stmt = select(func.count(CaregiverSupport.id)).where(
+            CaregiverSupport.deleted_at.is_(None),
+            CaregiverSupport.status.in_(["REQUESTED", "APPROVED", "IN_PROGRESS"]),
+        )
+        caregiver_supports_active = int((await self.session.execute(active_supports_stmt)).scalar() or 0)
+
+        # 8e. Strategic indicators
+        all_episodes_stmt = select(PlacementEpisode.status).where(PlacementEpisode.deleted_at.is_(None))
+        all_episodes_res = list((await self.session.execute(all_episodes_stmt)).scalars().all())
+        total_eps = len(all_episodes_res)
+        disrupted_eps = sum(1 for s in all_episodes_res if s == "DISRUPTED")
+        placement_stability_pct = (
+            round(((total_eps - disrupted_eps) / total_eps * 100.0), 1) if total_eps > 0 else 100.0
+        )
+
+        one_year_ago = datetime.utcnow() - timedelta(days=365)
+        retained_stmt = select(func.count(PlacementHome.id)).where(
+            PlacementHome.status == "ACTIVE",
+            PlacementHome.created_at <= one_year_ago,
+            PlacementHome.deleted_at.is_(None),
+        )
+        retained_count = int((await self.session.execute(retained_stmt)).scalar() or 0)
+        retention_rate_pct = round((retained_count / active_homes * 100.0), 1) if active_homes > 0 else 100.0
+
+        approved_apps_count = stage_counts.get("APPROVED", 0)
+        conversion_rate_pct = (
+            round((approved_apps_count / total_applications * 100.0), 1) if total_applications > 0 else 0.0
+        )
+
+        # 8f. Authorized Finance roll-up (only visible if user has finance permissions)
+        finance_summary = None
+        if current_user:
+            perm_service = PermissionService(self.session)
+            has_inv = await perm_service.user_has_permission(current_user.id, Permissions.FINANCE_INVOICE_READ)
+            has_req = await perm_service.user_has_permission(current_user.id, Permissions.FINANCE_REQUEST_READ)
+            if has_inv or has_req:
+                from app.models.finance import Invoice, ServiceRequest
+                inv_total_stmt = select(func.coalesce(func.sum(Invoice.total_amount), 0)).where(
+                    Invoice.status.in_(["FINALIZED", "PAID"]),
+                    Invoice.deleted_at.is_(None),
+                )
+                inv_sum = float((await self.session.execute(inv_total_stmt)).scalar() or 0)
+                sr_total_stmt = select(func.coalesce(func.sum(ServiceRequest.total_amount), 0)).where(
+                    ServiceRequest.status == "APPROVED",
+                    ServiceRequest.deleted_at.is_(None),
+                )
+                sr_sum = float((await self.session.execute(sr_total_stmt)).scalar() or 0)
+                finance_summary = {
+                    "total_placement_invoiced_ytd": inv_sum,
+                    "total_service_requests_approved": sr_sum,
+                }
+
         return ResourceDashboardMetrics(
             active_resource_homes=active_homes,
             available_beds=available_beds,
@@ -637,4 +724,13 @@ class ResourceRecruitmentService:
             inspections_overdue=inspections_overdue,
             outstanding_corrective_actions=outstanding_corrective_actions,
             non_compliant_homes_count=non_compliant_homes_count,
+            monitoring_due_30_days=monitoring_due_30_days,
+            monitoring_overdue=monitoring_overdue,
+            open_complaints_count=open_complaints_count,
+            active_investigations_count=active_investigations_count,
+            caregiver_supports_active=caregiver_supports_active,
+            placement_stability_pct=placement_stability_pct,
+            retention_rate_pct=retention_rate_pct,
+            recruitment_conversion_rate_pct=conversion_rate_pct,
+            finance_summary=finance_summary,
         )

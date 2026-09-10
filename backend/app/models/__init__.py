@@ -21,6 +21,7 @@ from app.models.calendar import (  # noqa: F401
     CalendarEvent,
     CalendarRecurrenceRule,
 )
+from app.models.caregiver_support import CaregiverSupport  # noqa: F401
 from app.models.caregiver_training import CaregiverTraining  # noqa: F401
 from app.models.case import Case  # noqa: F401
 from app.models.case_management import (  # noqa: F401
@@ -182,6 +183,8 @@ from app.models.reporting_qa import (  # noqa: F401
     SavedReport,
     UserDashboardWidget,
 )
+from app.models.resource_complaint import ResourceComplaint  # noqa: F401
+from app.models.resource_monitoring import ResourceHomeMonitoring  # noqa: F401
 from app.models.resource_recruitment import (  # noqa: F401
     ApplicantRole,
     RecruitmentState,

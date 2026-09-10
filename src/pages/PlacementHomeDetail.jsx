@@ -22,6 +22,10 @@ import {
   CheckCircle,
   XCircle,
   FileText,
+  Calendar,
+  FileWarning,
+  HeartHandshake,
+  DollarSign,
 } from "lucide-react";
 import { placementHomesApi } from "@/api/placementHomes";
 import { Button } from "@/components/ui/button";
@@ -46,6 +50,10 @@ export default function PlacementHomeDetail() {
   const [clearances, setClearances] = useState([]);
   const [trainings, setTrainings] = useState([]);
   const [complianceSummary, setComplianceSummary] = useState(null);
+  const [monitorings, setMonitorings] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [supports, setSupports] = useState([]);
+  const [financeSummary, setFinanceSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -142,6 +150,38 @@ export default function PlacementHomeDetail() {
     completed_date: new Date().toISOString().split("T")[0],
   });
 
+  // Sprint 3: Modals State
+  const [showMonitoringModal, setShowMonitoringModal] = useState(false);
+  const [monitoringForm, setMonitoringForm] = useState({
+    visit_date: new Date().toISOString().split("T")[0],
+    visit_type: "HOME_VISIT",
+    contact_method: "IN_PERSON",
+    duration_minutes: 45,
+    safe_sleep_verified: true,
+    caregiver_wellbeing_notes: "",
+    follow_up_required: false,
+    follow_up_notes: "",
+    observations: "",
+  });
+
+  const [showComplaintModal, setShowComplaintModal] = useState(false);
+  const [complaintForm, setComplaintForm] = useState({
+    allegation_type: "CARE_QUALITY",
+    allegation_summary: "",
+    incident_date: new Date().toISOString().split("T")[0],
+    complainant_type: "CASEWORKER",
+    complainant_name: "",
+    is_sensitive: false,
+  });
+
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [supportForm, setSupportForm] = useState({
+    support_type: "RESPITE",
+    description: "",
+    requested_amount: "",
+    service_request_id: "",
+  });
+
   const [submitting, setSubmitting] = useState(false);
 
   const fetchHomeData = async () => {
@@ -155,6 +195,10 @@ export default function PlacementHomeDetail() {
         clearancesRes,
         trainingRes,
         compRes,
+        monitoringRes,
+        complaintRes,
+        supportRes,
+        financeRes,
       ] = await Promise.all([
         placementHomesApi.get(id),
         placementHomesApi.getBackgroundChecks(id),
@@ -163,6 +207,10 @@ export default function PlacementHomeDetail() {
         placementHomesApi.getClearances(id).catch(() => ({ data: [] })),
         placementHomesApi.getTrainings(id).catch(() => ({ data: [] })),
         placementHomesApi.getTrainingCompliance(id).catch(() => ({ data: null })),
+        placementHomesApi.getMonitoring({ home_id: id }).catch(() => ({ data: [] })),
+        placementHomesApi.getComplaints({ home_id: id }).catch(() => ({ data: [] })),
+        placementHomesApi.getSupports({ home_id: id }).catch(() => ({ data: [] })),
+        placementHomesApi.getFinanceSummary(id).catch(() => ({ data: null })),
       ]);
       setHome(homeRes.data);
       setBackgroundChecks(bgRes.data || []);
@@ -171,6 +219,10 @@ export default function PlacementHomeDetail() {
       setClearances(clearancesRes.data || []);
       setTrainings(trainingRes.data || []);
       setComplianceSummary(compRes.data || null);
+      setMonitorings(monitoringRes.data || []);
+      setComplaints(complaintRes.data || []);
+      setSupports(supportRes.data || []);
+      setFinanceSummary(financeRes?.data || null);
 
       if (homeRes.data.total_capacity) {
         setRenewForm((prev) => ({ ...prev, max_capacity: homeRes.data.total_capacity }));
@@ -289,6 +341,63 @@ export default function PlacementHomeDetail() {
       fetchHomeData();
     } catch (err) {
       toast.error(err.response?.data?.detail || "Failed to update corrective action.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateMonitoring = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await placementHomesApi.createMonitoring({
+        placement_home_id: id,
+        ...monitoringForm,
+      });
+      toast.success("Monitoring visit recorded.");
+      setShowMonitoringModal(false);
+      fetchHomeData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to record monitoring visit.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateComplaint = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await placementHomesApi.createComplaint({
+        placement_home_id: id,
+        ...complaintForm,
+      });
+      toast.success("Complaint registered.");
+      setShowComplaintModal(false);
+      fetchHomeData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to register complaint.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateSupport = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await placementHomesApi.createSupport({
+        placement_home_id: id,
+        support_type: supportForm.support_type,
+        description: supportForm.description,
+        requested_amount: supportForm.requested_amount ? parseFloat(supportForm.requested_amount) : undefined,
+        service_request_id: supportForm.service_request_id || undefined,
+      });
+      toast.success("Caregiver support requested.");
+      setShowSupportModal(false);
+      fetchHomeData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to create support request.");
     } finally {
       setSubmitting(false);
     }
@@ -457,8 +566,17 @@ export default function PlacementHomeDetail() {
               <Button size="sm" variant="outline" onClick={() => setShowRenewModal(true)} className="gap-1.5">
                 <RefreshCw className="h-4 w-4" /> Renew Licence
               </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowMonitoringModal(true)} className="gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+                <Calendar className="h-4 w-4" /> Log Monitoring
+              </Button>
               <Button size="sm" variant="outline" onClick={() => setShowVisitModal(true)} className="gap-1.5">
                 <Eye className="h-4 w-4" /> Log Inspection
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowComplaintModal(true)} className="gap-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200">
+                <FileWarning className="h-4 w-4" /> Register Complaint
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowSupportModal(true)} className="gap-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200">
+                <HeartHandshake className="h-4 w-4" /> Request Support
               </Button>
               <Button size="sm" variant="outline" onClick={() => setShowAssessModal(true)} className="gap-1.5">
                 <ClipboardList className="h-4 w-4" /> New Assessment
@@ -504,6 +622,9 @@ export default function PlacementHomeDetail() {
         <TabsList className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 flex-wrap h-auto">
           <TabsTrigger value="overview" className="gap-1.5"><Home className="h-4 w-4" /> Overview</TabsTrigger>
           <TabsTrigger value="members" className="gap-1.5"><Users className="h-4 w-4" /> Caregivers & Household ({home.members?.length || 0})</TabsTrigger>
+          <TabsTrigger value="monitoring" className="gap-1.5"><Calendar className="h-4 w-4" /> Monitoring ({monitorings.length})</TabsTrigger>
+          <TabsTrigger value="complaints" className="gap-1.5"><FileWarning className="h-4 w-4" /> Complaints ({complaints.length})</TabsTrigger>
+          <TabsTrigger value="supports" className="gap-1.5"><HeartHandshake className="h-4 w-4" /> Supports ({supports.length})</TabsTrigger>
           <TabsTrigger value="assessments" className="gap-1.5"><ClipboardList className="h-4 w-4" /> Assessments ({assessments.length})</TabsTrigger>
           <TabsTrigger value="clearances" className="gap-1.5"><ShieldCheck className="h-4 w-4" /> Clearances ({clearances.length || backgroundChecks.length})</TabsTrigger>
           <TabsTrigger value="training" className="gap-1.5"><GraduationCap className="h-4 w-4" /> Training ({trainings.length})</TabsTrigger>
@@ -512,6 +633,7 @@ export default function PlacementHomeDetail() {
           <TabsTrigger value="compliance" className="gap-1.5"><ShieldAlert className="h-4 w-4" /> Compliance</TabsTrigger>
           <TabsTrigger value="contacts" className="gap-1.5"><PhoneCall className="h-4 w-4" /> Contact Logs ({home.contact_logs?.length || 0})</TabsTrigger>
           <TabsTrigger value="placements" className="gap-1.5"><Bed className="h-4 w-4" /> Placements ({placementHistory.length})</TabsTrigger>
+          <TabsTrigger value="finance" className="gap-1.5"><DollarSign className="h-4 w-4" /> Finance</TabsTrigger>
         </TabsList>
 
         {/* 1. OVERVIEW TAB */}
@@ -1073,6 +1195,338 @@ export default function PlacementHomeDetail() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* 11. MONITORING TAB (Sprint 3) */}
+        <TabsContent value="monitoring" className="space-y-4">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600" /> Periodic Resource Home Monitoring
+                </CardTitle>
+                <CardDescription>
+                  Ongoing monthly contact and home observations distinct from annual licensing reviews.
+                </CardDescription>
+              </div>
+              <Button size="sm" onClick={() => setShowMonitoringModal(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" /> Log Monitoring Visit
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {monitorings.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">
+                  No periodic monitoring records logged for this home yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {monitorings.map((m) => (
+                    <div
+                      key={m.id}
+                      className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2"
+                    >
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+                            {m.visit_date}
+                          </span>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/30">
+                            {m.visit_type}
+                          </Badge>
+                          <Badge variant="outline" className="bg-slate-100 text-slate-700 dark:bg-slate-800">
+                            {m.contact_method}
+                          </Badge>
+                          {m.safe_sleep_verified && (
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30">
+                              Safe Sleep Verified
+                            </Badge>
+                          )}
+                          {m.follow_up_required && (
+                            <Badge variant="outline" className="bg-rose-50 text-rose-700 dark:bg-rose-900/30">
+                              Follow-Up Required
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          {m.duration_minutes ? `${m.duration_minutes} min` : ""}
+                        </span>
+                      </div>
+                      {m.observations && (
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
+                          <span className="font-semibold">Observations:</span> {m.observations}
+                        </p>
+                      )}
+                      {m.caregiver_wellbeing_notes && (
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
+                          <span className="font-semibold">Caregiver Well-being:</span> {m.caregiver_wellbeing_notes}
+                        </p>
+                      )}
+                      {m.follow_up_required && m.follow_up_notes && (
+                        <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                          Follow-up Action: {m.follow_up_notes} (Due: {m.follow_up_due_date || "Not set"})
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 12. COMPLAINTS TAB (Sprint 3) */}
+        <TabsContent value="complaints" className="space-y-4">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileWarning className="h-4 w-4 text-rose-600" /> Resource Complaints & Inquiries
+                </CardTitle>
+                <CardDescription>
+                  Confidential tracking of complaints, investigation status, findings, and formal dispositions.
+                </CardDescription>
+              </div>
+              <Button size="sm" onClick={() => setShowComplaintModal(true)} className="gap-1.5 bg-rose-600 hover:bg-rose-700 text-white">
+                <Plus className="h-4 w-4" /> Register Complaint
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {complaints.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">
+                  No complaints or investigations registered for this resource home.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {complaints.map((c) => (
+                    <div
+                      key={c.id}
+                      className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2"
+                    >
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+                            {c.complaint_number}
+                          </span>
+                          <Badge variant="outline" className="bg-rose-50 text-rose-700 dark:bg-rose-900/30">
+                            {c.allegation_type}
+                          </Badge>
+                          <Badge variant="outline" className="bg-slate-100 text-slate-700">
+                            Status: {c.status}
+                          </Badge>
+                          <Badge variant="outline" className="bg-amber-50 text-amber-800">
+                            Investigation: {c.investigation_status}
+                          </Badge>
+                          {c.disposition && (
+                            <Badge variant="outline" className="bg-indigo-50 text-indigo-700">
+                              Disposition: {c.disposition}
+                            </Badge>
+                          )}
+                          {c.is_sensitive && (
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                              Confidential / Sensitive
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          Incident: {c.incident_date || c.created_at?.split("T")[0]}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 dark:text-slate-300">
+                        <span className="font-semibold">Allegation:</span> {c.allegation_summary}
+                      </p>
+                      {c.findings && (
+                        <div className="text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 p-2.5 rounded border border-slate-200 dark:border-slate-700">
+                          <div className="font-semibold text-slate-700 dark:text-slate-200">
+                            Investigation Findings {c.findings_finalized ? "(Finalized)" : "(In Progress)"}:
+                          </div>
+                          <div>{c.findings}</div>
+                        </div>
+                      )}
+                      {c.disposition_notes && (
+                        <p className="text-xs text-slate-500">
+                          <span className="font-semibold">Disposition Rationale:</span> {c.disposition_notes}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 13. SUPPORTS TAB (Sprint 3) */}
+        <TabsContent value="supports" className="space-y-4">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <HeartHandshake className="h-4 w-4 text-indigo-600" /> Caregiver Supports & Stabilization
+                </CardTitle>
+                <CardDescription>
+                  Respite care, clinical consultations, peer support, and financial assistance allocations.
+                </CardDescription>
+              </div>
+              <Button size="sm" onClick={() => setShowSupportModal(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" /> Request Caregiver Support
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {supports.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">
+                  No caregiver supports requested or recorded for this home.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {supports.map((s) => (
+                    <div
+                      key={s.id}
+                      className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2"
+                    >
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 font-semibold">
+                            {s.support_type}
+                          </Badge>
+                          <Badge variant="outline" className={s.status === "APPROVED" || s.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-700"}>
+                            {s.status}
+                          </Badge>
+                          {s.service_request_id && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                              Service Request Linked
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                          {s.approved_amount ? `$${Number(s.approved_amount).toLocaleString()}` : s.requested_amount ? `Requested: $${Number(s.requested_amount).toLocaleString()}` : ""}
+                        </div>
+                      </div>
+                      {s.description && (
+                        <p className="text-xs text-slate-700 dark:text-slate-300">
+                          {s.description}
+                        </p>
+                      )}
+                      {s.notes && (
+                        <p className="text-xs text-slate-500">
+                          Notes: {s.notes}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 14. FINANCE TAB (Sprint 3) */}
+        <TabsContent value="finance" className="space-y-4">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-emerald-600" /> Resource Financial Integration
+              </CardTitle>
+              <CardDescription>
+                Maintenance rate schedules, generated foster invoices, and authorized service requests.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {financeSummary ? (
+                <div className="space-y-6">
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                      <div className="text-xs text-slate-500">Active Rate Schedules</div>
+                      <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                        {financeSummary.active_rates_count}
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1">Placement home maintenance per diem</div>
+                    </div>
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                      <div className="text-xs text-slate-500">Resource Home Invoices</div>
+                      <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                        ${Number(financeSummary.total_invoiced_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="text-[11px] text-amber-600 mt-1">
+                        {financeSummary.unpaid_invoices_count} unpaid / pending payment
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                      <div className="text-xs text-slate-500">Support Service Requests</div>
+                      <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                        ${Number(financeSummary.total_service_requests_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1">
+                        {financeSummary.active_service_requests_count} active service requests
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rates Detail */}
+                  {financeSummary.rates && financeSummary.rates.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Rate Schedules
+                      </h4>
+                      <div className="space-y-2">
+                        {financeSummary.rates.map((r, i) => (
+                          <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-sm">
+                            <div>
+                              <span className="font-semibold text-slate-900 dark:text-slate-100">{r.rate_type}</span>
+                              <span className="text-xs text-slate-500 ml-2">Effective: {r.effective_date} {r.end_date ? `to ${r.end_date}` : "(Ongoing)"}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-emerald-600">${r.daily_rate}/day</span>
+                              <Badge variant="outline" className={r.is_active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}>
+                                {r.is_active ? "Active" : "Archived"}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Invoices Detail */}
+                  {financeSummary.invoices && financeSummary.invoices.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Recent Invoices
+                      </h4>
+                      <div className="space-y-2">
+                        {financeSummary.invoices.map((inv, i) => (
+                          <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-sm">
+                            <div>
+                              <span className="font-semibold text-slate-900 dark:text-slate-100">{inv.invoice_number || `INV-${i+1}`}</span>
+                              <span className="text-xs text-slate-500 ml-2">Due: {inv.due_date || "N/A"}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white">${Number(inv.amount || 0).toLocaleString()}</span>
+                              <Badge variant="outline" className={inv.status === "PAID" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}>
+                                {inv.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-10 space-y-3">
+                  <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-full w-fit mx-auto text-slate-500">
+                    <Lock className="h-6 w-6" />
+                  </div>
+                  <div className="font-medium text-slate-800 dark:text-slate-200 text-sm">
+                    Restricted Financial Information
+                  </div>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    Placement home financial ledgers, per diem schedules, and invoice histories are protected by RBAC policy. Only users with authorized Finance permissions may inspect ledger amounts.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Member Modal */}
@@ -1625,6 +2079,290 @@ export default function PlacementHomeDetail() {
             <DialogFooter className="pt-3">
               <Button type="button" variant="outline" onClick={() => setShowCorrectiveModal(false)}>Cancel</Button>
               <Button type="submit" disabled={submitting}>Update Corrective Action</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sprint 3: Periodic Monitoring Modal */}
+      <Dialog open={showMonitoringModal} onOpenChange={setShowMonitoringModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Log Periodic Monitoring Visit</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateMonitoring} className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Visit Date *</Label>
+                <Input
+                  type="date"
+                  required
+                  value={monitoringForm.visit_date}
+                  onChange={(e) => setMonitoringForm({ ...monitoringForm, visit_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Duration (Minutes)</Label>
+                <Input
+                  type="number"
+                  value={monitoringForm.duration_minutes}
+                  onChange={(e) => setMonitoringForm({ ...monitoringForm, duration_minutes: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Visit Type *</Label>
+                <Select
+                  value={monitoringForm.visit_type}
+                  onValueChange={(v) => setMonitoringForm({ ...monitoringForm, visit_type: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="HOME_VISIT">Home Visit</SelectItem>
+                    <SelectItem value="VIRTUAL_CHECK_IN">Virtual Check-In</SelectItem>
+                    <SelectItem value="COLLATERAL_CONTACT">Collateral Contact</SelectItem>
+                    <SelectItem value="UNANNOUNCED_VISIT">Unannounced Visit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Contact Method *</Label>
+                <Select
+                  value={monitoringForm.contact_method}
+                  onValueChange={(v) => setMonitoringForm({ ...monitoringForm, contact_method: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IN_PERSON">In Person</SelectItem>
+                    <SelectItem value="PHONE">Phone Call</SelectItem>
+                    <SelectItem value="VIDEO">Video Conference</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Safe Sleep / Living Conditions Verified</Label>
+              <Select
+                value={monitoringForm.safe_sleep_verified ? "true" : "false"}
+                onValueChange={(v) => setMonitoringForm({ ...monitoringForm, safe_sleep_verified: v === "true" })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Yes - Safe Sleep & Conditions Verified</SelectItem>
+                  <SelectItem value="false">No / Deficiencies Observed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Caregiver Well-being & Observations</Label>
+              <Textarea
+                placeholder="Caregiver coping, dynamics, supports needed..."
+                value={monitoringForm.caregiver_wellbeing_notes}
+                onChange={(e) => setMonitoringForm({ ...monitoringForm, caregiver_wellbeing_notes: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>General Observations</Label>
+              <Textarea
+                placeholder="Home environment, child interactions..."
+                value={monitoringForm.observations}
+                onChange={(e) => setMonitoringForm({ ...monitoringForm, observations: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Follow-Up Action Required?</Label>
+              <Select
+                value={monitoringForm.follow_up_required ? "true" : "false"}
+                onValueChange={(v) => setMonitoringForm({ ...monitoringForm, follow_up_required: v === "true" })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="false">No Follow-up Required</SelectItem>
+                  <SelectItem value="true">Yes - Follow-up Action Required</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {monitoringForm.follow_up_required && (
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className="space-y-1">
+                  <Label>Follow-Up Notes</Label>
+                  <Input
+                    placeholder="Specific items to follow up on..."
+                    value={monitoringForm.follow_up_notes}
+                    onChange={(e) => setMonitoringForm({ ...monitoringForm, follow_up_notes: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Follow-Up Due Date</Label>
+                  <Input
+                    type="date"
+                    value={monitoringForm.follow_up_due_date || ""}
+                    onChange={(e) => setMonitoringForm({ ...monitoringForm, follow_up_due_date: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter className="pt-3">
+              <Button type="button" variant="outline" onClick={() => setShowMonitoringModal(false)}>Cancel</Button>
+              <Button type="submit" disabled={submitting}>Record Visit</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sprint 3: Register Complaint Modal */}
+      <Dialog open={showComplaintModal} onOpenChange={setShowComplaintModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Register Resource Home Complaint</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateComplaint} className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Allegation Category *</Label>
+                <Select
+                  value={complaintForm.allegation_type}
+                  onValueChange={(v) => setComplaintForm({ ...complaintForm, allegation_type: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CARE_QUALITY">Care Quality</SelectItem>
+                    <SelectItem value="SAFETY_CONCERN">Safety Concern</SelectItem>
+                    <SelectItem value="POLICY_BREACH">Policy Breach</SelectItem>
+                    <SelectItem value="ABUSE_NEGLECT">Abuse / Neglect Allegation</SelectItem>
+                    <SelectItem value="COMMUNICATION_ISSUE">Communication Issue</SelectItem>
+                    <SelectItem value="OTHER">Other Inquiry</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Incident Date</Label>
+                <Input
+                  type="date"
+                  value={complaintForm.incident_date}
+                  onChange={(e) => setComplaintForm({ ...complaintForm, incident_date: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Complainant Source *</Label>
+                <Select
+                  value={complaintForm.complainant_type}
+                  onValueChange={(v) => setComplaintForm({ ...complaintForm, complainant_type: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CASEWORKER">Caseworker</SelectItem>
+                    <SelectItem value="FOSTER_CHILD">Foster Child / Youth</SelectItem>
+                    <SelectItem value="BIOLOGICAL_PARENT">Biological Parent / Family</SelectItem>
+                    <SelectItem value="COMMUNITY_MEMBER">Community Member / Neighbour</SelectItem>
+                    <SelectItem value="ANONYMOUS">Anonymous</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Complainant Name (Confidential)</Label>
+                <Input
+                  placeholder="Optional complainant name..."
+                  value={complaintForm.complainant_name}
+                  onChange={(e) => setComplaintForm({ ...complaintForm, complainant_name: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Allegation Summary *</Label>
+              <Textarea
+                required
+                placeholder="Factual summary of concern or incident reported..."
+                value={complaintForm.allegation_summary}
+                onChange={(e) => setComplaintForm({ ...complaintForm, allegation_summary: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Confidential / Sensitive Tier</Label>
+              <Select
+                value={complaintForm.is_sensitive ? "true" : "false"}
+                onValueChange={(v) => setComplaintForm({ ...complaintForm, is_sensitive: v === "true" })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="false">Standard Complaint</SelectItem>
+                  <SelectItem value="true">High Sensitivity / Protected Investigation</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-slate-500">
+                Sensitive records are restricted to investigator and supervisor roles.
+              </p>
+            </div>
+            <DialogFooter className="pt-3">
+              <Button type="button" variant="outline" onClick={() => setShowComplaintModal(false)}>Cancel</Button>
+              <Button type="submit" disabled={submitting} className="bg-rose-600 hover:bg-rose-700 text-white">
+                Register Complaint
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sprint 3: Request Caregiver Support Modal */}
+      <Dialog open={showSupportModal} onOpenChange={setShowSupportModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request Caregiver Support / Stabilization</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateSupport} className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Support Type *</Label>
+                <Select
+                  value={supportForm.support_type}
+                  onValueChange={(v) => setSupportForm({ ...supportForm, support_type: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="RESPITE">Respite Care</SelectItem>
+                    <SelectItem value="CLINICAL_CONSULTATION">Clinical Consultation</SelectItem>
+                    <SelectItem value="PEER_SUPPORT">Peer Support / Mentorship</SelectItem>
+                    <SelectItem value="CULTURAL_MENTORSHIP">Cultural Mentorship</SelectItem>
+                    <SelectItem value="EQUIPMENT_SPECIAL_NEED">Equipment / Special Need</SelectItem>
+                    <SelectItem value="TRAINING_ENHANCED">Enhanced Training</SelectItem>
+                    <SelectItem value="EMERGENCY_ASSISTANCE">Emergency Stabilization</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Requested Allocation ($)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g. 500.00"
+                  value={supportForm.requested_amount}
+                  onChange={(e) => setSupportForm({ ...supportForm, requested_amount: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Description / Need Justification</Label>
+              <Textarea
+                placeholder="Details of caregiver support requested and child needs..."
+                value={supportForm.description}
+                onChange={(e) => setSupportForm({ ...supportForm, description: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Linked Service Request UUID (Optional)</Label>
+              <Input
+                placeholder="Connect to existing Finance ServiceRequest..."
+                value={supportForm.service_request_id}
+                onChange={(e) => setSupportForm({ ...supportForm, service_request_id: e.target.value })}
+              />
+            </div>
+            <DialogFooter className="pt-3">
+              <Button type="button" variant="outline" onClick={() => setShowSupportModal(false)}>Cancel</Button>
+              <Button type="submit" disabled={submitting}>Submit Support Request</Button>
             </DialogFooter>
           </form>
         </DialogContent>

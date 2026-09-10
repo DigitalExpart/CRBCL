@@ -15,6 +15,11 @@ import {
   ShieldAlert,
   GraduationCap,
   Wrench,
+  Search,
+  HeartHandshake,
+  DollarSign,
+  TrendingUp,
+  FileWarning,
 } from 'lucide-react';
 import resourceRecruitmentApi from '../api/resourceRecruitment';
 
@@ -67,6 +72,13 @@ export default function ResourceDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/resource-team/matching"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
+          >
+            <Search className="w-4 h-4" />
+            Placement Matching
+          </Link>
           <Link
             to="/resource-team/recruitment/new"
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
@@ -295,6 +307,178 @@ export default function ResourceDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Sprint 3: Care Quality, Monitoring & Safeguards Telemetry */}
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Resource Home Safeguards & Caregiver Support</h2>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                    Continuous Monitoring & Safeguards
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Periodic home monitoring visits, complaints management, active caregiver supports, and placement stability.
+                </p>
+              </div>
+              <Link
+                to="/resource-team/matching"
+                className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+              >
+                Placement Matching Engine <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Monitoring Visits */}
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Periodic Monitoring</span>
+                  <div className={`p-1.5 rounded-lg ${metrics.monitoring_overdue > 0 ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="flex items-baseline justify-between pt-1">
+                  <div>
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.monitoring_due_30_days ?? 0}</span>
+                    <span className="text-xs text-slate-500 ml-1.5">due in 30d</span>
+                  </div>
+                  {metrics.monitoring_overdue > 0 && (
+                    <span className="text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-900/30 px-2 py-0.5 rounded">
+                      {metrics.monitoring_overdue} overdue
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500">Monthly/quarterly ongoing caregiver contact</p>
+              </div>
+
+              {/* Complaints & Investigations */}
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Complaints & Inquiries</span>
+                  <div className={`p-1.5 rounded-lg ${(metrics.open_complaints_count || 0) > 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-700'}`}>
+                    <FileWarning className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="flex items-baseline justify-between pt-1">
+                  <div>
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.open_complaints_count ?? 0}</span>
+                    <span className="text-xs text-slate-500 ml-1.5">open complaints</span>
+                  </div>
+                  {(metrics.active_investigations_count || 0) > 0 && (
+                    <span className="text-xs font-bold text-amber-700 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded">
+                      {metrics.active_investigations_count} under investigation
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500">Privileged records & privacy-protected workflow</p>
+              </div>
+
+              {/* Caregiver Supports */}
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Caregiver Supports</span>
+                  <div className="p-1.5 rounded-lg bg-indigo-100 text-indigo-700">
+                    <HeartHandshake className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="flex items-baseline justify-between pt-1">
+                  <div>
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.caregiver_supports_active ?? 0}</span>
+                    <span className="text-xs text-slate-500 ml-1.5">active provisions</span>
+                  </div>
+                  <span className="text-xs text-indigo-600 font-medium">Respite & Clinical</span>
+                </div>
+                <p className="text-[11px] text-slate-500">Linked to Finance Service Requests</p>
+              </div>
+
+              {/* Retention & Stability */}
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Stability & Longevity</span>
+                  <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="flex items-baseline justify-between pt-1">
+                  <div>
+                    <span className="text-2xl font-bold text-emerald-600">{metrics.placement_stability_pct ?? 100}%</span>
+                    <span className="text-xs text-slate-500 ml-1.5">stability</span>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {metrics.active_home_longevity_over_one_year_pct != null
+                      ? `${metrics.active_home_longevity_over_one_year_pct}% longevity (>1yr)`
+                      : "Longevity: N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-[11px] text-slate-500">
+                  <span>Conversion: {metrics.recruitment_conversion_rate_pct ?? 0}%</span>
+                  <span className="italic">Cohort Retention: Unavailable</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sprint 3: Authorized Finance View (Rendered only if authorized) */}
+          {metrics.finance_summary && (
+            <div className="bg-white dark:bg-gray-800 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">Resource Financial Operations</h2>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                        Authorized Finance Role View
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Authoritative financial ledger integration for foster maintenance rates, invoices, and service requests.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/finance"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                >
+                  Finance Module <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <div className="text-xs text-slate-500">Active Rate Schedules</div>
+                  <div className="text-xl font-bold text-slate-900 dark:text-white mt-1">
+                    {metrics.finance_summary.active_rates_count} active rates
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">Placement home maintenance per diems</div>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <div className="text-xs text-slate-500">Resource Home Invoices</div>
+                  <div className="text-xl font-bold text-slate-900 dark:text-white mt-1">
+                    ${Number(metrics.finance_summary.total_invoiced_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-[11px] text-amber-600 mt-1">
+                    {metrics.finance_summary.unpaid_invoices_count} unpaid / pending approval
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <div className="text-xs text-slate-500">Active Support Service Requests</div>
+                  <div className="text-xl font-bold text-slate-900 dark:text-white mt-1">
+                    ${Number(metrics.finance_summary.total_service_requests_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">
+                    {metrics.finance_summary.active_service_requests_count} approved service request allocations
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Pipeline Breakdown */}
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">

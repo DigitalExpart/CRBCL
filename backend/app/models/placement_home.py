@@ -24,11 +24,14 @@ from app.core.database import AuditMixin, Base, SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.assessment import Assessment
+    from app.models.caregiver_support import CaregiverSupport
     from app.models.caregiver_training import CaregiverTraining
     from app.models.document import Document
     from app.models.person import Person
     from app.models.placement import BackgroundCheck, PlacementEpisode
     from app.models.provider import Provider
+    from app.models.resource_complaint import ResourceComplaint
+    from app.models.resource_monitoring import ResourceHomeMonitoring
     from app.models.resource_recruitment import ResourceRecruitment
     from app.models.user import User
 
@@ -114,6 +117,27 @@ class PlacementHome(Base, AuditMixin, SoftDeleteMixin):
     )
     background_checks: Mapped[list[BackgroundCheck]] = relationship(
         "BackgroundCheck", back_populates="placement_home", cascade="all, delete-orphan", lazy="selectin"
+    )
+    monitorings: Mapped[list[ResourceHomeMonitoring]] = relationship(
+        "ResourceHomeMonitoring",
+        back_populates="placement_home",
+        cascade="all, delete-orphan",
+        order_by="desc(ResourceHomeMonitoring.contact_date)",
+        lazy="selectin",
+    )
+    complaints: Mapped[list[ResourceComplaint]] = relationship(
+        "ResourceComplaint",
+        back_populates="placement_home",
+        cascade="all, delete-orphan",
+        order_by="desc(ResourceComplaint.received_date)",
+        lazy="selectin",
+    )
+    supports: Mapped[list[CaregiverSupport]] = relationship(
+        "CaregiverSupport",
+        back_populates="placement_home",
+        cascade="all, delete-orphan",
+        order_by="desc(CaregiverSupport.requested_date)",
+        lazy="selectin",
     )
 
 

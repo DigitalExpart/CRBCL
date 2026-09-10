@@ -99,7 +99,7 @@ async def get_resource_dashboard(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ResourceDashboardMetrics:
     service = ResourceRecruitmentService(db)
-    return await service.get_dashboard_metrics()
+    return await service.get_dashboard_metrics(current_user=current_user)
 
 
 # ── Recruitment Endpoints ──────────────────────────────────────────

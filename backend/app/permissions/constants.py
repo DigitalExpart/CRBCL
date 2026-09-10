@@ -253,6 +253,20 @@ class Permissions(StrEnum):
     RESOURCE_CLEARANCE_ADJUDICATE = "resource_clearance.adjudicate"
     PLACEMENT_HOME_INSPECTION_MANAGE = "placement_home.inspection.manage"
 
+    # Resource Unit Sprint 3 (Matching, Monitoring, Complaints, Supports, Outcomes)
+    RESOURCE_MATCHING_READ = "resource_matching.read"
+    RESOURCE_MONITORING_READ = "resource_monitoring.read"
+    RESOURCE_MONITORING_MANAGE = "resource_monitoring.manage"
+    RESOURCE_COMPLAINT_READ = "resource_complaint.read"
+    RESOURCE_COMPLAINT_SENSITIVE_READ = "resource_complaint.sensitive.read"
+    RESOURCE_COMPLAINT_MANAGE = "resource_complaint.manage"
+    RESOURCE_COMPLAINT_DISPOSITION = "resource_complaint.disposition"
+    CAREGIVER_SUPPORT_READ = "caregiver_support.read"
+    CAREGIVER_SUPPORT_MANAGE = "caregiver_support.manage"
+    RESOURCE_REPORTING_READ = "resource_reporting.read"
+    RESOURCE_REPORTING_EXPORT = "resource_reporting.export"
+    RESOURCE_OUTCOMES_READ = "resource_outcomes.read"
+
     # Scheduling, Staffing & Notifications (Phase 9)
     CALENDAR_READ_OWN = "calendar.read_own"
     CALENDAR_READ_TEAM = "calendar.read_team"
