@@ -6,7 +6,7 @@ import {
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
   Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home,
   CalendarDays, Bell, UserCheck, Receipt, BarChart3, CheckSquare, Truck,
-  Crown, TrendingUp, Building
+  Crown, TrendingUp, Building, ConciergeBell
 } from "lucide-react";
 
 import { api } from "@/api";
@@ -61,6 +61,7 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   }
 
   items.push(
+    { label: "Front Desk Queue", icon: ConciergeBell, path: "/front-desk" },
     { label: "Intake & Referrals", icon: Inbox, path: "/intake" },
     { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
     { label: "My Schedule", icon: Calendar, path: "/schedule" },

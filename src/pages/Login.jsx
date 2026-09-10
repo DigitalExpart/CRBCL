@@ -43,6 +43,7 @@ export default function Login() {
       const isCEO = roles.includes("ceo");
       const isExecutive = roles.includes("executive_director");
       const isDirector = roles.includes("director_manager");
+      const isFrontDesk = roles.includes("front_desk");
 
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get("returnTo");
@@ -55,6 +56,8 @@ export default function Login() {
         window.location.href = "/executive";
       } else if (isDirector) {
         window.location.href = "/director";
+      } else if (isFrontDesk) {
+        window.location.href = "/front-desk";
       } else {
         window.location.href = "/";
       }

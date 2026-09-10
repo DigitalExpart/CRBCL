@@ -20,6 +20,7 @@ const AVAILABLE_ROLES = [
   { key: "supervisor", label: "Supervisor — Casework Approvals & Reviews" },
   { key: "caseworker", label: "Caseworker — Direct Client & Case Files" },
   { key: "case_aide", label: "Case Aide — Support Worker" },
+  { key: "front_desk", label: "Front Desk — Intake Reception & Form Triage" },
   { key: "finance_staff", label: "Finance Staff — Billing & Invoices" },
   { key: "cultural_worker", label: "Cultural Worker — Cultural Supports & Elders" },
   { key: "clinical_staff", label: "Clinical Staff — Medical & Therapy" },

@@ -679,6 +679,37 @@ export class ApiClient {
     this.auth = new AuthService(this);
     this.integrations = new IntegrationsService(this);
 
+    this.frontDesk = {
+      getStats: () => this.get('/api/v1/front-desk/stats'),
+      getSubmissions: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.status && params.status !== 'ALL') q.set('status', params.status);
+        if (params.department) q.set('department', params.department);
+        if (params.query) q.set('query', params.query);
+        if (params.offset !== undefined) q.set('offset', params.offset);
+        if (params.limit !== undefined) q.set('limit', params.limit);
+        const queryStr = q.toString() ? `?${q.toString()}` : '';
+        return this.get(`/api/v1/front-desk/submissions${queryStr}`);
+      },
+      getDepartmentQueue: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.department) q.set('department', params.department);
+        if (params.status && params.status !== 'ALL') q.set('status', params.status);
+        if (params.offset !== undefined) q.set('offset', params.offset);
+        if (params.limit !== undefined) q.set('limit', params.limit);
+        const queryStr = q.toString() ? `?${q.toString()}` : '';
+        return this.get(`/api/v1/front-desk/department-queue${queryStr}`);
+      },
+      getSubmission: (id) => this.get(`/api/v1/front-desk/submissions/${id}`),
+      createManual: (data) => this.post('/api/v1/front-desk/submissions/manual', data),
+      reviewSubmission: (id, data) => this.patch(`/api/v1/front-desk/submissions/${id}/review`, data),
+      routeSubmission: (id, data) => this.post(`/api/v1/front-desk/submissions/${id}/route`, data),
+      departmentAction: (id, data) => this.patch(`/api/v1/front-desk/submissions/${id}/department-action`, data),
+      checkDuplicates: (id) => this.get(`/api/v1/front-desk/submissions/${id}/duplicates`),
+      convertToReferral: (id, data) => this.post(`/api/v1/front-desk/submissions/${id}/convert-to-referral`, data),
+      convertGeneric: (id, data) => this.post(`/api/v1/front-desk/submissions/${id}/convert-generic`, data),
+    };
+
     // Entity instances proxy
     this._entities = {};
     this.entities = new Proxy(this._entities, {

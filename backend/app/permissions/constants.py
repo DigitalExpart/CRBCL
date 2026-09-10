@@ -344,3 +344,11 @@ class Permissions(StrEnum):
     OCR_CONFIRM = "ocr.confirm"
     AI_QUERY = "ai.query"
     COMMUNICATIONS_MANAGE = "communications.manage"
+
+    # Front Desk & Public Intake Ingestion Foundation
+    PUBLIC_INTAKE_READ = "public_intake.read"
+    PUBLIC_INTAKE_TRIAGE = "public_intake.triage"
+    PUBLIC_INTAKE_ROUTE = "public_intake.route"
+    PUBLIC_INTAKE_NOTE = "public_intake.note"
+    FRONT_DESK_DASHBOARD_READ = "front_desk.dashboard.read"
+    FRONT_DESK_VISITOR_MANAGE = "front_desk.visitor.manage"

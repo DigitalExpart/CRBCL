@@ -20,6 +20,7 @@ from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.families import router as families_router
 from app.api.v1.finance import router as finance_router
 from app.api.v1.fleet import router as fleet_router
+from app.api.v1.front_desk import router as front_desk_router
 from app.api.v1.health import router as health_router
 from app.api.v1.households import router as households_router
 from app.api.v1.integrations import router as integrations_router
@@ -105,4 +106,5 @@ api_v1_router.include_router(resource_complaints_router)
 api_v1_router.include_router(caregiver_supports_router)
 api_v1_router.include_router(resource_finance_router)
 api_v1_router.include_router(resource_outcomes_router)
+api_v1_router.include_router(front_desk_router)
 api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])

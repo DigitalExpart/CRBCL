@@ -143,6 +143,12 @@ ROLES_DATA = [
         "description": "Kinship and foster caregiver recruitment, applicant assessments, placement home support, and orientation.",
         "is_system": True,
     },
+    {
+        "key": "front_desk",
+        "name": "Front Desk / Intake Reception",
+        "description": "Reception, public intake Google Form triage, community inquiry processing, and referral drafting.",
+        "is_system": True,
+    },
 ]
 
 # ── 2. Permissions Definition ────────────────────────────────
@@ -475,12 +481,22 @@ PERMISSIONS_DATA = [
     {"key": Permissions.FINANCE_INVOICE_VOID, "name": "Void Invoices", "category": "finance"},
     {"key": Permissions.FINANCE_LEDGER_READ, "name": "Read Billing Ledger", "category": "finance"},
     {"key": Permissions.FINANCE_EXPORT, "name": "Export Financial Data", "category": "finance"},
+    # Front Desk & Public Intake Ingestion Foundation
+    {"key": Permissions.PUBLIC_INTAKE_READ, "name": "Read Public Intake Submissions", "category": "front_desk"},
+    {"key": Permissions.PUBLIC_INTAKE_TRIAGE, "name": "Triage Public Intake Submissions", "category": "front_desk"},
+    {"key": Permissions.PUBLIC_INTAKE_ROUTE, "name": "Route Public Intake Submissions", "category": "front_desk"},
+    {"key": Permissions.PUBLIC_INTAKE_NOTE, "name": "Add Notes to Public Intake Submissions", "category": "front_desk"},
+    {"key": Permissions.FRONT_DESK_DASHBOARD_READ, "name": "Read Front Desk Dashboard", "category": "front_desk"},
+    {"key": Permissions.FRONT_DESK_VISITOR_MANAGE, "name": "Manage Front Desk Visitors & Log", "category": "front_desk"},
 ]
 
 # ── 3. Role-Permission Mappings ──────────────────────────────
 ROLE_PERMISSIONS_MAP = {
     "executive_director": [p["key"] for p in PERMISSIONS_DATA],
     "director_manager": [
+        Permissions.PUBLIC_INTAKE_READ,
+        Permissions.PUBLIC_INTAKE_NOTE,
+        Permissions.PUBLIC_INTAKE_TRIAGE,
         Permissions.INTAKE_READ,
         Permissions.INTAKE_CREATE,
         Permissions.INTAKE_UPDATE,
@@ -608,6 +624,9 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "supervisor": [
+        Permissions.PUBLIC_INTAKE_READ,
+        Permissions.PUBLIC_INTAKE_NOTE,
+        Permissions.PUBLIC_INTAKE_TRIAGE,
         Permissions.INTAKE_READ,
         Permissions.INTAKE_CREATE,
         Permissions.INTAKE_UPDATE,
@@ -756,6 +775,8 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "caseworker": [
+        Permissions.PUBLIC_INTAKE_READ,
+        Permissions.PUBLIC_INTAKE_NOTE,
         Permissions.INTAKE_READ,
         Permissions.INTAKE_CREATE,
         Permissions.INTAKE_UPDATE,
@@ -1012,6 +1033,8 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.PLAN_READ,
     ],
     "resource_worker": [
+        Permissions.PUBLIC_INTAKE_READ,
+        Permissions.PUBLIC_INTAKE_NOTE,
         Permissions.RESOURCE_HOME_READ,
         Permissions.RESOURCE_HOME_WRITE,
         Permissions.RESOURCE_RECRUITMENT_READ,
@@ -1175,6 +1198,18 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_READ,
         Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
+    ],
+    "front_desk": [
+        Permissions.PUBLIC_INTAKE_READ,
+        Permissions.PUBLIC_INTAKE_TRIAGE,
+        Permissions.PUBLIC_INTAKE_ROUTE,
+        Permissions.PUBLIC_INTAKE_NOTE,
+        Permissions.FRONT_DESK_DASHBOARD_READ,
+        Permissions.FRONT_DESK_VISITOR_MANAGE,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.TIMELINE_READ,
+        Permissions.NOTIFICATION_READ,
     ],
 }
 

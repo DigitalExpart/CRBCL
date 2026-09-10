@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     smtp_from_name: str = "Chief Red Bear Children's Lodge"
     resend_api_key: str = ""
 
+    # ── Front Desk / Google Form Webhook ─────────────────────
+    front_desk_webhook_secret: str = "crbcl-frontdesk-secret-key"
+
     # ── Derived helpers ──────────────────────────────────────
     @property
     def is_development(self) -> bool:

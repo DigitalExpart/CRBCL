@@ -67,6 +67,12 @@ from app.models.fleet import (  # noqa: F401
     VehicleTelematicsLink,
     VehicleTrip,
 )
+from app.models.front_desk import (  # noqa: F401
+    FrontDeskRoutingHistory,
+    FrontDeskSequence,
+    FrontDeskSubmission,
+    PublicIntakeConversionLink,
+)
 from app.models.idempotency import IdempotencyKey  # noqa: F401
 from app.models.integrations import (  # noqa: F401
     AiRequestAudit,

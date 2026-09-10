@@ -94,6 +94,7 @@ const RecruitmentPipeline = lazy(() => import('@/pages/RecruitmentPipeline'));
 const RecruitmentDetail = lazy(() => import('@/pages/RecruitmentDetail'));
 const RecruitmentNew = lazy(() => import('@/pages/RecruitmentNew'));
 const PlacementMatching = lazy(() => import('@/pages/PlacementMatching'));
+const FrontDeskDashboard = lazy(() => import('@/pages/FrontDeskDashboard'));
 
 
 
@@ -175,6 +176,7 @@ const AuthenticatedApp = () => {
             <Route path="/executive" element={<ExecutiveDashboard />} />
             <Route path="/ceo" element={<CEODashboard />} />
             <Route path="/terminology" element={<AdminTerminology />} />
+            <Route path="/front-desk" element={<FrontDeskDashboard />} />
             <Route path="/intake" element={<IntakeList />} />
             <Route path="/intake/new" element={<NewIntake />} />
             <Route path="/intake/approvals" element={<SupervisorApprovalQueue />} />
