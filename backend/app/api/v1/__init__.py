@@ -12,6 +12,7 @@ from app.api.v1.caregiver_supports import router as caregiver_supports_router
 from app.api.v1.caregiver_training import router as caregiver_training_router
 from app.api.v1.case_notes import router as case_notes_router
 from app.api.v1.cases import router as cases_router
+from app.api.v1.ceo_dashboard import router as ceo_dashboard_router
 from app.api.v1.clients import router as clients_router
 from app.api.v1.clinical_notes import router as clinical_notes_router
 from app.api.v1.communications import router as communications_router
@@ -107,4 +108,5 @@ api_v1_router.include_router(caregiver_supports_router)
 api_v1_router.include_router(resource_finance_router)
 api_v1_router.include_router(resource_outcomes_router)
 api_v1_router.include_router(front_desk_router)
+api_v1_router.include_router(ceo_dashboard_router)
 api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])

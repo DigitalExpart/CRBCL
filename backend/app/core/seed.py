@@ -488,12 +488,26 @@ PERMISSIONS_DATA = [
     {"key": Permissions.PUBLIC_INTAKE_NOTE, "name": "Add Notes to Public Intake Submissions", "category": "front_desk"},
     {"key": Permissions.FRONT_DESK_DASHBOARD_READ, "name": "Read Front Desk Dashboard", "category": "front_desk"},
     {"key": Permissions.FRONT_DESK_VISITOR_MANAGE, "name": "Manage Front Desk Visitors & Log", "category": "front_desk"},
+    # Executive CEO Dashboard, Strategic Initiatives & Board Governance
+    {"key": Permissions.EXECUTIVE_DASHBOARD_READ, "name": "Read Organization-Wide CEO Dashboard", "category": "executive"},
+    {"key": Permissions.EXECUTIVE_INITIATIVE_READ, "name": "Read Strategic Organizational Initiatives", "category": "executive"},
+    {"key": Permissions.EXECUTIVE_INITIATIVE_WRITE, "name": "Manage Strategic Organizational Initiatives", "category": "executive"},
+    {"key": Permissions.BOARD_ACTION_READ, "name": "Read Board Attention & Action Items", "category": "executive"},
+    {"key": Permissions.BOARD_ACTION_WRITE, "name": "Create or Decide Board Action Items", "category": "executive"},
+    {"key": Permissions.DEPARTMENT_UPDATE_READ, "name": "Read Periodic Department Executive Updates", "category": "executive"},
+    {"key": Permissions.DEPARTMENT_UPDATE_WRITE, "name": "Submit Periodic Department Executive Updates", "category": "executive"},
 ]
 
 # ── 3. Role-Permission Mappings ──────────────────────────────
 ROLE_PERMISSIONS_MAP = {
+    "ceo": [p["key"] for p in PERMISSIONS_DATA],
     "executive_director": [p["key"] for p in PERMISSIONS_DATA],
     "director_manager": [
+        Permissions.EXECUTIVE_INITIATIVE_READ,
+        Permissions.BOARD_ACTION_READ,
+        Permissions.BOARD_ACTION_WRITE,
+        Permissions.DEPARTMENT_UPDATE_READ,
+        Permissions.DEPARTMENT_UPDATE_WRITE,
         Permissions.PUBLIC_INTAKE_READ,
         Permissions.PUBLIC_INTAKE_NOTE,
         Permissions.PUBLIC_INTAKE_TRIAGE,

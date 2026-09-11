@@ -17,6 +17,7 @@ from app.models.assessment import (  # noqa: F401
     AssessmentUnlockEvent,
 )
 from app.models.audit import AccessEvent, AuditEvent  # noqa: F401
+from app.models.board_action import BoardAction, BoardActionHistory  # noqa: F401
 from app.models.calendar import (  # noqa: F401
     CalendarEvent,
     CalendarRecurrenceRule,
@@ -43,8 +44,13 @@ from app.models.case_note import (  # noqa: F401
 )
 from app.models.client import Client  # noqa: F401
 from app.models.config import LookupList, LookupValue, SystemConfig  # noqa: F401
+from app.models.department_update import DepartmentExecutiveUpdate, DepartmentExecutiveUpdateHistory  # noqa: F401
 from app.models.device import MobileDevice  # noqa: F401
 from app.models.document import Document, DocumentAccessEvent, DocumentLink, DocumentVersion  # noqa: F401
+from app.models.executive_initiative import (  # noqa: F401
+    ExecutiveInitiative,
+    ExecutiveInitiativeHistory,
+)
 from app.models.family import Family  # noqa: F401
 from app.models.finance import (  # noqa: F401
     BillingRate,

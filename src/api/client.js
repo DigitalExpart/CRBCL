@@ -710,6 +710,42 @@ export class ApiClient {
       convertGeneric: (id, data) => this.post(`/api/v1/front-desk/submissions/${id}/convert-generic`, data),
     };
 
+    this.ceoDashboard = {
+      getDashboard: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.reporting_period) q.set('reporting_period', params.reporting_period);
+        const queryStr = q.toString() ? `?${q.toString()}` : '';
+        return this.get(`/api/v1/ceo-dashboard${queryStr}`);
+      },
+      listInitiatives: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.department) q.set('department', params.department);
+        if (params.status) q.set('status', params.status);
+        const queryStr = q.toString() ? `?${q.toString()}` : '';
+        return this.get(`/api/v1/ceo-dashboard/initiatives${queryStr}`);
+      },
+      createInitiative: (data) => this.post('/api/v1/ceo-dashboard/initiatives', data),
+      updateInitiative: (id, data) => this.patch(`/api/v1/ceo-dashboard/initiatives/${id}`, data),
+      listBoardActions: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.department) q.set('department', params.department);
+        if (params.status) q.set('status', params.status);
+        const queryStr = q.toString() ? `?${q.toString()}` : '';
+        return this.get(`/api/v1/ceo-dashboard/board-actions${queryStr}`);
+      },
+      createBoardAction: (data) => this.post('/api/v1/ceo-dashboard/board-actions', data),
+      updateBoardAction: (id, data) => this.patch(`/api/v1/ceo-dashboard/board-actions/${id}`, data),
+      recordBoardDecision: (id, data) => this.post(`/api/v1/ceo-dashboard/board-actions/${id}/decision`, data),
+      listDepartmentUpdates: (params = {}) => {
+        const q = new URLSearchParams();
+        if (params.reporting_period) q.set('reporting_period', params.reporting_period);
+        if (params.department) q.set('department', params.department);
+        const queryStr = q.toString() ? `?${q.toString()}` : '';
+        return this.get(`/api/v1/ceo-dashboard/department-updates${queryStr}`);
+      },
+      submitDepartmentUpdate: (data) => this.post('/api/v1/ceo-dashboard/department-updates', data),
+    };
+
     // Entity instances proxy
     this._entities = {};
     this.entities = new Proxy(this._entities, {

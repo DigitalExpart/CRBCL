@@ -352,3 +352,13 @@ class Permissions(StrEnum):
     PUBLIC_INTAKE_NOTE = "public_intake.note"
     FRONT_DESK_DASHBOARD_READ = "front_desk.dashboard.read"
     FRONT_DESK_VISITOR_MANAGE = "front_desk.visitor.manage"
+
+    # Executive CEO Dashboard, Strategic Initiatives & Board Governance
+    EXECUTIVE_DASHBOARD_READ = "executive_dashboard.read"
+    EXECUTIVE_INITIATIVE_READ = "executive_initiative.read"
+    EXECUTIVE_INITIATIVE_WRITE = "executive_initiative.write"
+    BOARD_ACTION_READ = "board_action.read"
+    BOARD_ACTION_WRITE = "board_action.write"
+    DEPARTMENT_UPDATE_READ = "department_update.read"
+    DEPARTMENT_UPDATE_WRITE = "department_update.write"
+
