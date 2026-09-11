@@ -6,7 +6,7 @@ import {
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
   Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home,
   CalendarDays, Bell, UserCheck, Receipt, BarChart3, CheckSquare, Truck,
-  Crown, TrendingUp, Building, ConciergeBell
+  Crown, TrendingUp, Building, ConciergeBell, Landmark
 } from "lucide-react";
 
 import { api } from "@/api";
@@ -38,6 +38,18 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   const isCEO = normalizedRoles.includes("ceo");
   const isExecutive = normalizedRoles.includes("executive_director");
   const isDirector = normalizedRoles.includes("director_manager");
+  const isBoardMember = normalizedRoles.includes("board_member");
+
+  // Board Member navigation: strictly restricted to governance oversight
+  if (isBoardMember) {
+    return [
+      { label: "Board Overview", icon: LayoutDashboard, path: "/board" },
+      { label: "Actions & Decisions", icon: CheckSquare, path: "/board?tab=actions" },
+      { label: "Strategic Initiatives", icon: TrendingUp, path: "/board?tab=initiatives" },
+      { label: "Performance & Risk", icon: BarChart3, path: "/board?tab=performance" },
+      { label: "Department Reports", icon: FileText, path: "/board?tab=reports" },
+    ];
+  }
 
   const items = [];
 
@@ -58,6 +70,9 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   }
   if (isDirector || isExecutive || isCEO || isItAdmin) {
     items.push({ label: "Director's Dashboard", icon: Building, path: "/director" });
+  }
+  if (isCEO || isExecutive || isItAdmin) {
+    items.push({ label: "Board Portal", icon: Landmark, path: "/board" });
   }
 
   items.push(

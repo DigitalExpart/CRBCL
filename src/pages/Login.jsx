@@ -44,12 +44,15 @@ export default function Login() {
       const isExecutive = roles.includes("executive_director");
       const isDirector = roles.includes("director_manager");
       const isFrontDesk = roles.includes("front_desk");
+      const isBoardMember = roles.includes("board_member");
 
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get("returnTo");
 
       if (returnTo && !returnTo.startsWith("/admin")) {
         window.location.href = returnTo;
+      } else if (isBoardMember) {
+        window.location.href = "/board";
       } else if (isCEO) {
         window.location.href = "/ceo";
       } else if (isExecutive) {

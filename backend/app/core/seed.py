@@ -149,6 +149,12 @@ ROLES_DATA = [
         "description": "Reception, public intake Google Form triage, community inquiry processing, and referral drafting.",
         "is_system": True,
     },
+    {
+        "key": "board_member",
+        "name": "Board Member",
+        "description": "Board of Governors member with governance oversight and board action review. NO operational child welfare, clinical, finance detail, or staff HR access.",
+        "is_system": True,
+    },
 ]
 
 # ── 2. Permissions Definition ────────────────────────────────
@@ -496,6 +502,12 @@ PERMISSIONS_DATA = [
     {"key": Permissions.BOARD_ACTION_WRITE, "name": "Create or Decide Board Action Items", "category": "executive"},
     {"key": Permissions.DEPARTMENT_UPDATE_READ, "name": "Read Periodic Department Executive Updates", "category": "executive"},
     {"key": Permissions.DEPARTMENT_UPDATE_WRITE, "name": "Submit Periodic Department Executive Updates", "category": "executive"},
+    # Board of Governors Governance Dashboard & Publication
+    {"key": Permissions.BOARD_DASHBOARD_READ, "name": "Read Board Governance Dashboard", "category": "board"},
+    {"key": Permissions.BOARD_DOCUMENT_READ, "name": "Read Board Governance Documents", "category": "board"},
+    {"key": Permissions.BOARD_REPORT_READ, "name": "Read Board Governance Reports", "category": "board"},
+    {"key": Permissions.BOARD_DECISION_RECORD, "name": "Record Formal Board Action Decisions", "category": "board"},
+    {"key": Permissions.BOARD_PUBLICATION_MANAGE, "name": "Manage Board Visibility & Publication Approvals", "category": "board"},
 ]
 
 # ── 3. Role-Permission Mappings ──────────────────────────────
@@ -1224,6 +1236,12 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
         Permissions.NOTIFICATION_READ,
+    ],
+    "board_member": [
+        Permissions.BOARD_DASHBOARD_READ,
+        Permissions.BOARD_ACTION_READ,
+        Permissions.BOARD_DOCUMENT_READ,
+        Permissions.BOARD_REPORT_READ,
     ],
 }
 

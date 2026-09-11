@@ -362,3 +362,10 @@ class Permissions(StrEnum):
     DEPARTMENT_UPDATE_READ = "department_update.read"
     DEPARTMENT_UPDATE_WRITE = "department_update.write"
 
+    # Board of Governors Governance Dashboard & Publication
+    BOARD_DASHBOARD_READ = "board_dashboard.read"
+    BOARD_DOCUMENT_READ = "board_document.read"
+    BOARD_REPORT_READ = "board_report.read"
+    BOARD_DECISION_RECORD = "board_decision.record"
+    BOARD_PUBLICATION_MANAGE = "board_publication.manage"
+

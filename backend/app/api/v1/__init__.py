@@ -7,6 +7,7 @@ from app.api.v1.ask_red_bear import router as ask_red_bear_router
 from app.api.v1.assessment_templates import router as assessment_templates_router
 from app.api.v1.assessments import router as assessments_router
 from app.api.v1.background_checks import router as background_checks_router
+from app.api.v1.board_dashboard import router as board_dashboard_router
 from app.api.v1.calendar import router as calendar_router
 from app.api.v1.caregiver_supports import router as caregiver_supports_router
 from app.api.v1.caregiver_training import router as caregiver_training_router
@@ -109,4 +110,5 @@ api_v1_router.include_router(resource_finance_router)
 api_v1_router.include_router(resource_outcomes_router)
 api_v1_router.include_router(front_desk_router)
 api_v1_router.include_router(ceo_dashboard_router)
+api_v1_router.include_router(board_dashboard_router)
 api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])

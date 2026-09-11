@@ -426,6 +426,12 @@ async def create_board_action(
     current_user: User = Depends(require_permission(Permissions.BOARD_ACTION_WRITE)),
 ) -> BoardActionResponse:
     await _assert_department_scope(db, current_user, data.originating_department)
+    perm_service = PermissionService(db)
+    can_publish = await perm_service.user_has_permission(
+        current_user.id, Permissions.BOARD_PUBLICATION_MANAGE
+    )
+    if not can_publish and data.is_governance_ready:
+        data.is_governance_ready = False
     ba = await CeoDashboardService.create_board_action(db, data, current_user.id)
     stmt = (
         select(BoardAction)
@@ -498,6 +504,17 @@ async def update_board_action(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(Permissions.BOARD_ACTION_WRITE)),
 ) -> BoardActionResponse:
+    if data.is_governance_ready is not None:
+        perm_service = PermissionService(db)
+        can_publish = await perm_service.user_has_permission(
+            current_user.id, Permissions.BOARD_PUBLICATION_MANAGE
+        )
+        if not can_publish:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only authorized executive leadership with board_publication.manage can modify governance readiness (is_governance_ready).",
+            )
+
     try:
         ba = await CeoDashboardService.update_board_action(db, action_id, data, current_user.id)
     except ValueError as err:

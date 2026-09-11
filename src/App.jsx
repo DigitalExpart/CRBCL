@@ -18,6 +18,7 @@ import Profile from '@/pages/Profile';
 import DirectorsDashboard from '@/pages/DirectorsDashboard';
 import ExecutiveDashboard from '@/pages/ExecutiveDashboard';
 import CEODashboard from '@/pages/CEODashboard';
+import BoardDashboard from '@/pages/BoardDashboard';
 
 // Layout
 import AppLayout from '@/components/layout/AppLayout';
@@ -175,6 +176,7 @@ const AuthenticatedApp = () => {
             <Route path="/director" element={<DirectorsDashboard />} />
             <Route path="/executive" element={<ExecutiveDashboard />} />
             <Route path="/ceo" element={<CEODashboard />} />
+            <Route path="/board" element={<BoardDashboard />} />
             <Route path="/terminology" element={<AdminTerminology />} />
             <Route path="/front-desk" element={<FrontDeskDashboard />} />
             <Route path="/intake" element={<IntakeList />} />

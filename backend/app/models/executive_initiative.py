@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -43,8 +43,17 @@ class ExecutiveInitiative(Base, AuditMixin, SoftDeleteMixin):
     latest_update: Mapped[str | None] = mapped_column(Text, nullable=True)
     reporting_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Board publication boundary
+    is_board_visible: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    board_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    approved_for_board_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    approved_for_board_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
     # Relationships
     responsible_owner: Mapped[User | None] = relationship("User", foreign_keys=[responsible_owner_id], lazy="selectin")
+    approved_for_board_by: Mapped[User | None] = relationship("User", foreign_keys=[approved_for_board_by_id], lazy="selectin")
     history: Mapped[list[ExecutiveInitiativeHistory]] = relationship(
         "ExecutiveInitiativeHistory",
         back_populates="initiative",

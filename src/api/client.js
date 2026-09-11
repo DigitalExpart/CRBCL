@@ -746,6 +746,30 @@ export class ApiClient {
       submitDepartmentUpdate: (data) => this.post('/api/v1/ceo-dashboard/department-updates', data),
     };
 
+    this.boardDashboard = {
+      getSummary: (reportingPeriod) => {
+        const q = reportingPeriod ? `?reporting_period=${encodeURIComponent(reportingPeriod)}` : '';
+        return this.get(`/api/v1/board/summary${q}`);
+      },
+      getActions: (status) => {
+        const q = status ? `?status=${encodeURIComponent(status)}` : '';
+        return this.get(`/api/v1/board/actions${q}`);
+      },
+      getInitiatives: () => this.get('/api/v1/board/initiatives'),
+      getDepartmentUpdates: (reportingPeriod) => {
+        const q = reportingPeriod ? `?reporting_period=${encodeURIComponent(reportingPeriod)}` : '';
+        return this.get(`/api/v1/board/department-updates${q}`);
+      },
+      getWorkforce: () => this.get('/api/v1/board/workforce'),
+      getFinance: () => this.get('/api/v1/board/finance'),
+      getPerformance: () => this.get('/api/v1/board/performance'),
+      getRiskCompliance: () => this.get('/api/v1/board/risk-compliance'),
+      getCriticalDates: () => this.get('/api/v1/board/critical-dates'),
+      recordDecision: (actionId, data) => this.post(`/api/v1/board/actions/${actionId}/decision`, data),
+      publishInitiative: (initiativeId, data) => this.post(`/api/v1/board/initiatives/${initiativeId}/publish`, data),
+      publishDepartmentUpdate: (updateId, data) => this.post(`/api/v1/board/department-updates/${updateId}/publish`, data),
+    };
+
     // Entity instances proxy
     this._entities = {};
     this.entities = new Proxy(this._entities, {
