@@ -19,6 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CaseFormDialog from "@/components/cases/CaseFormDialog";
+import AddPersonToCaseModal from "@/components/cases/AddPersonToCaseModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PlansTab from "@/components/plans/PlansTab";
 import ActiveEffortsTab from "@/components/placements/ActiveEffortsTab";
 import PlacementsTab from "@/components/placements/PlacementsTab";
@@ -492,7 +494,8 @@ export default function CaseDetail() {
             <table className="w-full text-sm text-left">
               <thead className="bg-muted/50 text-muted-foreground text-xs border-b">
                 <tr>
-                  <th className="py-3 px-4">Name</th>
+                  <th className="py-3 px-4">Person</th>
+                  <th className="py-3 px-4">CRBCL Person ID</th>
                   <th className="py-3 px-4">Role in Case</th>
                   <th className="py-3 px-4">Relationship</th>
                   <th className="py-3 px-4">Primary?</th>
@@ -504,15 +507,44 @@ export default function CaseDetail() {
               <tbody className="divide-y divide-border/60">
                 {people.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-muted-foreground text-xs">
+                    <td colSpan={8} className="py-8 text-center text-muted-foreground text-xs">
                       No individuals linked to this case roster yet.
                     </td>
                   </tr>
                 ) : (
                   people.map((p) => (
-                    <tr key={p.id} className="hover:bg-muted/30">
+                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
                       <td className="py-3 px-4 font-medium text-foreground">
-                        {p.person_first_name} {p.person_last_name}
+                        <Link
+                          to={`/people/${p.person_id}`}
+                          className="flex items-center gap-3 group hover:underline text-foreground"
+                        >
+                          <Avatar className="h-8 w-8 border">
+                            <AvatarImage src={p.photo_url} alt={p.person_first_name} />
+                            <AvatarFallback className="text-xs font-medium">
+                              {p.person_first_name?.[0]}{p.person_last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-foreground group-hover:text-primary transition-colors">
+                              {p.person_first_name} {p.person_last_name}
+                            </span>
+                            {p.date_of_birth && (
+                              <span className="text-[11px] text-muted-foreground font-normal">
+                                DOB: {p.date_of_birth}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="py-3 px-4">
+                        {p.person_id_number ? (
+                          <Badge variant="secondary" className="font-mono text-xs font-normal">
+                            {p.person_id_number}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <Badge variant="outline" className="capitalize text-xs font-normal">
@@ -1496,6 +1528,14 @@ export default function CaseDetail() {
           setShowEdit(false);
           loadAll();
         }}
+      />
+
+      {/* Add Person to Case Modal */}
+      <AddPersonToCaseModal
+        isOpen={showAddPersonModal}
+        onClose={() => setShowAddPersonModal(false)}
+        caseId={id}
+        onSuccess={loadAll}
       />
     </div>
   );

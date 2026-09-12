@@ -52,6 +52,7 @@ from app.schemas.case_management import (
 from app.schemas.common import PaginatedResponse, PaginationMeta
 from app.services.case_service import CaseService
 from app.services.case_transfer_service import CaseTransferService
+from app.services.file_security import generate_signed_file_url
 
 router = APIRouter(tags=["Cases"])
 
@@ -232,6 +233,13 @@ async def list_case_people(
             notes=p.notes,
             person_first_name=p.person.first_name if p.person else None,
             person_last_name=p.person.last_name if p.person else None,
+            person_id_number=p.person.person_id_number if p.person else None,
+            date_of_birth=p.person.date_of_birth if p.person else None,
+            photo_url=(
+                generate_signed_file_url(p.person.photo_document_id, expiry_seconds=3600)
+                if (p.person and p.person.photo_document_id)
+                else (p.person.photo_url if p.person else None)
+            ),
             created_at=p.created_at,
         )
         for p in people
@@ -269,6 +277,13 @@ async def add_case_person(
         notes=loaded_p.notes,
         person_first_name=loaded_p.person.first_name if loaded_p.person else None,
         person_last_name=loaded_p.person.last_name if loaded_p.person else None,
+        person_id_number=loaded_p.person.person_id_number if loaded_p.person else None,
+        date_of_birth=loaded_p.person.date_of_birth if loaded_p.person else None,
+        photo_url=(
+            generate_signed_file_url(loaded_p.person.photo_document_id, expiry_seconds=3600)
+            if (loaded_p.person and loaded_p.person.photo_document_id)
+            else (loaded_p.person.photo_url if loaded_p.person else None)
+        ),
         created_at=loaded_p.created_at,
     )
 

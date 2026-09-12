@@ -127,6 +127,7 @@ from app.models.person import (  # noqa: F401
     PersonCulturalProfile,
     PersonMerge,
     PersonPhysicalDescription,
+    PersonSequence,
     PersonStrength,
 )
 from app.models.placement import (  # noqa: F401

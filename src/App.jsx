@@ -106,6 +106,7 @@ import CaseDetail from '@/pages/CaseDetail';
 
 import Clients from '@/pages/Clients';
 import ClientDetail from '@/pages/ClientDetail';
+import PersonDetail from '@/pages/PersonDetail';
 import Families from '@/pages/Families';
 import FamilyDetail from '@/pages/FamilyDetail';
 import Programs from '@/pages/Programs';
@@ -243,6 +244,7 @@ const AuthenticatedApp = () => {
             <Route path="/plans/:id/edit" element={<PlanEditor />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/clients/:id" element={<ClientDetail />} />
+            <Route path="/people/:id" element={<PersonDetail />} />
             <Route path="/families" element={<Families />} />
             <Route path="/families/:id" element={<FamilyDetail />} />
             <Route path="/programs" element={<Programs />} />

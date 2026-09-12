@@ -18,3 +18,4 @@ export { placementHomesApi } from './placementHomes';
 export { calendarApi } from './calendar';
 export { staffingApi } from './staffing';
 export { notificationsApi } from './notifications';
+export { personsApi } from './persons';

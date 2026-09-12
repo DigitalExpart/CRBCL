@@ -453,6 +453,20 @@ class CaseService:
         if not person:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
 
+        # Prevent duplicate active participation on same case
+        existing_stmt = select(CasePerson).where(
+            CasePerson.case_id == case.id,
+            CasePerson.person_id == person.id,
+            CasePerson.end_date.is_(None),
+            CasePerson.deleted_at.is_(None),
+        )
+        existing_res = await self.db.execute(existing_stmt)
+        if existing_res.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"{person.first_name} {person.last_name} is already an active member of this case roster.",
+            )
+
         case_person = await self.people_repo.create(
             case_id=case.id,
             person_id=person.id,

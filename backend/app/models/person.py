@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+import secrets
 import uuid
 from datetime import UTC, date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Index, String, Text, func
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import AuditMixin, Base, SoftDeleteMixin, TimestampMixin
+
+
+def _generate_default_person_id() -> str:
+    """Generate a fallback 10-digit numeric ID if none provided before insert."""
+    return str(secrets.randbelow(900000000) + 1100000000)
 
 
 class Person(Base, AuditMixin, SoftDeleteMixin):
@@ -18,6 +24,9 @@ class Person(Base, AuditMixin, SoftDeleteMixin):
     __tablename__ = "persons"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    person_id_number: Mapped[str] = mapped_column(
+        String(10), unique=True, index=True, nullable=False, default=_generate_default_person_id
+    )
     first_name: Mapped[str] = mapped_column(String(200), nullable=False)
     middle_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     last_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -26,6 +35,9 @@ class Person(Base, AuditMixin, SoftDeleteMixin):
 
     date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
     gender: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    photo_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     photo_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     place_of_birth: Mapped[str | None] = mapped_column(String(200), nullable=True)
     preferred_language: Mapped[str] = mapped_column(String(100), default="English", nullable=False)
@@ -215,3 +227,12 @@ class PersonMerge(Base):
     )
     reason: Mapped[str] = mapped_column(String(500), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class PersonSequence(Base):
+    """Atomic sequence counter for concurrency-safe numeric Person ID generation."""
+
+    __tablename__ = "person_sequences"
+
+    sequence_name: Mapped[str] = mapped_column(String(50), primary_key=True)
+    last_value: Mapped[int] = mapped_column(BigInteger, default=1100000000, nullable=False)

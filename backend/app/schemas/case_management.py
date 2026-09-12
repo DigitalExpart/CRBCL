@@ -143,10 +143,14 @@ class CasePersonResponse(BaseModel):
     notes: str | None = None
     person_first_name: str | None = None
     person_last_name: str | None = None
+    person_id_number: str | None = None
+    date_of_birth: date | None = None
+    photo_url: str | None = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
 
 
 # ── Case Assignment Schemas ───────────────────────────────────

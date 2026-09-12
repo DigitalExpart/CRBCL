@@ -34,6 +34,7 @@ from app.api.v1.ocr import router as ocr_router
 from app.api.v1.org_ops import router as org_ops_router
 from app.api.v1.passports import router as passports_router
 from app.api.v1.permanency_plans import router as permanency_plans_router
+from app.api.v1.persons import router as persons_router
 from app.api.v1.placement_homes import router as placement_homes_router
 from app.api.v1.placement_matching import router as placement_matching_router
 from app.api.v1.placements import router as placements_router
@@ -65,6 +66,7 @@ api_v1_router.include_router(sprint_b_legacy_router)
 api_v1_router.include_router(sync_router, prefix="/sync", tags=["Sync"])
 api_v1_router.include_router(auth_router)
 api_v1_router.include_router(referrals_router)
+api_v1_router.include_router(persons_router)
 api_v1_router.include_router(clients_router)
 api_v1_router.include_router(families_router)
 api_v1_router.include_router(households_router)
