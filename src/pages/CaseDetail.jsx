@@ -102,6 +102,8 @@ export default function CaseDetail() {
   const loadAll = async () => {
     try {
       setLoading(true);
+      // Core required: casesApi.get — failure propagates to catch block.
+      // Optional/permission-gated: all others use .catch() to degrade gracefully.
       const [
         caseRes,
         snapRes,
@@ -118,6 +120,7 @@ export default function CaseDetail() {
         assessmentsRes,
         templatesRes,
         plansRes,
+        activeGoalsRes,
       ] = await Promise.all([
         casesApi.get(id),
         casesApi.getSnapshot(id).catch(() => null),
@@ -133,6 +136,8 @@ export default function CaseDetail() {
         caseNotesApi.getMetrics(id).catch(() => null),
         assessmentsApi.listByCase(id, { limit: 100 }).catch(() => ({ items: [] })),
         assessmentTemplatesApi.list({ is_active: true }).catch(() => []),
+        // Plans & active goals are permission-gated (PLAN_READ).
+        // A 403 for roles without plan access returns [] and does not crash CaseDetail.
         plansApi.listByCase(id).catch(() => []),
         plansApi.getActiveGoals(id).catch(() => []),
       ]);
