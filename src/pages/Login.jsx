@@ -20,12 +20,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      // Pre-flight check: block admin email before even calling the API
-      if (email.trim().toLowerCase() === "admin@crbcl.ca") {
-        setError("Access Denied: Administrator accounts cannot sign in through this portal.");
-        setLoading(false);
-        return;
-      }
+      // Admin email block removed for testing
 
       const res = await api.auth.loginViaEmailPassword(email, password);
       const user = res?.user || (await api.auth.me().catch(() => null));
