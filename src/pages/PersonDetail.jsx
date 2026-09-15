@@ -153,7 +153,7 @@ export default function PersonDetail() {
     try {
       setIsUploadingPhoto(true);
       await personsApi.uploadPhoto(id, file);
-      queryClient.invalidateQueries({ queryKey: ["person-profile", id] });
+      await queryClient.invalidateQueries({ queryKey: ["person-profile", id] });
       toast({ title: "Photo updated", description: "Profile photo saved successfully." });
     } catch (err) {
       toast({ title: "Upload failed", description: err.message || "Could not upload photo", variant: "destructive" });

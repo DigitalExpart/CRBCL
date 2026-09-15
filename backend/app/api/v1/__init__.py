@@ -19,6 +19,7 @@ from app.api.v1.clinical_notes import router as clinical_notes_router
 from app.api.v1.communications import router as communications_router
 from app.api.v1.court_events import router as court_events_router
 from app.api.v1.dashboard import router as dashboard_router
+from app.api.v1.documents import router as documents_router
 from app.api.v1.families import router as families_router
 from app.api.v1.finance import router as finance_router
 from app.api.v1.fleet import router as fleet_router
@@ -67,6 +68,7 @@ api_v1_router.include_router(sync_router, prefix="/sync", tags=["Sync"])
 api_v1_router.include_router(auth_router)
 api_v1_router.include_router(referrals_router)
 api_v1_router.include_router(persons_router)
+api_v1_router.include_router(documents_router)
 api_v1_router.include_router(clients_router)
 api_v1_router.include_router(families_router)
 api_v1_router.include_router(households_router)

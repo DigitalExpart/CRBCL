@@ -25,6 +25,8 @@ Covers 20 core scenarios required for CRBCL canonical identity:
 
 from __future__ import annotations
 
+import hmac
+import time
 import uuid
 from datetime import date
 
@@ -36,6 +38,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.security import create_access_token, hash_password
 from app.models.client import Client
+from app.models.document import Document
 from app.models.medical import ClientMedicalProfile
 from app.models.person import (
     Person,
@@ -44,6 +47,7 @@ from app.models.person import (
 from app.models.role import Permission, Role, RolePermission, UserRole
 from app.models.user import User
 from app.permissions.constants import Permissions
+from app.services.file_security import SECRET_KEY
 from app.services.person_service import PersonService
 
 
@@ -1612,3 +1616,546 @@ async def test_31_profile_photo_storage_disclosure_and_case_roster(
     assert roster_people[0]["photo_url"] is not None
     assert "/api/v1/documents/" in roster_people[0]["photo_url"]
     assert "sig=" in roster_people[0]["photo_url"]
+
+
+# ── Photo Pipeline Regression Tests (UAT Defect: Photo upload shows success but image ──
+# ── does not display — root cause: documents router not registered in __init__.py)     ──
+
+# Minimal 1x1 PNG bytes used throughout — synthetic/de-identified test image.
+_PNG_1X1 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00"
+    b"\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+@pytest.mark.anyio
+async def test_photo_32_upload_persists_durable_photo_document_id(
+    client: AsyncClient, caseworker_user: dict, db_session: AsyncSession
+):
+    """Photo-1: Upload persists durable photo_document_id (not an expiring URL) in persons table."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest32", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    upload_res = await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+    assert upload_res.status_code == 200
+    assert "photo_url" in upload_res.json()
+
+    row = (await db_session.execute(select(Person).where(Person.id == uuid.UUID(person_id)))).scalar_one()
+    assert row.photo_document_id is not None, "photo_document_id must be set after upload"
+
+
+@pytest.mark.anyio
+async def test_photo_33_no_expiring_url_stored_in_db(
+    client: AsyncClient, caseworker_user: dict, db_session: AsyncSession
+):
+    """Photo-2: photo_url column remains NULL after upload — signed URL is never persisted in DB."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest33", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    row = (await db_session.execute(select(Person).where(Person.id == uuid.UUID(person_id)))).scalar_one()
+    assert row.photo_url is None, (
+        "photo_url column must be NULL — only photo_document_id is persisted"
+    )
+
+
+@pytest.mark.anyio
+async def test_photo_34_authorized_profile_receives_fresh_signed_url(
+    client: AsyncClient, caseworker_user: dict
+):
+    """Photo-3: GET /api/v1/persons/{id} generates a fresh signed photo URL when photo_document_id is set."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest34", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    prof_res = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    assert prof_res.status_code == 200
+    photo_url = prof_res.json()["person"]["photo_url"]
+    assert photo_url is not None, "photo_url must be non-null in profile after upload"
+    assert "/api/v1/documents/" in photo_url
+    assert "expires=" in photo_url
+    assert "sig=" in photo_url
+
+
+@pytest.mark.anyio
+async def test_photo_35_signed_image_url_resolves_to_200_image_bytes(
+    client: AsyncClient, caseworker_user: dict
+):
+    """
+    Photo-4 (CRITICAL): The signed image URL returned by GET /api/v1/persons/{id}
+    must resolve to HTTP 200 with image/* Content-Type and non-empty body bytes.
+
+    This test verifies that GET /api/v1/documents/{id}/download is actually registered
+    and reachable — the exact step that was failing with 404 before this fix.
+    """
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest35", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    prof_res = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    assert prof_res.status_code == 200
+    photo_url = prof_res.json()["person"]["photo_url"]
+    assert photo_url is not None
+
+    # Follow the signed URL — no Authorization header; signed URL provides its own time-limited auth
+    img_res = await client.get(photo_url)
+    assert img_res.status_code == 200, (
+        f"Signed image URL returned {img_res.status_code} — expected 200. "
+        "Likely the documents router is still not registered."
+    )
+    content_type = img_res.headers.get("content-type", "")
+    assert content_type.startswith("image/"), (
+        f"Expected image/* Content-Type, got '{content_type}'"
+    )
+    assert len(img_res.content) > 0, "Image response body must not be empty"
+
+
+@pytest.mark.anyio
+async def test_photo_36_tampered_signature_returns_403(
+    client: AsyncClient, caseworker_user: dict
+):
+    """Photo-5: A tampered or expired signature on the download URL returns HTTP 403, not the image."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest36", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    prof_res = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    photo_url = prof_res.json()["person"]["photo_url"]
+    assert photo_url is not None
+
+    # Corrupt the signature
+    tampered_url = photo_url.replace("sig=", "sig=INVALIDTAMPEREDSIG")
+    bad_res = await client.get(tampered_url)
+    assert bad_res.status_code == 403, (
+        f"Tampered signature should return 403, got {bad_res.status_code}"
+    )
+
+
+@pytest.mark.anyio
+async def test_photo_37_search_does_not_disclose_photo_url(
+    client: AsyncClient, caseworker_user: dict
+):
+    """Photo-6: PersonSearchResultResponse does not include photo_url — search before create must not disclose photo."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest37", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_data = p_res.json()
+    person_id = person_data["id"]
+    num_id = person_data["person_id_number"]
+
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    search_res = await client.get(f"/api/v1/persons?person_id_number={num_id}", headers=headers)
+    assert search_res.status_code == 200
+    items = search_res.json()["items"]
+    assert len(items) >= 1
+    item = next(i for i in items if i["person_id_number"] == num_id)
+    assert "photo_url" not in item, (
+        "Search result must not disclose photo_url — use profile endpoint with authorization"
+    )
+
+
+@pytest.mark.anyio
+async def test_photo_38_profile_refetch_after_upload_has_photo_url(
+    client: AsyncClient, caseworker_user: dict
+):
+    """Photo-7: After upload + profile refetch, person.photo_url is non-null (simulates frontend invalidateQueries flow)."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest38", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    # Before upload: photo_url is null
+    before = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    assert before.json()["person"]["photo_url"] is None
+
+    # Upload
+    upload_res = await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+    assert upload_res.status_code == 200
+
+    # After upload + refetch: photo_url is set
+    after = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    assert after.status_code == 200
+    photo_url = after.json()["person"]["photo_url"]
+    assert photo_url is not None, "photo_url must be non-null after upload and profile refetch"
+    assert "/api/v1/documents/" in photo_url
+
+
+@pytest.mark.anyio
+async def test_photo_39_case_people_roster_receives_valid_avatar_url(
+    client: AsyncClient, caseworker_user: dict
+):
+    """Photo-8: Case People roster returns a valid signed avatar URL for an authorized viewer."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest39", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    # Upload photo
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    # Create Case and link Person
+    case_res = await client.post(
+        "/api/v1/cases",
+        json={"title": "Photo Roster Regression", "case_type": "PROTECTION"},
+        headers=headers,
+    )
+    case_id = case_res.json()["id"]
+    await client.post(
+        f"/api/v1/cases/{case_id}/people",
+        json={"person_id": person_id, "role": "subject_child", "is_primary": True},
+        headers=headers,
+    )
+
+    roster_res = await client.get(f"/api/v1/cases/{case_id}/people", headers=headers)
+    assert roster_res.status_code == 200
+    roster = roster_res.json()
+    assert len(roster) >= 1
+    target = next(p for p in roster if p["person_id"] == person_id)
+    assert target["photo_url"] is not None, "Case People roster must include a signed photo_url"
+    assert "/api/v1/documents/" in target["photo_url"]
+    assert "sig=" in target["photo_url"]
+
+    # The signed URL must resolve to 200 image bytes via the (now registered) download route
+    img_res = await client.get(target["photo_url"])
+    assert img_res.status_code == 200, (
+        f"Case roster avatar signed URL returned {img_res.status_code} — "
+        "check documents router is registered"
+    )
+    assert img_res.headers.get("content-type", "").startswith("image/")
+
+
+@pytest.mark.anyio
+async def test_photo_40_replacement_photo_becomes_current(
+    client: AsyncClient, caseworker_user: dict, db_session: AsyncSession
+):
+    """Photo-9: Uploading a replacement photo updates photo_document_id to the new document."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest40", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    # Upload first photo
+    first_res = await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("first.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+    assert first_res.status_code == 200
+
+    row = (await db_session.execute(select(Person).where(Person.id == uuid.UUID(person_id)))).scalar_one()
+    await db_session.refresh(row)
+    first_doc_id = row.photo_document_id
+    assert first_doc_id is not None
+
+    # Upload replacement photo
+    second_res = await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("replacement.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+    assert second_res.status_code == 200
+
+    await db_session.refresh(row)
+    second_doc_id = row.photo_document_id
+    assert second_doc_id is not None
+    assert second_doc_id != first_doc_id, (
+        "Replacement photo must update photo_document_id to the new document"
+    )
+
+    # Profile must now return URL pointing to replacement document
+    prof_res = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    assert prof_res.status_code == 200
+    photo_url = prof_res.json()["person"]["photo_url"]
+    assert photo_url is not None
+    assert str(second_doc_id) in photo_url, (
+        "Profile photo URL must reference the replacement document ID"
+    )
+
+
+@pytest.mark.anyio
+async def test_photo_41_expired_url_regenerated_on_next_profile_fetch(
+    client: AsyncClient, caseworker_user: dict
+):
+    """
+    Photo-10: A subsequent authorized GET /api/v1/persons/{id} always generates a fresh signed URL
+    from the durable photo_document_id. Expiry of a previously served signed URL does NOT
+    permanently break the profile — the next fetch produces a new valid URL.
+
+    Verified by: two sequential profile fetches both return non-null, structurally valid signed URLs.
+    """
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest41", "last_name": "Regression"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    # First fetch
+    prof1 = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    assert prof1.status_code == 200
+    url1 = prof1.json()["person"]["photo_url"]
+    assert url1 is not None
+    assert "expires=" in url1 and "sig=" in url1
+
+    # Second fetch (simulates browser reload or cache miss on an expired URL)
+    prof2 = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    assert prof2.status_code == 200
+    url2 = prof2.json()["person"]["photo_url"]
+    assert url2 is not None, "Second profile fetch must still produce a fresh signed URL"
+    assert "expires=" in url2 and "sig=" in url2
+
+    # Both are structurally valid signed document URLs
+    assert "/api/v1/documents/" in url1
+    assert "/api/v1/documents/" in url2
+
+
+@pytest.mark.anyio
+async def test_photo_42_fail_closed_scan_status_checks(
+    client: AsyncClient, caseworker_user: dict, db_session: AsyncSession
+):
+    """
+    Photo-11: Generic signed document download route enforces fail-closed scan status.
+    Only scan_status == 'clean' permits download. All non-clean statuses are denied (403):
+    - clean -> 200
+    - infected -> 403
+    - pending / unscanned -> 403
+    - quarantined -> 403
+    - failed / error -> 403
+    """
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest42", "last_name": "ScanSecurity"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    prof_res = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    assert prof_res.status_code == 200
+    photo_url = prof_res.json()["person"]["photo_url"]
+    assert photo_url is not None
+
+    row = (await db_session.execute(select(Person).where(Person.id == uuid.UUID(person_id)))).scalar_one()
+    doc = (await db_session.execute(select(Document).where(Document.id == row.photo_document_id))).scalar_one()
+
+    # 1. Clean document -> 200
+    assert doc.scan_status == "clean"
+    res_clean = await client.get(photo_url)
+    assert res_clean.status_code == 200
+
+    # 2. Infected document -> 403
+    doc.scan_status = "infected"
+    await db_session.commit()
+    res_infected = await client.get(photo_url)
+    assert res_infected.status_code == 403
+    err_msg = res_infected.json().get("error", {}).get("message") or res_infected.json().get("detail", "")
+    assert "security scan" in err_msg.lower()
+
+    # 3. Pending / unscanned document -> 403
+    doc.scan_status = "pending"
+    await db_session.commit()
+    res_pending = await client.get(photo_url)
+    assert res_pending.status_code == 403
+
+    # 4. Quarantined document -> 403
+    doc.scan_status = "quarantined"
+    await db_session.commit()
+    res_quarantine = await client.get(photo_url)
+    assert res_quarantine.status_code == 403
+
+    # 5. Failed / error scan document -> 403
+    doc.scan_status = "failed"
+    await db_session.commit()
+    res_failed = await client.get(photo_url)
+    assert res_failed.status_code == 403
+
+    # Restore clean state
+    doc.scan_status = "clean"
+    await db_session.commit()
+
+
+@pytest.mark.anyio
+async def test_photo_43_expired_signature_rejected(
+    client: AsyncClient, caseworker_user: dict
+):
+    """Photo-12: Expired signed URL signature returns HTTP 403 Forbidden."""
+    headers = caseworker_user["headers"]
+    p_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest43", "last_name": "ExpirySecurity"},
+        headers=headers,
+    )
+    assert p_res.status_code == 201
+    person_id = p_res.json()["id"]
+
+    await client.post(
+        f"/api/v1/persons/{person_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    prof_res = await client.get(f"/api/v1/persons/{person_id}", headers=headers)
+    photo_url = prof_res.json()["person"]["photo_url"]
+    assert photo_url is not None
+
+    # Parse doc_id from photo_url: /api/v1/documents/{doc_id}/download?expires=...&sig=...
+    doc_id_str = photo_url.split("/documents/")[1].split("/download")[0]
+    past_timestamp = int(time.time()) - 3600  # 1 hour in the past
+    sig_base = f"{doc_id_str}:{past_timestamp}"
+    past_sig = hmac.new(SECRET_KEY.encode(), sig_base.encode(), "sha256").hexdigest()
+
+    expired_url = f"/api/v1/documents/{doc_id_str}/download?expires={past_timestamp}&sig={past_sig}"
+    res = await client.get(expired_url)
+    assert res.status_code == 403
+    err_msg = res.json().get("error", {}).get("message") or res.json().get("detail", "")
+    assert "expired" in err_msg.lower()
+
+
+@pytest.mark.anyio
+async def test_photo_44_document_id_token_mismatch_rejected(
+    client: AsyncClient, caseworker_user: dict
+):
+    """
+    Photo-13: Signed URL for Document A cannot be used to download Document B.
+    Mismatched document ID with another valid token returns HTTP 403 Forbidden.
+    """
+    headers = caseworker_user["headers"]
+    p1_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest44A", "last_name": "DocA"},
+        headers=headers,
+    )
+    person1_id = p1_res.json()["id"]
+
+    p2_res = await client.post(
+        "/api/v1/persons",
+        json={"first_name": "PhotoTest44B", "last_name": "DocB"},
+        headers=headers,
+    )
+    person2_id = p2_res.json()["id"]
+
+    await client.post(
+        f"/api/v1/persons/{person1_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+    await client.post(
+        f"/api/v1/persons/{person2_id}/photo",
+        files={"file": ("test.png", _PNG_1X1, "image/png")},
+        headers=headers,
+    )
+
+    prof1 = await client.get(f"/api/v1/persons/{person1_id}", headers=headers)
+    prof2 = await client.get(f"/api/v1/persons/{person2_id}", headers=headers)
+
+    url1 = prof1.json()["person"]["photo_url"]
+    url2 = prof2.json()["person"]["photo_url"]
+
+    # Extract doc_id from url2, but query params (expires & sig) from url1
+    doc2_id_str = url2.split("/documents/")[1].split("/download")[0]
+    query_params_1 = url1.split("?")[1]
+
+    mismatched_url = f"/api/v1/documents/{doc2_id_str}/download?{query_params_1}"
+    res = await client.get(mismatched_url)
+    assert res.status_code == 403
+    err_msg = res.json().get("error", {}).get("message") or res.json().get("detail", "")
+    assert "invalid or expired" in err_msg.lower()
