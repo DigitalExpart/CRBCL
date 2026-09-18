@@ -1,4 +1,4 @@
-"""Client repository with trigram text search and team scoping."""
+"""Client repository with trigram text search, team scoping, and approval workflow queries."""
 
 from __future__ import annotations
 
@@ -6,8 +6,10 @@ import uuid
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.models.client import Client
+from app.models.client import Client, ClientApprovalHistory
+from app.models.person import Person
 from app.repositories.base import BaseRepository
 
 
@@ -19,6 +21,7 @@ class ClientRepository(BaseRepository[Client]):
         self,
         query_text: str | None = None,
         status: str | None = None,
+        approval_status: str | None = None,
         risk_level: str | None = None,
         team_id: uuid.UUID | None = None,
         accessible_team_ids: set[uuid.UUID] | None = None,
@@ -26,7 +29,7 @@ class ClientRepository(BaseRepository[Client]):
         limit: int = 50,
         sort_by: str | None = None,
     ) -> tuple[list[Client], int]:
-        """Search clients with team access scoping and text search."""
+        """Search clients with team access scoping, approval status filter, and text search."""
         query = select(Client).where(Client.deleted_at.is_(None))
 
         # Team scoping: if accessible_team_ids is provided, restrict to those teams or unassigned
@@ -44,18 +47,25 @@ class ClientRepository(BaseRepository[Client]):
         if status:
             query = query.where(Client.status == status)
 
+        if approval_status:
+            query = query.where(Client.approval_status == approval_status)
+
         if risk_level:
             query = query.where(Client.risk_level == risk_level)
 
         if query_text:
             search_pattern = f"%{query_text}%"
-            query = query.where(
+            # Also allow searching by linked person's numeric ID or aliases
+            query = query.outerjoin(Person, Client.person_id == Person.id).where(
                 or_(
                     Client.first_name.ilike(search_pattern),
                     Client.last_name.ilike(search_pattern),
                     Client.email.ilike(search_pattern),
                     Client.phone.ilike(search_pattern),
                     Client.band_nation.ilike(search_pattern),
+                    Person.person_id_number.ilike(search_pattern),
+                    Person.preferred_name.ilike(search_pattern),
+                    Person.aliases.ilike(search_pattern),
                 )
             )
 
@@ -74,3 +84,54 @@ class ClientRepository(BaseRepository[Client]):
         query = query.offset(offset).limit(limit)
         result = await self.db.execute(query)
         return list(result.scalars().all()), total
+
+    async def get_by_person_id(self, person_id: uuid.UUID) -> Client | None:
+        """Find active/pending client context linked to a canonical Person."""
+        stmt = (
+            select(Client)
+            .where(Client.person_id == person_id, Client.deleted_at.is_(None))
+            .order_by(Client.created_at.desc())
+        )
+        res = await self.db.execute(stmt)
+        return res.scalars().first()
+
+    async def get_pending_approvals(
+        self,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> tuple[list[Client], int]:
+        """Fetch all client submissions currently awaiting supervisor/director review."""
+        query = (
+            select(Client)
+            .options(
+                selectinload(Client.person),
+                selectinload(Client.submitter),
+            )
+            .where(
+                Client.approval_status == "PENDING_APPROVAL",
+                Client.deleted_at.is_(None),
+            )
+        )
+
+        count_query = select(func.count()).select_from(query.subquery())
+        total = (await self.db.execute(count_query)).scalar_one()
+
+        query = query.order_by(Client.submitted_at.desc().nullslast(), Client.created_at.desc()).offset(offset).limit(limit)
+        res = await self.db.execute(query)
+        return list(res.scalars().all()), total
+
+    async def add_approval_history(self, history_entry: ClientApprovalHistory) -> None:
+        """Append an immutable audit entry for client proposal lifecycle transition."""
+        self.db.add(history_entry)
+        await self.db.flush()
+
+    async def get_approval_history(self, client_id: uuid.UUID) -> list[ClientApprovalHistory]:
+        """Fetch complete chronological decision history for a client."""
+        stmt = (
+            select(ClientApprovalHistory)
+            .options(selectinload(ClientApprovalHistory.actor))
+            .where(ClientApprovalHistory.client_id == client_id)
+            .order_by(ClientApprovalHistory.created_at.desc())
+        )
+        res = await self.db.execute(stmt)
+        return list(res.scalars().all())

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/api";
+import { clientsApi } from "@/api/clients";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FolderOpen,
   CheckSquare,
@@ -16,6 +18,9 @@ import {
   ChevronRight,
   ShieldCheck,
   Sparkles,
+  UserCheck,
+  CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -31,19 +36,23 @@ export default function DirectorsDashboard() {
   const [stats, setStats] = useState({
     activeCases: 0,
     pendingApprovals: 0,
+    pendingReferrals: 0,
+    pendingClients: 0,
     placementHomes: 0,
     incidentsCount: 0,
   });
+  const [pendingClients, setPendingClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [casesRes, approvalsRes, homesRes, incidentsRes] = await Promise.allSettled([
+        const [casesRes, approvalsRes, homesRes, incidentsRes, clientApprovalsRes] = await Promise.allSettled([
           api.entities.Case.list("-created_date", 100),
           api.fetch("/api/v1/intake/approvals"),
           api.entities.PlacementHome.list("-created_date", 50),
           api.entities.Incident.list("-created_date", 50),
+          clientsApi.getPendingApprovals(0, 10),
         ]);
 
         const cases = casesRes.status === "fulfilled" && Array.isArray(casesRes.value) ? casesRes.value : [];
@@ -52,12 +61,24 @@ export default function DirectorsDashboard() {
           const approvData = await approvalsRes.value.json().catch(() => []);
           approvals = Array.isArray(approvData) ? approvData : (approvData?.items || []);
         }
+
+        let clientItems = [];
+        let clientTotal = 0;
+        if (clientApprovalsRes.status === "fulfilled" && clientApprovalsRes.value) {
+          const cData = clientApprovalsRes.value;
+          clientItems = cData.items || [];
+          clientTotal = cData.pagination?.total ?? cData.total ?? clientItems.length;
+        }
+
         const homes = homesRes.status === "fulfilled" && Array.isArray(homesRes.value) ? homesRes.value : [];
         const incidents = incidentsRes.status === "fulfilled" && Array.isArray(incidentsRes.value) ? incidentsRes.value : [];
 
+        setPendingClients(clientItems);
         setStats({
-          activeCases: cases.filter(c => c.status !== "Closed").length,
-          pendingApprovals: approvals.length,
+          activeCases: cases.filter((c) => c.status !== "Closed").length,
+          pendingApprovals: approvals.length + clientTotal,
+          pendingReferrals: approvals.length,
+          pendingClients: clientTotal,
           placementHomes: homes.length,
           incidentsCount: incidents.length,
         });
@@ -78,17 +99,29 @@ export default function DirectorsDashboard() {
     { department: "Family Support", active: 17, capacity: 24 },
   ];
 
+  const getRiskBadge = (level) => {
+    switch (level?.toLowerCase()) {
+      case "high":
+        return <Badge variant="destructive" className="text-[10px] font-medium">High</Badge>;
+      case "medium":
+        return <Badge className="bg-amber-500 text-white text-[10px] font-medium">Med</Badge>;
+      case "low":
+      default:
+        return <Badge className="bg-emerald-600 text-white text-[10px] font-medium">Low</Badge>;
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
       <PageHeader
         title="Director's Dashboard"
         subtitle="Departmental operational service delivery, case flow throughput, and divisional oversight"
         actions={
           <div className="flex items-center gap-2">
-            <Link to="/intake/approvals">
+            <Link to="/intake/approvals?tab=clients">
               <Button variant="outline" size="sm">
                 <CheckSquare className="w-4 h-4 mr-2 text-amber-600" />
-                Review Approvals ({stats.pendingApprovals})
+                Client Proposals ({stats.pendingClients})
               </Button>
             </Link>
             <Link to="/teams">
@@ -110,7 +143,7 @@ export default function DirectorsDashboard() {
           <div>
             <p className="font-semibold text-sm">Director's Operational Hub Active</p>
             <p className="text-xs text-amber-800 dark:text-amber-300/80">
-              Departmental service delivery tracking, operational workflow escalations, and casework standards.
+              Departmental service delivery tracking, operational workflow escalations, and caseworker standards.
             </p>
           </div>
         </div>
@@ -130,9 +163,9 @@ export default function DirectorsDashboard() {
         />
         <StatCard
           title="Pending Approvals"
-          value={stats.pendingApprovals || "3"}
+          value={stats.pendingApprovals || "0"}
           icon={Clock}
-          change="Requires sign-off"
+          change={`${stats.pendingClients} clients, ${stats.pendingReferrals} referrals`}
           color="hsl(36,70%,52%)"
         />
         <StatCard
@@ -150,6 +183,99 @@ export default function DirectorsDashboard() {
           color="hsl(4,60%,38%)"
         />
       </div>
+
+      {/* Client Approvals Awaiting Review Widget */}
+      <Card className="border shadow-sm overflow-hidden">
+        <CardHeader className="bg-muted/20 pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-primary" />
+              <CardTitle className="text-sm font-bold">
+                Client Proposals Awaiting Supervisory Authorization ({stats.pendingClients})
+              </CardTitle>
+            </div>
+            <Link to="/intake/approvals?tab=clients">
+              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-primary hover:text-primary">
+                <span>View Full Approval Queue</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
+          <CardDescription className="text-xs">
+            Review proposed client intakes submitted by caseworkers before enrollment into service contexts
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="p-8 text-center text-xs text-muted-foreground">
+              Loading pending client proposals...
+            </div>
+          ) : pendingClients.length === 0 ? (
+            <div className="p-8 text-center space-y-2">
+              <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 opacity-60" />
+              <p className="text-sm font-medium text-foreground">Client Queue Current</p>
+              <p className="text-xs text-muted-foreground">
+                No client proposals are currently awaiting supervisory or directorial decision.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {pendingClients.slice(0, 5).map((p) => (
+                <div
+                  key={p.client_id}
+                  className="p-3.5 hover:bg-muted/20 transition-colors flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border shadow-xs">
+                      <AvatarImage src={p.person_profile_photo_url} />
+                      <AvatarFallback className="font-semibold text-xs bg-primary/10 text-primary">
+                        {p.first_name?.[0]}{p.last_name?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-foreground">
+                          {p.first_name} {p.last_name}
+                        </span>
+                        <Badge variant="outline" className="font-mono text-[10px]">
+                          #{p.person_id_number}
+                        </Badge>
+                        {getRiskBadge(p.risk_level)}
+                        <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                          Pending
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>Submitted by: <strong className="font-medium text-foreground">{p.submitted_by_name || "Caseworker"}</strong></span>
+                        <span>•</span>
+                        <span>DOB: {p.date_of_birth || "Unknown"}</span>
+                        {p.submission_notes && (
+                          <>
+                            <span>•</span>
+                            <span className="truncate max-w-xs italic text-muted-foreground">
+                              "{p.submission_notes}"
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link to="/intake/approvals?tab=clients">
+                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                      <span>Review in Queue</span>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Departmental Workload Chart & Urgent Queue */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -182,14 +308,25 @@ export default function DirectorsDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Link
-              to="/intake/approvals"
+              to="/intake/approvals?tab=clients"
               className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/60 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <CheckSquare className="w-4 h-4 text-amber-600" />
-                <span className="text-sm font-medium">Supervisor Queue</span>
+                <span className="text-sm font-medium">Client Approval Queue</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              <Badge className="bg-amber-600 text-white text-[10px]">{stats.pendingClients}</Badge>
+            </Link>
+
+            <Link
+              to="/intake/approvals?tab=referrals"
+              className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/60 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium">Referral Queue</span>
+              </div>
+              <Badge variant="outline" className="text-[10px]">{stats.pendingReferrals}</Badge>
             </Link>
 
             <Link

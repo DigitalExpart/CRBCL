@@ -183,6 +183,7 @@ const AuthenticatedApp = () => {
             <Route path="/intake" element={<IntakeList />} />
             <Route path="/intake/new" element={<NewIntake />} />
             <Route path="/intake/approvals" element={<SupervisorApprovalQueue />} />
+            <Route path="/supervisor/approvals" element={<SupervisorApprovalQueue />} />
             <Route path="/intake/:id" element={<IntakeDetail />} />
             <Route path="/intake/:id/decision" element={<IntakeDecision />} />
             <Route path="/cases" element={<Cases />} />

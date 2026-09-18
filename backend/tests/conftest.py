@@ -117,6 +117,10 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     # Create IT Admin Role (NO clinical/client/intake permissions!)
     it_admin_role = Role(key="it_admin", name="IT Admin", is_system=True)
     db_session.add(it_admin_role)
+
+    # Create Board Member Role (NO clinical/client/intake permissions!)
+    board_member_role = Role(key="board_member", name="Board Member", is_system=True)
+    db_session.add(board_member_role)
     await db_session.flush()
 
     # Grant Executive Director ALL permissions
@@ -140,6 +144,7 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.CLIENT_READ,
         Permissions.CLIENT_CREATE,
         Permissions.CLIENT_UPDATE,
+        Permissions.CLIENT_SUBMIT,
         Permissions.CLIENT_IDENTIFIERS_READ,
         Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ,
@@ -316,6 +321,10 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.CLIENT_READ,
         Permissions.CLIENT_CREATE,
         Permissions.CLIENT_UPDATE,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.CLIENT_APPROVE,
+        Permissions.CLIENT_RETURN,
+        Permissions.CLIENT_DECLINE,
         Permissions.CLIENT_IDENTIFIERS_READ,
         Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ,
@@ -531,6 +540,7 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
             "supervisor": supervisor_role,
             "finance_staff": finance_role,
             "it_admin": it_admin_role,
+            "board_member": board_member_role,
         },
         "team": team,
     }
@@ -675,3 +685,29 @@ async def finance_user(db_session: AsyncSession, seed_roles_and_permissions):
 async def admin_token(executive_director_user):
     """Convenience fixture returning the token string for Executive Director."""
     return executive_director_user["token"]
+
+
+@pytest.fixture
+async def board_member_user(db_session: AsyncSession, seed_roles_and_permissions):
+    """Create an active Board Member user with token (no operational/client permissions)."""
+    user = User(
+        email="board@crbcl.ca",
+        email_normalized="board@crbcl.ca",
+        password_hash=hash_password("password123"),
+        full_name="Betty Board",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["board_member"].id)
+    db_session.add(ur)
+
+    tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)
+    db_session.add(tm)
+
+    await db_session.commit()
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}

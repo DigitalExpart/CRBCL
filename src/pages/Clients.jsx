@@ -1,155 +1,354 @@
-import React, { useState, useEffect } from "react";
-import { api } from "@/api";
-import { Plus, Search, Users } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Search, Users, ShieldCheck, Clock, CheckCircle2, RotateCcw, XCircle, Phone, Mail, MapPin, Calendar, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PageHeader from "@/components/shared/PageHeader";
-import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import ImportExport from "@/components/shared/ImportExport";
-
-const CLIENT_EXPORT_FIELDS = ["first_name","last_name","date_of_birth","gender","status","risk_level","phone","email","address","city","province","indigenous_identity","band_nation","notes"];
-const CLIENT_LABELS = { first_name:"First Name", last_name:"Last Name", date_of_birth:"Date of Birth", gender:"Gender", status:"Status", risk_level:"Risk Level", phone:"Phone", email:"Email", address:"Address", city:"City", province:"Province", indigenous_identity:"Indigenous Identity", band_nation:"Band/Nation", notes:"Notes" };
-
-const STATUSES = ["Active", "Inactive", "Pending Intake", "Closed", "Referred"];
-const GENDERS = ["Male", "Female", "Non-Binary", "Two-Spirit", "Prefer Not to Say"];
-const IDENTITIES = ["First Nations", "Métis", "Inuit", "Non-Indigenous", "Prefer Not to Say"];
-const RISK_LEVELS = ["Low", "Medium", "High", "Critical"];
+import AddClientModal from "@/components/clients/AddClientModal";
+import { clientsApi } from "@/api/clients";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Clients() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ first_name: "", last_name: "", status: "Pending Intake", risk_level: "Low", gender: "", indigenous_identity: "", phone: "", email: "", address: "", city: "", province: "Saskatchewan", band_nation: "", notes: "" });
-  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("ALL");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    setClients(await api.entities.Client.list("-created_date", 50));
-    setLoading(false);
+  const loadClients = async () => {
+    try {
+      setLoading(true);
+      const res = await clientsApi.listFiltered(null, 100, 0);
+      const items = Array.isArray(res) ? res : res?.items || [];
+      setClients(items);
+    } catch (err) {
+      console.error("Failed to load clients:", err);
+      toast({
+        title: "Error",
+        description: "Failed to load client directory.",
+        variant: "destructive",
+      });
+      setClients([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    loadClients();
+  }, []);
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    await api.entities.Client.create(form);
-    setSaving(false);
-    setShowForm(false);
-    setForm({ first_name: "", last_name: "", status: "Pending Intake", risk_level: "Low", gender: "", indigenous_identity: "", phone: "", email: "", address: "", city: "", province: "Saskatchewan", band_nation: "", notes: "" });
-    load();
+  const counts = useMemo(() => {
+    return {
+      all: clients.length,
+      approved: clients.filter((c) => c.approval_status === "APPROVED").length,
+      pending: clients.filter((c) => c.approval_status === "PENDING_APPROVAL").length,
+      returned: clients.filter((c) => c.approval_status === "RETURNED").length,
+    };
+  }, [clients]);
+
+  const filtered = useMemo(() => {
+    return clients.filter((c) => {
+      // Tab filter
+      if (activeTab === "APPROVED" && c.approval_status !== "APPROVED") return false;
+      if (activeTab === "PENDING_APPROVAL" && c.approval_status !== "PENDING_APPROVAL") return false;
+      if (activeTab === "RETURNED" && c.approval_status !== "RETURNED") return false;
+
+      // Search filter
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      const fullName = `${c.first_name || ""} ${c.last_name || ""}`.toLowerCase();
+      const personId = (c.person_id_number || "").toLowerCase();
+      const email = (c.email || "").toLowerCase();
+      const band = (c.band_nation || "").toLowerCase();
+      const notes = (c.submission_notes || "").toLowerCase();
+
+      return (
+        fullName.includes(q) ||
+        personId.includes(q) ||
+        email.includes(q) ||
+        band.includes(q) ||
+        notes.includes(q)
+      );
+    });
+  }, [clients, activeTab, search]);
+
+  const calculateAge = (dobString) => {
+    if (!dobString) return null;
+    try {
+      const birth = new Date(dobString);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      return age >= 0 ? `${age} yrs` : null;
+    } catch {
+      return null;
+    }
   };
 
-  const filtered = clients.filter(c => {
-    const name = `${c.first_name} ${c.last_name}`.toLowerCase();
-    return !search || name.includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase());
-  });
+  const renderApprovalBadge = (status) => {
+    switch (status) {
+      case "APPROVED":
+        return (
+          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300/60 font-medium text-[11px] gap-1 shadow-xs">
+            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+            Approved
+          </Badge>
+        );
+      case "PENDING_APPROVAL":
+        return (
+          <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border-amber-300/60 font-medium text-[11px] gap-1 shadow-xs animate-pulse">
+            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+            Pending Review
+          </Badge>
+        );
+      case "RETURNED":
+        return (
+          <Badge className="bg-orange-100 text-orange-900 dark:bg-orange-950/70 dark:text-orange-300 border-orange-300/60 font-medium text-[11px] gap-1 shadow-xs">
+            <RotateCcw className="w-3 h-3 text-orange-600 dark:text-orange-400" />
+            Returned to Worker
+          </Badge>
+        );
+      case "DECLINED":
+        return (
+          <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/70 dark:text-rose-300 border-rose-300/60 font-medium text-[11px] gap-1 shadow-xs">
+            <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+            Declined
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="text-[11px]">
+            {status || "Pending"}
+          </Badge>
+        );
+    }
+  };
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-[60vh]"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
-  }
+  const renderRiskBadge = (risk) => {
+    const r = (risk || "Low").toLowerCase();
+    if (r === "high" || r === "critical") {
+      return (
+        <Badge variant="destructive" className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5">
+          {risk} Risk
+        </Badge>
+      );
+    }
+    if (r === "medium") {
+      return (
+        <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30 text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5">
+          Medium Risk
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 text-muted-foreground">
+        Low Risk
+      </Badge>
+    );
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
       <PageHeader
-        title="Clients"
-        subtitle={`${clients.length} registered clients`}
+        title="Clients Directory"
+        subtitle="Canonical human identity records and service delivery context for CRBCL children, youth, and families"
         actions={
           <div className="flex items-center gap-2">
-            <ImportExport
-              data={filtered}
-              filename="clients"
-              exportFields={CLIENT_EXPORT_FIELDS}
-              fieldLabels={CLIENT_LABELS}
-              onImport={async (rows) => {
-                for (const row of rows) {
-                  if (row.first_name && row.last_name) await api.entities.Client.create({ status: "Pending Intake", risk_level: "Low", province: "Saskatchewan", ...row });
-                }
-                load();
-              }}
-            />
-            <Button onClick={() => setShowForm(true)}><Plus className="w-4 h-4 mr-2" /> Add Client</Button>
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              className="shadow-sm font-medium"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Client
+            </Button>
           </div>
         }
       />
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Search by name or email…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+      {/* Control Bar: Search & Status Filters */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search clients by name, #11-digit ID, nation, or email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-10 shadow-2xs"
+          />
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+          <TabsList className="grid grid-cols-4 h-10 bg-muted/60 p-1">
+            <TabsTrigger value="ALL" className="text-xs px-3">
+              All ({counts.all})
+            </TabsTrigger>
+            <TabsTrigger value="APPROVED" className="text-xs px-3">
+              Approved ({counts.approved})
+            </TabsTrigger>
+            <TabsTrigger value="PENDING_APPROVAL" className="text-xs px-3">
+              Pending ({counts.pending})
+            </TabsTrigger>
+            <TabsTrigger value="RETURNED" className="text-xs px-3">
+              Returned ({counts.returned})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      {filtered.length === 0 ? (
-        <EmptyState icon={Users} title="No clients found" description="Add your first client to begin tracking" action={<Button onClick={() => setShowForm(true)}><Plus className="w-4 h-4 mr-2" /> Add Client</Button>} />
+      {loading ? (
+        <div className="flex flex-col items-center justify-center h-[50vh] space-y-3">
+          <div className="w-9 h-9 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <p className="text-xs text-muted-foreground font-medium">Loading canonical client records...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title={search ? "No matching clients found" : "No clients in this view"}
+          description={
+            search
+              ? `No records match "${search}". Try adjusting your filters or search keywords.`
+              : "Propose a new client to initiate the supervisor approval intake workflow."
+          }
+          action={
+            <Button onClick={() => setIsAddModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Add Client
+            </Button>
+          }
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map(c => (
-            <div key={c.id} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
-                    {c.first_name?.[0]}{c.last_name?.[0]}
+        /* Photo-Forward Client Card Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filtered.map((c) => {
+            const ageText = calculateAge(c.date_of_birth);
+            const initials = `${c.first_name?.[0] || ""}${c.last_name?.[0] || "?"}`;
+
+            return (
+              <Link
+                key={c.id}
+                to={`/clients/${c.id}`}
+                className="group relative bg-card hover:bg-muted/15 border border-border/80 hover:border-primary/50 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col justify-between focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 no-underline text-inherit block"
+              >
+                <div>
+                  {/* Top Row: Photo, Name, Person ID, Approval Badge */}
+                  <div className="flex items-start gap-4">
+                    {/* Photo-Forward Portrait */}
+                    <Avatar className="h-16 w-16 rounded-2xl border-2 border-background shadow-xs shrink-0 ring-1 ring-border group-hover:scale-102 transition-transform duration-200">
+                      <AvatarImage
+                        src={c.photo_url}
+                        alt={`${c.first_name} ${c.last_name}`}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="rounded-2xl text-base font-bold bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-base text-foreground leading-snug truncate group-hover:text-primary transition-colors">
+                            {c.first_name} {c.last_name}
+                          </h3>
+                        </div>
+                        {renderApprovalBadge(c.approval_status)}
+                      </div>
+
+                      {/* Canonical 10-digit ID */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge
+                          variant="outline"
+                          className="font-mono text-[11px] font-semibold bg-muted/40 border-muted-foreground/20 text-foreground/90 tracking-tight"
+                        >
+                          #{c.person_id_number || "PENDING-ID"}
+                        </Badge>
+                        {renderRiskBadge(c.risk_level)}
+                      </div>
+
+                      <p className="text-xs text-muted-foreground truncate pt-0.5">
+                        {c.indigenous_identity || "Indigenous"}
+                        {c.band_nation ? ` • ${c.band_nation}` : ""}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">{c.first_name} {c.last_name}</p>
-                    <p className="text-xs text-muted-foreground">{c.indigenous_identity || "—"} {c.band_nation ? `• ${c.band_nation}` : ""}</p>
+
+                  {/* Demographic & Contact Metadata */}
+                  <div className="mt-4 pt-3.5 border-t border-border/60 grid grid-cols-2 gap-y-2 gap-x-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Calendar className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
+                      <span className="truncate">
+                        {c.date_of_birth ? `${c.date_of_birth} ${ageText ? `(${ageText})` : ""}` : "DOB Unknown"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 truncate">
+                      <MapPin className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
+                      <span className="truncate">{c.city || "Regina"}, {c.province || "SK"}</span>
+                    </div>
+
+                    {c.phone && (
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Phone className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
+                        <span className="truncate">{c.phone}</span>
+                      </div>
+                    )}
+
+                    {c.email && (
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Mail className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
+                        <span className="truncate">{c.email}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Context / Submission Notes */}
+                  {c.submission_notes && (
+                    <div className="mt-3 p-2 rounded-lg bg-muted/30 text-[11px] text-muted-foreground line-clamp-2 italic border border-border/40">
+                      &quot;{c.submission_notes}&quot;
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Footer: Submitter / Approval Audit & Arrow Action */}
+                <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <div className="truncate">
+                    {c.approval_status === "PENDING_APPROVAL" && c.submitted_by_name ? (
+                      <span>Submitted by {c.submitted_by_name}</span>
+                    ) : c.approval_status === "APPROVED" && c.decided_by_name ? (
+                      <span>Approved by {c.decided_by_name}</span>
+                    ) : (
+                      <span>Status: {c.status || "Active"}</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center text-primary font-medium group-hover:translate-x-1 transition-transform">
+                    <span>View Profile</span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </div>
                 </div>
-                <StatusBadge status={c.status} />
-              </div>
-              <div className="space-y-1.5 text-xs text-muted-foreground">
-                {c.email && <p>✉ {c.email}</p>}
-                {c.phone && <p>☎ {c.phone}</p>}
-                {c.city && <p>📍 {c.city}, {c.province}</p>}
-              </div>
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-                <StatusBadge status={c.risk_level} />
-                {c.date_of_birth && <span className="text-xs text-muted-foreground">DOB: {c.date_of_birth}</span>}
-              </div>
-            </div>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-heading">New Client</DialogTitle></DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>First Name *</Label><Input value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} required /></div>
-              <div><Label>Last Name *</Label><Input value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} required /></div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Status</Label><Select value={form.status} onValueChange={v => setForm({...form, status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Risk Level</Label><Select value={form.risk_level} onValueChange={v => setForm({...form, risk_level: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{RISK_LEVELS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Gender</Label><Select value={form.gender} onValueChange={v => setForm({...form, gender: v})}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Indigenous Identity</Label><Select value={form.indigenous_identity} onValueChange={v => setForm({...form, indigenous_identity: v})}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{IDENTITIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent></Select></div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} /></div>
-              <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>
-            </div>
-            <div><Label>Band / Nation</Label><Input value={form.band_nation} onChange={e => setForm({...form, band_nation: e.target.value})} /></div>
-            <div><Label>Address</Label><Input value={form.address} onChange={e => setForm({...form, address: e.target.value})} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>City</Label><Input value={form.city} onChange={e => setForm({...form, city: e.target.value})} /></div>
-              <div><Label>Province</Label><Input value={form.province} onChange={e => setForm({...form, province: e.target.value})} /></div>
-            </div>
-            <div><Label>Notes</Label><Textarea rows={2} value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} /></div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving || !form.first_name || !form.last_name}>{saving ? "Saving…" : "Add Client"}</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Unified Add Client Modal */}
+      <AddClientModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          loadClients();
+        }}
+      />
     </div>
   );
 }

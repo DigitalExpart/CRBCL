@@ -154,6 +154,38 @@ class PersonService:
             )
         return user_roles
 
+    async def assert_client_role_authorized(self, current_user: User, action_label: str = "access") -> set[str]:
+        """
+        Verify that user does not have an administrative/governance role that lacks
+        operational authority over Client records (e.g. IT Admin, Board Member).
+        Front Desk and operational staff with CLIENT_READ / CLIENT_SUBMIT are authorized.
+        """
+        if not current_user or not current_user.is_active or current_user.is_deleted:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"error": {"code": "UNAUTHENTICATED", "message": "Authentication required."}},
+            )
+
+        user_roles_stmt = (
+            select(Role.key)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .where(UserRole.user_id == current_user.id, Role.is_active == True)  # noqa: E712
+        )
+        user_roles_res = await self.db.execute(user_roles_stmt)
+        user_roles = set(user_roles_res.scalars().all())
+
+        if "it_admin" in user_roles and not any(r in user_roles for r in ["executive_director", "ceo"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": {"code": "ROLE_ACCESS_DENIED", "message": f"IT Administrators cannot {action_label} Client records."}},
+            )
+        if "board_member" in user_roles and not any(r in user_roles for r in ["executive_director", "ceo"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": {"code": "ROLE_ACCESS_DENIED", "message": f"Board members cannot {action_label} Client records."}},
+            )
+        return user_roles
+
     async def check_person_operational_access(
         self, person_id: uuid.UUID, current_user: User, write: bool = False
     ) -> None:
@@ -253,10 +285,19 @@ class PersonService:
         # 3. Client Participation
         client_stmt = select(Client).where(Client.person_id == person_id, Client.deleted_at.is_(None))
         clients = (await self.db.execute(client_stmt)).scalars().all()
+        user_perms = await perm_service.get_user_permissions(current_user.id)
         for cl in clients:
-            if getattr(cl, "assigned_worker_id", None) == current_user.id or cl.created_by == current_user.id:
+            if (
+                getattr(cl, "assigned_worker_id", None) == current_user.id
+                or cl.created_by == current_user.id
+                or getattr(cl, "submitted_by", None) == current_user.id
+            ):
                 return
             if cl.assigned_team_id is not None and user_team_ids is not None and cl.assigned_team_id in user_team_ids:
+                return
+            if cl.approval_status == "PENDING_APPROVAL" and ("client.approve" in user_perms or "supervisor" in user_roles):
+                return
+            if cl.assigned_team_id is None and ("supervisor" in user_roles or "caseworker" in user_roles):
                 return
 
         # 4. Referral Participation

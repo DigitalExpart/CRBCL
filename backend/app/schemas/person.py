@@ -247,6 +247,8 @@ class PersonSearchResultResponse(BaseModel):
     date_of_birth: date | None = None
     gender: str | None = None
     created_at: datetime
+    client_id: uuid.UUID | None = None
+    client_approval_status: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

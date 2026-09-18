@@ -26,6 +26,10 @@ class Permissions(StrEnum):
     CLIENT_CREATE = "client.create"
     CLIENT_UPDATE = "client.update"
     CLIENT_DELETE = "client.delete"
+    CLIENT_SUBMIT = "client.submit"
+    CLIENT_APPROVE = "client.approve"
+    CLIENT_RETURN = "client.return"
+    CLIENT_DECLINE = "client.decline"
 
     # Field-level client permissions
     CLIENT_IDENTIFIERS_READ = "client.identifiers.read"

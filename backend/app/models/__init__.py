@@ -42,7 +42,7 @@ from app.models.case_note import (  # noqa: F401
     CaseNoteAttachment,
     CaseNotePerson,
 )
-from app.models.client import Client  # noqa: F401
+from app.models.client import Client, ClientApprovalHistory  # noqa: F401
 from app.models.config import LookupList, LookupValue, SystemConfig  # noqa: F401
 from app.models.department_update import DepartmentExecutiveUpdate, DepartmentExecutiveUpdateHistory  # noqa: F401
 from app.models.device import MobileDevice  # noqa: F401

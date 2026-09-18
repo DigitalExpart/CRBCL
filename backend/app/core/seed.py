@@ -184,6 +184,10 @@ PERMISSIONS_DATA = [
     {"key": Permissions.CLIENT_CREATE, "name": "Create Clients", "category": "clients"},
     {"key": Permissions.CLIENT_UPDATE, "name": "Update Clients", "category": "clients"},
     {"key": Permissions.CLIENT_DELETE, "name": "Delete Clients", "category": "clients"},
+    {"key": Permissions.CLIENT_SUBMIT, "name": "Submit Client for Approval", "category": "clients"},
+    {"key": Permissions.CLIENT_APPROVE, "name": "Approve Client Submissions", "category": "clients"},
+    {"key": Permissions.CLIENT_RETURN, "name": "Return Client Submissions", "category": "clients"},
+    {"key": Permissions.CLIENT_DECLINE, "name": "Decline Client Submissions", "category": "clients"},
     # Field-level Client
     {
         "key": Permissions.CLIENT_IDENTIFIERS_READ,
@@ -540,6 +544,10 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CLIENT_READ,
         Permissions.CLIENT_CREATE,
         Permissions.CLIENT_UPDATE,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.CLIENT_APPROVE,
+        Permissions.CLIENT_RETURN,
+        Permissions.CLIENT_DECLINE,
         Permissions.CLIENT_IDENTIFIERS_READ,
         Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ,
@@ -670,6 +678,10 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CLIENT_READ,
         Permissions.CLIENT_CREATE,
         Permissions.CLIENT_UPDATE,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.CLIENT_APPROVE,
+        Permissions.CLIENT_RETURN,
+        Permissions.CLIENT_DECLINE,
         Permissions.CLIENT_IDENTIFIERS_READ,
         Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ,
@@ -817,6 +829,7 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CLIENT_READ,
         Permissions.CLIENT_CREATE,
         Permissions.CLIENT_UPDATE,
+        Permissions.CLIENT_SUBMIT,
         Permissions.CLIENT_IDENTIFIERS_READ,
         Permissions.CLIENT_IDENTIFIERS_WRITE,
         Permissions.CLIENT_MEDICAL_READ,
@@ -932,6 +945,7 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "case_aide": [
         Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
         Permissions.CLIENT_SCHOOL_READ,
         Permissions.CLIENT_CULTURAL_READ,
         Permissions.CLIENT_DOCUMENTS_READ,
@@ -993,6 +1007,7 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "cultural_worker": [
         Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
         Permissions.CLIENT_CULTURAL_READ,
         Permissions.CLIENT_CULTURAL_WRITE,
         Permissions.FAMILY_READ,
@@ -1013,6 +1028,7 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "clinical_staff": [
         Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
         Permissions.CLIENT_MEDICAL_READ,
         Permissions.CLIENT_MEDICAL_WRITE,
         Permissions.FAMILY_READ,
@@ -1059,6 +1075,8 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.PLAN_READ,
     ],
     "resource_worker": [
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
         Permissions.PUBLIC_INTAKE_READ,
         Permissions.PUBLIC_INTAKE_NOTE,
         Permissions.RESOURCE_HOME_READ,
@@ -1107,6 +1125,11 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "resource_supervisor": [
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.CLIENT_APPROVE,
+        Permissions.CLIENT_RETURN,
+        Permissions.CLIENT_DECLINE,
         Permissions.RESOURCE_HOME_READ,
         Permissions.RESOURCE_HOME_WRITE,
         Permissions.RESOURCE_RECRUITMENT_READ,
@@ -1166,6 +1189,11 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "resource_director": [
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.CLIENT_APPROVE,
+        Permissions.CLIENT_RETURN,
+        Permissions.CLIENT_DECLINE,
         Permissions.RESOURCE_HOME_READ,
         Permissions.RESOURCE_HOME_WRITE,
         Permissions.RESOURCE_RECRUITMENT_READ,
@@ -1226,6 +1254,8 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "front_desk": [
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
         Permissions.PUBLIC_INTAKE_READ,
         Permissions.PUBLIC_INTAKE_TRIAGE,
         Permissions.PUBLIC_INTAKE_ROUTE,
@@ -1237,6 +1267,7 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
         Permissions.NOTIFICATION_READ,
     ],
+
     "board_member": [
         Permissions.BOARD_DASHBOARD_READ,
         Permissions.BOARD_ACTION_READ,

@@ -1211,14 +1211,16 @@ async def test_27_role_boundaries_front_desk_board_it_admin(
     )
     assert it_dup.status_code == 403
 
-    # 2. Create Front Desk Role and User
-    fd_role = Role(key="front_desk", name="Front Desk Reception", is_system=True)
-    db_session.add(fd_role)
-    await db_session.flush()
+    # 2. Get or Create Front Desk Role and User
+    fd_role = (await db_session.execute(select(Role).where(Role.key == "front_desk"))).scalar_one_or_none()
+    if not fd_role:
+        fd_role = Role(key="front_desk", name="Front Desk Reception", is_system=True)
+        db_session.add(fd_role)
+        await db_session.flush()
 
     fd_user = User(
-        email="reception@crbcl.ca",
-        email_normalized="reception@crbcl.ca",
+        email="reception-test27@crbcl.ca",
+        email_normalized="reception-test27@crbcl.ca",
         password_hash=hash_password("password123"),
         full_name="Front Desk Receptionist",
         is_active=True,
@@ -1251,14 +1253,16 @@ async def test_27_role_boundaries_front_desk_board_it_admin(
     )
     assert fd_dup.status_code == 403
 
-    # 3. Create Board Member Role and User
-    bm_role = Role(key="board_member", name="Board Member", is_system=True)
-    db_session.add(bm_role)
-    await db_session.flush()
+    # 3. Get or Create Board Member Role and User
+    bm_role = (await db_session.execute(select(Role).where(Role.key == "board_member"))).scalar_one_or_none()
+    if not bm_role:
+        bm_role = Role(key="board_member", name="Board Member", is_system=True)
+        db_session.add(bm_role)
+        await db_session.flush()
 
     bm_user = User(
-        email="board@crbcl.ca",
-        email_normalized="board@crbcl.ca",
+        email="board-test27@crbcl.ca",
+        email_normalized="board-test27@crbcl.ca",
         password_hash=hash_password("password123"),
         full_name="Governor Board",
         is_active=True,
