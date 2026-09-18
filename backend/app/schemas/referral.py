@@ -324,3 +324,13 @@ class ReferralListResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class ReferralStatsResponse(BaseModel):
+    total_referrals: int = 0
+    open_referrals: int = 0
+    assigned_to_me: int = 0
+    drafts_count: int = 0
+    received_count: int = 0
+    pending_supervisor_count: int = 0
+    approved_count: int = 0

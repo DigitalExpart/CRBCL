@@ -6,7 +6,7 @@ import {
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
   Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home,
   CalendarDays, Bell, UserCheck, Receipt, BarChart3, CheckSquare, Truck,
-  Crown, TrendingUp, Building, ConciergeBell, Landmark
+  Crown, TrendingUp, Building, ConciergeBell, Landmark, Compass
 } from "lucide-react";
 
 import { api } from "@/api";
@@ -39,6 +39,7 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   const isExecutive = normalizedRoles.includes("executive_director");
   const isDirector = normalizedRoles.includes("director_manager");
   const isBoardMember = normalizedRoles.includes("board_member");
+  const isNavigator = normalizedRoles.includes("navigator");
 
   // Board Member navigation: strictly restricted to governance oversight
   if (isBoardMember) {
@@ -73,6 +74,10 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   }
   if (isCEO || isExecutive || isItAdmin) {
     items.push({ label: "Board Portal", icon: Landmark, path: "/board" });
+  }
+
+  if (isNavigator || isDirector || isExecutive || isCEO || isItAdmin) {
+    items.push({ label: "Navigator Dashboard", icon: Compass, path: "/navigator" });
   }
 
   items.push(

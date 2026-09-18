@@ -121,6 +121,10 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     # Create Board Member Role (NO clinical/client/intake permissions!)
     board_member_role = Role(key="board_member", name="Board Member", is_system=True)
     db_session.add(board_member_role)
+
+    # Create Navigator Role
+    navigator_role = Role(key="navigator", name="Navigator / System Navigation Specialist", is_system=True)
+    db_session.add(navigator_role)
     await db_session.flush()
 
     # Grant Executive Director ALL permissions
@@ -528,6 +532,31 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         rp = RolePermission(role_id=it_admin_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
 
+    # Grant Navigator permissions
+    for p_key in [
+        Permissions.NAVIGATOR_DASHBOARD_READ,
+        Permissions.INTAKE_READ,
+        Permissions.INTAKE_CREATE,
+        Permissions.INTAKE_UPDATE,
+        Permissions.INTAKE_SUBMIT,
+        Permissions.INTAKE_REPORTER_READ,
+        Permissions.INTAKE_REPORTER_WRITE,
+        Permissions.INTAKE_DECISION_READ,
+        Permissions.INTAKE_HISTORY_READ,
+        Permissions.INTAKE_LINK_READ,
+        Permissions.INTAKE_LINK_WRITE,
+        Permissions.PUBLIC_INTAKE_READ,
+        Permissions.PUBLIC_INTAKE_NOTE,
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.TIMELINE_READ,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.NOTIFICATION_READ,
+    ]:
+        rp = RolePermission(role_id=navigator_role.id, permission_id=perms[p_key].id)
+        db_session.add(rp)
+
     # Create a Test Team
     team = Team(code="cfs_protection", name="Child & Family Services (Protection)", short_name="CFS")
     db_session.add(team)
@@ -541,6 +570,7 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
             "finance_staff": finance_role,
             "it_admin": it_admin_role,
             "board_member": board_member_role,
+            "navigator": navigator_role,
         },
         "team": team,
     }
@@ -614,6 +644,32 @@ async def it_admin_user(db_session: AsyncSession, seed_roles_and_permissions):
 
     ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["it_admin"].id)
     db_session.add(ur)
+    await db_session.commit()
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
+
+
+@pytest.fixture
+async def navigator_user(db_session: AsyncSession, seed_roles_and_permissions):
+    """Create an active navigator user with token."""
+    user = User(
+        email="navigator@crbcl.ca",
+        email_normalized="navigator@crbcl.ca",
+        password_hash=hash_password("password123"),
+        full_name="Noah Navigator",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["navigator"].id)
+    db_session.add(ur)
+
+    tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)
+    db_session.add(tm)
+
     await db_session.commit()
 
     token = create_access_token(user.id)

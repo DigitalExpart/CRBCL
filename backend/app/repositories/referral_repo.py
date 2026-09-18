@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import case, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -173,6 +173,38 @@ class ReferralRepository:
             status="PENDING_SUPERVISOR",
             assigned_team_id=team_id,
         )
+
+    async def get_dashboard_summary(self, user_id: uuid.UUID | None = None) -> dict:
+        """Compute authoritative summary KPI counts for the referral / intake dashboard."""
+        base_filter = Referral.deleted_at.is_(None)
+
+        assigned_cond = (
+            (Referral.assigned_worker_id == user_id) & (~Referral.status.in_(["APPROVED", "CLOSED"]))
+            if user_id
+            else False
+        )
+
+        stmt = select(
+            func.count(Referral.id).label("total"),
+            func.coalesce(func.sum(case((~Referral.status.in_(["APPROVED", "CLOSED"]), 1), else_=0)), 0).label("open"),
+            func.coalesce(func.sum(case((Referral.status == "DRAFT", 1), else_=0)), 0).label("drafts"),
+            func.coalesce(func.sum(case((Referral.status == "RECEIVED", 1), else_=0)), 0).label("received"),
+            func.coalesce(func.sum(case((Referral.status == "PENDING_SUPERVISOR", 1), else_=0)), 0).label("pending_supervisor"),
+            func.coalesce(func.sum(case((Referral.status == "APPROVED", 1), else_=0)), 0).label("approved"),
+            func.coalesce(func.sum(case((assigned_cond, 1), else_=0)), 0).label("assigned_to_me"),
+        ).where(base_filter)
+
+        res = await self.db.execute(stmt)
+        row = res.one()
+        return {
+            "total_referrals": int(row.total or 0),
+            "open_referrals": int(row.open or 0),
+            "assigned_to_me": int(row.assigned_to_me or 0),
+            "drafts_count": int(row.drafts or 0),
+            "received_count": int(row.received or 0),
+            "pending_supervisor_count": int(row.pending_supervisor or 0),
+            "approved_count": int(row.approved or 0),
+        }
 
     # ── Person Associations ───────────────────────────────────
 

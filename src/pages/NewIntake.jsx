@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Inbox, Plus, Trash2, ArrowLeft, AlertTriangle, Users, FileText, Lock
 } from "lucide-react";
@@ -31,6 +31,8 @@ const CONCERN_TYPES = [
 
 export default function NewIntake() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isReferral = searchParams.get("type") === "referral";
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
@@ -94,7 +96,7 @@ export default function NewIntake() {
     setPeople([
       ...people,
       {
-        person_id: client.id,
+        person_id: client.person_id || client.id,
         name: `${client.first_name} ${client.last_name}`,
         role: personRole,
         relationship_to_child: relationshipToChild,
@@ -172,8 +174,8 @@ export default function NewIntake() {
 
       const created = await referralsApi.create(payload);
       toast({
-        title: "Intake Referral Created",
-        description: `Draft referral ${created.referral_number} registered successfully.`,
+        title: isReferral ? "Referral Initiated" : "Intake Referral Created",
+        description: `Reference #${created.referral_number || "Draft"} saved successfully.`,
       });
 
       navigate(`/intake/${created.id}`);
@@ -197,8 +199,19 @@ export default function NewIntake() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold font-heading text-foreground">Log New Intake Referral</h1>
-            <p className="text-xs text-muted-foreground">Capture front-door referral details, confidential reporter, involved persons, and screening concerns</p>
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                {isReferral ? "Community Referral" : "Intake Referral"}
+              </Badge>
+            </div>
+            <h1 className="text-2xl font-bold font-heading text-foreground">
+              {isReferral ? "Initiate Community Referral" : "Log New Intake Referral"}
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              {isReferral
+                ? "Connect individuals and families to lodge navigation services, community resources, and programs"
+                : "Capture front-door referral details, confidential reporter, involved persons, and screening concerns"}
+            </p>
           </div>
         </div>
       </div>
@@ -675,9 +688,9 @@ export default function NewIntake() {
           <Button type="button" variant="outline" onClick={() => navigate("/intake")}>
             Cancel
           </Button>
-          <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary/90 min-w-[160px]">
-            {submitting ? "Saving Draft..." : "Create Intake Referral"}
-          </Button>
+            <Button type="submit" disabled={submitting} className="min-w-[140px]">
+              {submitting ? "Saving..." : isReferral ? "Create Referral" : "Log Intake Referral"}
+            </Button>
         </div>
       </form>
     </div>

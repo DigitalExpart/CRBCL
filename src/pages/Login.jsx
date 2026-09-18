@@ -38,6 +38,7 @@ export default function Login() {
       const isCEO = roles.includes("ceo");
       const isExecutive = roles.includes("executive_director");
       const isDirector = roles.includes("director_manager");
+      const isNavigator = roles.includes("navigator");
       const isFrontDesk = roles.includes("front_desk");
       const isBoardMember = roles.includes("board_member");
 
@@ -54,6 +55,8 @@ export default function Login() {
         window.location.href = "/executive";
       } else if (isDirector) {
         window.location.href = "/director";
+      } else if (isNavigator) {
+        window.location.href = "/navigator";
       } else if (isFrontDesk) {
         window.location.href = "/front-desk";
       } else {

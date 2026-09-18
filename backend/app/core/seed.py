@@ -155,6 +155,12 @@ ROLES_DATA = [
         "description": "Board of Governors member with governance oversight and board action review. NO operational child welfare, clinical, finance detail, or staff HR access.",
         "is_system": True,
     },
+    {
+        "key": "navigator",
+        "name": "Navigator / System Navigation Specialist",
+        "description": "System navigation support, community referral coordination, and intake reception.",
+        "is_system": True,
+    },
 ]
 
 # ── 2. Permissions Definition ────────────────────────────────
@@ -512,6 +518,8 @@ PERMISSIONS_DATA = [
     {"key": Permissions.BOARD_REPORT_READ, "name": "Read Board Governance Reports", "category": "board"},
     {"key": Permissions.BOARD_DECISION_RECORD, "name": "Record Formal Board Action Decisions", "category": "board"},
     {"key": Permissions.BOARD_PUBLICATION_MANAGE, "name": "Manage Board Visibility & Publication Approvals", "category": "board"},
+    # System Navigation & Referral Coordination
+    {"key": Permissions.NAVIGATOR_DASHBOARD_READ, "name": "Read Navigator Dashboard", "category": "navigator"},
 ]
 
 # ── 3. Role-Permission Mappings ──────────────────────────────
@@ -519,6 +527,7 @@ ROLE_PERMISSIONS_MAP = {
     "ceo": [p["key"] for p in PERMISSIONS_DATA],
     "executive_director": [p["key"] for p in PERMISSIONS_DATA],
     "director_manager": [
+        Permissions.NAVIGATOR_DASHBOARD_READ,
         Permissions.EXECUTIVE_INITIATIVE_READ,
         Permissions.BOARD_ACTION_READ,
         Permissions.BOARD_ACTION_WRITE,
@@ -658,6 +667,7 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.TIMELINE_READ,
     ],
     "supervisor": [
+        Permissions.NAVIGATOR_DASHBOARD_READ,
         Permissions.PUBLIC_INTAKE_READ,
         Permissions.PUBLIC_INTAKE_NOTE,
         Permissions.PUBLIC_INTAKE_TRIAGE,
@@ -1273,6 +1283,27 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.BOARD_ACTION_READ,
         Permissions.BOARD_DOCUMENT_READ,
         Permissions.BOARD_REPORT_READ,
+    ],
+    "navigator": [
+        Permissions.NAVIGATOR_DASHBOARD_READ,
+        Permissions.INTAKE_READ,
+        Permissions.INTAKE_CREATE,
+        Permissions.INTAKE_UPDATE,
+        Permissions.INTAKE_SUBMIT,
+        Permissions.INTAKE_REPORTER_READ,
+        Permissions.INTAKE_REPORTER_WRITE,
+        Permissions.INTAKE_DECISION_READ,
+        Permissions.INTAKE_HISTORY_READ,
+        Permissions.INTAKE_LINK_READ,
+        Permissions.INTAKE_LINK_WRITE,
+        Permissions.PUBLIC_INTAKE_READ,
+        Permissions.PUBLIC_INTAKE_NOTE,
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.TIMELINE_READ,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.NOTIFICATION_READ,
     ],
 }
 

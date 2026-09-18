@@ -33,6 +33,7 @@ from app.schemas.referral import (
     ReferralReporterCreate,
     ReferralReporterResponse,
     ReferralResponse,
+    ReferralStatsResponse,
     ReferralUpdate,
 )
 from app.services.intake_approval_service import IntakeApprovalService
@@ -186,6 +187,17 @@ async def list_supervisor_approval_queue(
         page_size=page_size,
         total_pages=math.ceil(total / page_size) if total > 0 else 1,
     )
+
+
+@router.get("/stats", response_model=ReferralStatsResponse)
+async def get_referral_stats(
+    user: User = Depends(require_permission(Permissions.INTAKE_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve authoritative workload summary KPI counts for intakes and referrals."""
+    repo = ReferralRepository(db)
+    summary = await repo.get_dashboard_summary(user_id=user.id)
+    return ReferralStatsResponse(**summary)
 
 
 @router.get("/{referral_id}", response_model=ReferralDetailResponse)

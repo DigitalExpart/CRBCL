@@ -373,3 +373,6 @@ class Permissions(StrEnum):
     BOARD_DECISION_RECORD = "board_decision.record"
     BOARD_PUBLICATION_MANAGE = "board_publication.manage"
 
+    # System Navigation & Referral Coordination
+    NAVIGATOR_DASHBOARD_READ = "navigator.dashboard.read"
+

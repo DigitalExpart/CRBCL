@@ -136,4 +136,7 @@ export const referralsApi = {
     const qs = query.toString();
     return api.fetch(`/api/v1/referrals/approvals/queue${qs ? `?${qs}` : ''}`).then(res => res.json());
   },
+
+  getStats: () =>
+    api.fetch('/api/v1/referrals/stats').then(res => res.json()),
 };
