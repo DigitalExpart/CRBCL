@@ -302,6 +302,9 @@ async def submit_existing_person(
     existing_client = await client_repo.get_by_person_id(person.id)
     now = datetime.now(UTC)
 
+    perm_service = PermissionService(db)
+    has_approve_perm = await perm_service.user_has_permission(user.id, Permissions.CLIENT_APPROVE)
+
     if existing_client:
         if existing_client.approval_status == "APPROVED":
             raise HTTPException(
@@ -315,54 +318,112 @@ async def submit_existing_person(
                 },
             )
         if existing_client.approval_status == "PENDING_APPROVAL":
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "error": {
-                        "code": "CLIENT_PENDING_APPROVAL",
-                        "message": f"{person.first_name} {person.last_name} already has a pending client proposal awaiting review.",
-                        "client_id": str(existing_client.id),
-                    }
-                },
+            if not has_approve_perm:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={
+                        "error": {
+                            "code": "CLIENT_PENDING_APPROVAL",
+                            "message": f"{person.first_name} {person.last_name} already has a pending client proposal awaiting review.",
+                            "client_id": str(existing_client.id),
+                        }
+                    },
+                )
+            # Authorized approver direct review & activation of existing pending proposal
+            old_status = existing_client.approval_status
+            existing_client.approval_status = "APPROVED"
+            existing_client.status = "Active"
+            existing_client.decided_by = user.id
+            existing_client.decided_at = now
+            existing_client.decision_reason = payload.submission_notes or "Direct authorized approval by supervisor/director."
+            if payload.submission_notes:
+                existing_client.submission_notes = payload.submission_notes
+            existing_client.risk_level = payload.risk_level
+            if payload.assigned_team_id:
+                existing_client.assigned_team_id = payload.assigned_team_id
+            existing_client.updated_by = user.id
+
+            history_entry = ClientApprovalHistory(
+                client_id=existing_client.id,
+                person_id=person.id,
+                action="APPROVED",
+                from_status=old_status,
+                to_status="APPROVED",
+                actor_id=user.id,
+                notes=payload.submission_notes or "Direct authorized approval by supervisor/director.",
+                created_at=now,
             )
+            await client_repo.add_approval_history(history_entry)
+            target_client = existing_client
+        else:
+            # Re-submitting or directly approving a previously RETURNED or DECLINED client proposal
+            old_status = existing_client.approval_status
+            if has_approve_perm:
+                existing_client.approval_status = "APPROVED"
+                existing_client.status = "Active"
+                existing_client.decided_by = user.id
+                existing_client.decided_at = now
+                existing_client.decision_reason = payload.submission_notes or "Direct authorized approval by supervisor/director."
+                action_type = "APPROVED"
+                to_status = "APPROVED"
+                hist_notes = payload.submission_notes or "Direct authorized approval by supervisor/director."
+            else:
+                existing_client.approval_status = "PENDING_APPROVAL"
+                existing_client.status = "Pending Intake"
+                existing_client.decided_by = None
+                existing_client.decided_at = None
+                existing_client.decision_reason = None
+                action_type = "SUBMITTED"
+                to_status = "PENDING_APPROVAL"
+                hist_notes = payload.submission_notes
 
-        # Re-submitting a previously RETURNED or DECLINED client proposal
-        old_status = existing_client.approval_status
-        existing_client.approval_status = "PENDING_APPROVAL"
-        existing_client.status = "Pending Intake"
-        existing_client.submitted_by = user.id
-        existing_client.submitted_at = now
-        existing_client.submission_notes = payload.submission_notes
-        existing_client.risk_level = payload.risk_level
-        if payload.assigned_team_id:
-            existing_client.assigned_team_id = payload.assigned_team_id
-        existing_client.decided_by = None
-        existing_client.decided_at = None
-        existing_client.decision_reason = None
-        existing_client.updated_by = user.id
+            existing_client.submitted_by = user.id
+            existing_client.submitted_at = now
+            existing_client.submission_notes = payload.submission_notes
+            existing_client.risk_level = payload.risk_level
+            if payload.assigned_team_id:
+                existing_client.assigned_team_id = payload.assigned_team_id
+            existing_client.updated_by = user.id
 
-        history_entry = ClientApprovalHistory(
-            client_id=existing_client.id,
-            person_id=person.id,
-            action="SUBMITTED",
-            from_status=old_status,
-            to_status="PENDING_APPROVAL",
-            actor_id=user.id,
-            notes=payload.submission_notes,
-            created_at=now,
-        )
-        await client_repo.add_approval_history(history_entry)
-        target_client = existing_client
+            history_entry = ClientApprovalHistory(
+                client_id=existing_client.id,
+                person_id=person.id,
+                action=action_type,
+                from_status=old_status,
+                to_status=to_status,
+                actor_id=user.id,
+                notes=hist_notes,
+                created_at=now,
+            )
+            await client_repo.add_approval_history(history_entry)
+            target_client = existing_client
     else:
-        # Create fresh client record linked to canonical Person in PENDING_APPROVAL state
+        # Create fresh client record linked to canonical Person
+        if has_approve_perm:
+            client_approval_status = "APPROVED"
+            client_status = "Active"
+            decided_by = user.id
+            decided_at = now
+            decision_reason = payload.submission_notes or "Direct authorized creation and approval by supervisor/director."
+            action_type = "APPROVED"
+            hist_notes = payload.submission_notes or "Direct authorized creation and approval by supervisor/director."
+        else:
+            client_approval_status = "PENDING_APPROVAL"
+            client_status = "Pending Intake"
+            decided_by = None
+            decided_at = None
+            decision_reason = None
+            action_type = "SUBMITTED"
+            hist_notes = payload.submission_notes
+
         target_client = Client(
             person_id=person.id,
             first_name=person.first_name,
             last_name=person.last_name,
             date_of_birth=person.date_of_birth,
             gender=person.gender,
-            status="Pending Intake",
-            approval_status="PENDING_APPROVAL",
+            status=client_status,
+            approval_status=client_approval_status,
             risk_level=payload.risk_level,
             phone=person.phone,
             email=person.email,
@@ -371,6 +432,9 @@ async def submit_existing_person(
             submission_notes=payload.submission_notes,
             submitted_by=user.id,
             submitted_at=now,
+            decided_by=decided_by,
+            decided_at=decided_at,
+            decision_reason=decision_reason,
             assigned_team_id=payload.assigned_team_id,
             created_by=user.id,
             updated_by=user.id,
@@ -381,44 +445,71 @@ async def submit_existing_person(
         history_entry = ClientApprovalHistory(
             client_id=target_client.id,
             person_id=person.id,
-            action="SUBMITTED",
+            action=action_type,
             from_status=None,
-            to_status="PENDING_APPROVAL",
+            to_status=client_approval_status,
             actor_id=user.id,
-            notes=payload.submission_notes,
+            notes=hist_notes,
             created_at=now,
         )
         await client_repo.add_approval_history(history_entry)
 
     # Audit & Timeline
     audit_service = AuditService(db)
-    await audit_service.log_event(
-        event_type="CLIENT_SUBMITTED",
-        user_id=user.id,
-        entity_type="client",
-        entity_id=target_client.id,
-        after_data={
-            "person_id": str(person.id),
-            "person_id_number": person.person_id_number,
-            "approval_status": "PENDING_APPROVAL",
-            "submission_notes": payload.submission_notes,
-        },
-        ip_address=request.client.host if request.client else None,
-    )
+    if has_approve_perm:
+        await audit_service.log_event(
+            event_type="CLIENT_APPROVED",
+            user_id=user.id,
+            entity_type="client",
+            entity_id=target_client.id,
+            after_data={
+                "person_id": str(person.id),
+                "person_id_number": person.person_id_number,
+                "approval_status": "APPROVED",
+                "decided_by": str(user.id),
+                "decided_at": now.isoformat(),
+            },
+            ip_address=request.client.host if request.client else None,
+        )
 
-    timeline_service = TimelineService(db)
-    await timeline_service.record_event(
-        event_type=TimelineEventType.CLIENT_CREATED,
-        title=f"Client Proposal Submitted: {person.first_name} {person.last_name}",
-        description=f"Submitted for Supervisor/Director approval (ID: {person.person_id_number}).",
-        entity_type="client",
-        entity_id=target_client.id,
-        client_id=target_client.id,
-        created_by=user.id,
-    )
+        timeline_service = TimelineService(db)
+        await timeline_service.record_event(
+            event_type=TimelineEventType.CLIENT_CREATED,
+            title=f"Client Created & Approved: {person.first_name} {person.last_name}",
+            description=f"Directly created and approved client context (ID: {person.person_id_number}).",
+            entity_type="client",
+            entity_id=target_client.id,
+            client_id=target_client.id,
+            created_by=user.id,
+        )
+    else:
+        await audit_service.log_event(
+            event_type="CLIENT_SUBMITTED",
+            user_id=user.id,
+            entity_type="client",
+            entity_id=target_client.id,
+            after_data={
+                "person_id": str(person.id),
+                "person_id_number": person.person_id_number,
+                "approval_status": "PENDING_APPROVAL",
+                "submission_notes": payload.submission_notes,
+            },
+            ip_address=request.client.host if request.client else None,
+        )
+
+        timeline_service = TimelineService(db)
+        await timeline_service.record_event(
+            event_type=TimelineEventType.CLIENT_CREATED,
+            title=f"Client Proposal Submitted: {person.first_name} {person.last_name}",
+            description=f"Submitted for Supervisor/Director approval (ID: {person.person_id_number}).",
+            entity_type="client",
+            entity_id=target_client.id,
+            client_id=target_client.id,
+            created_by=user.id,
+        )
 
     await db.commit()
-    return _populate_client_response(target_client, person=person, submitter=user)
+    return _populate_client_response(target_client, person=person, submitter=user, decider=user if has_approve_perm else None)
 
 
 @router.post("/submit-new", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
@@ -430,7 +521,7 @@ async def submit_new_person_and_client(
 ):
     """
     Create a new canonical Person with automatic permanent 10-digit ID,
-    and submit as a Client for Supervisor/Director approval in a unified flow.
+    and submit as a Client (or auto-approve if user has CLIENT_APPROVE authority).
     """
     person_service = PersonService(db)
     await person_service.assert_client_role_authorized(user, "create person and propose client")
@@ -438,12 +529,32 @@ async def submit_new_person_and_client(
     # 1. Create canonical Person record with permanent 10-digit numeric ID
     person = await person_service.create_person(payload.person, current_user_id=user.id)
 
-    # 2. Create linked Client in PENDING_APPROVAL state
+    # 2. Check approver authority
+    perm_service = PermissionService(db)
+    has_approve_perm = await perm_service.user_has_permission(user.id, Permissions.CLIENT_APPROVE)
+
     now = datetime.now(UTC)
     client_repo = ClientRepository(db)
     primary_addr = next((a.address_line_1 for a in person.addresses if a.is_primary), None)
     primary_city = next((a.city for a in person.addresses if a.is_primary), "Regina")
     primary_province = next((a.province for a in person.addresses if a.is_primary), "Saskatchewan")
+
+    if has_approve_perm:
+        client_approval_status = "APPROVED"
+        client_status = "Active"
+        decided_by = user.id
+        decided_at = now
+        decision_reason = payload.submission_notes or "Direct authorized creation and approval by supervisor/director."
+        action_type = "APPROVED"
+        hist_notes = payload.submission_notes or "Direct authorized creation and approval by supervisor/director."
+    else:
+        client_approval_status = "PENDING_APPROVAL"
+        client_status = "Pending Intake"
+        decided_by = None
+        decided_at = None
+        decision_reason = None
+        action_type = "SUBMITTED"
+        hist_notes = payload.submission_notes
 
     target_client = Client(
         person_id=person.id,
@@ -451,8 +562,8 @@ async def submit_new_person_and_client(
         last_name=person.last_name,
         date_of_birth=person.date_of_birth,
         gender=person.gender,
-        status="Pending Intake",
-        approval_status="PENDING_APPROVAL",
+        status=client_status,
+        approval_status=client_approval_status,
         risk_level=payload.risk_level,
         phone=person.phone,
         email=person.email,
@@ -464,6 +575,9 @@ async def submit_new_person_and_client(
         submission_notes=payload.submission_notes,
         submitted_by=user.id,
         submitted_at=now,
+        decided_by=decided_by,
+        decided_at=decided_at,
+        decision_reason=decision_reason,
         assigned_team_id=payload.assigned_team_id,
         created_by=user.id,
         updated_by=user.id,
@@ -475,44 +589,71 @@ async def submit_new_person_and_client(
     history_entry = ClientApprovalHistory(
         client_id=target_client.id,
         person_id=person.id,
-        action="SUBMITTED",
+        action=action_type,
         from_status=None,
-        to_status="PENDING_APPROVAL",
+        to_status=client_approval_status,
         actor_id=user.id,
-        notes=payload.submission_notes,
+        notes=hist_notes,
         created_at=now,
     )
     await client_repo.add_approval_history(history_entry)
 
     # 4. Audit & Timeline
     audit_service = AuditService(db)
-    await audit_service.log_event(
-        event_type="CLIENT_SUBMITTED",
-        user_id=user.id,
-        entity_type="client",
-        entity_id=target_client.id,
-        after_data={
-            "person_id": str(person.id),
-            "person_id_number": person.person_id_number,
-            "approval_status": "PENDING_APPROVAL",
-            "submission_notes": payload.submission_notes,
-        },
-        ip_address=request.client.host if request.client else None,
-    )
-
     timeline_service = TimelineService(db)
-    await timeline_service.record_event(
-        event_type=TimelineEventType.CLIENT_CREATED,
-        title=f"New Client Proposal: {person.first_name} {person.last_name}",
-        description=f"Created canonical Person (ID: {person.person_id_number}) and submitted for approval.",
-        entity_type="client",
-        entity_id=target_client.id,
-        client_id=target_client.id,
-        created_by=user.id,
-    )
+
+    if has_approve_perm:
+        await audit_service.log_event(
+            event_type="CLIENT_APPROVED",
+            user_id=user.id,
+            entity_type="client",
+            entity_id=target_client.id,
+            after_data={
+                "person_id": str(person.id),
+                "person_id_number": person.person_id_number,
+                "approval_status": "APPROVED",
+                "decided_by": str(user.id),
+                "decided_at": now.isoformat(),
+            },
+            ip_address=request.client.host if request.client else None,
+        )
+
+        await timeline_service.record_event(
+            event_type=TimelineEventType.CLIENT_CREATED,
+            title=f"Client Created & Approved: {person.first_name} {person.last_name}",
+            description=f"Created canonical Person (ID: {person.person_id_number}) and approved client context.",
+            entity_type="client",
+            entity_id=target_client.id,
+            client_id=target_client.id,
+            created_by=user.id,
+        )
+    else:
+        await audit_service.log_event(
+            event_type="CLIENT_SUBMITTED",
+            user_id=user.id,
+            entity_type="client",
+            entity_id=target_client.id,
+            after_data={
+                "person_id": str(person.id),
+                "person_id_number": person.person_id_number,
+                "approval_status": "PENDING_APPROVAL",
+                "submission_notes": payload.submission_notes,
+            },
+            ip_address=request.client.host if request.client else None,
+        )
+
+        await timeline_service.record_event(
+            event_type=TimelineEventType.CLIENT_CREATED,
+            title=f"New Client Proposal: {person.first_name} {person.last_name}",
+            description=f"Created canonical Person (ID: {person.person_id_number}) and submitted for approval.",
+            entity_type="client",
+            entity_id=target_client.id,
+            client_id=target_client.id,
+            created_by=user.id,
+        )
 
     await db.commit()
-    return _populate_client_response(target_client, person=person, submitter=user)
+    return _populate_client_response(target_client, person=person, submitter=user, decider=user if has_approve_perm else None)
 
 
 @router.get("/approvals/pending", response_model=PaginatedResponse[ClientApprovalItemResponse])

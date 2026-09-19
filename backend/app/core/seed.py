@@ -520,6 +520,14 @@ PERMISSIONS_DATA = [
     {"key": Permissions.BOARD_PUBLICATION_MANAGE, "name": "Manage Board Visibility & Publication Approvals", "category": "board"},
     # System Navigation & Referral Coordination
     {"key": Permissions.NAVIGATOR_DASHBOARD_READ, "name": "Read Navigator Dashboard", "category": "navigator"},
+    # Human Resources, Staffing & Certification Management
+    {"key": Permissions.HR_EMPLOYEE_READ, "name": "Read Employee Records & Personnel Directory", "category": "hr"},
+    {"key": Permissions.HR_EMPLOYEE_CREATE, "name": "Create Employee Records", "category": "hr"},
+    {"key": Permissions.HR_EMPLOYEE_UPDATE, "name": "Update Employee Records", "category": "hr"},
+    {"key": Permissions.HR_EMPLOYEE_ARCHIVE, "name": "Archive Employee Records", "category": "hr"},
+    {"key": Permissions.HR_CERTIFICATION_READ, "name": "Read Employee Certifications & Credentials", "category": "hr"},
+    {"key": Permissions.HR_CERTIFICATION_MANAGE, "name": "Manage Employee Certifications & Credentials", "category": "hr"},
+    {"key": Permissions.HR_DASHBOARD_READ, "name": "Read Human Resources Dashboard", "category": "hr"},
 ]
 
 # ── 3. Role-Permission Mappings ──────────────────────────────
@@ -527,6 +535,9 @@ ROLE_PERMISSIONS_MAP = {
     "ceo": [p["key"] for p in PERMISSIONS_DATA],
     "executive_director": [p["key"] for p in PERMISSIONS_DATA],
     "director_manager": [
+        Permissions.HR_DASHBOARD_READ,
+        Permissions.HR_EMPLOYEE_READ,
+        Permissions.HR_CERTIFICATION_READ,
         Permissions.NAVIGATOR_DASHBOARD_READ,
         Permissions.EXECUTIVE_INITIATIVE_READ,
         Permissions.BOARD_ACTION_READ,
@@ -1006,6 +1017,14 @@ ROLE_PERMISSIONS_MAP = {
     "hr_staff": [
         Permissions.ADMIN_USERS_MANAGE,
         Permissions.ADMIN_TEAMS_MANAGE,
+        Permissions.HR_DASHBOARD_READ,
+        Permissions.HR_EMPLOYEE_READ,
+        Permissions.HR_EMPLOYEE_CREATE,
+        Permissions.HR_EMPLOYEE_UPDATE,
+        Permissions.HR_EMPLOYEE_ARCHIVE,
+        Permissions.HR_CERTIFICATION_READ,
+        Permissions.HR_CERTIFICATION_MANAGE,
+        Permissions.NOTIFICATION_READ,
     ],
     "it_admin": [
         Permissions.ADMIN_USERS_MANAGE,

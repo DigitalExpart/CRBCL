@@ -1,8 +1,10 @@
 """Service business logic for Organizational Operations Sprint A."""
 
 import uuid
+from datetime import date, timedelta
 from typing import Any
 
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.org_ops import (
@@ -18,7 +20,14 @@ from app.models.org_ops import (
     Volunteer,
     VolunteerHour,
 )
+from app.models.staffing import StaffingSession
 from app.repositories.org_ops_repo import OrgOpsRepository
+from app.schemas.hr_dashboard import (
+    ExpiringCertificationSummary,
+    HRDashboardSummaryResponse,
+    MetricAvailability,
+    RecentHireSummary,
+)
 
 
 class OrgOpsService:
@@ -59,6 +68,225 @@ class OrgOpsService:
             status=data.get("status", "ACTIVE"),
         )
         return await self.repo.create_employee_certification(cert)
+
+    async def get_hr_dashboard_summary(self) -> HRDashboardSummaryResponse:
+        today = date.today()
+        ninety_days_ago = today - timedelta(days=90)
+        thirty_days_future = today + timedelta(days=30)
+        session = self.repo.session
+
+        # 1. Total non-deleted employees
+        total_emp_res = await session.execute(
+            select(func.count(Employee.id)).where(Employee.deleted_at.is_(None))
+        )
+        total_employees = total_emp_res.scalar() or 0
+
+        # 2. Active employees
+        active_emp_res = await session.execute(
+            select(func.count(Employee.id)).where(
+                Employee.deleted_at.is_(None),
+                func.upper(Employee.employment_status) == "ACTIVE",
+            )
+        )
+        active_staff_count = active_emp_res.scalar() or 0
+
+        # 3. On leave employees
+        leave_emp_res = await session.execute(
+            select(func.count(Employee.id)).where(
+                Employee.deleted_at.is_(None),
+                func.upper(Employee.employment_status) == "ON_LEAVE",
+            )
+        )
+        on_leave_count = leave_emp_res.scalar() or 0
+
+        # 4. Terminated / Departed employees
+        term_emp_res = await session.execute(
+            select(func.count(Employee.id)).where(
+                Employee.deleted_at.is_(None),
+                func.upper(Employee.employment_status) == "TERMINATED",
+            )
+        )
+        terminated_count = term_emp_res.scalar() or 0
+
+        # 5. Recent hires (last 90 days)
+        recent_hires_count_res = await session.execute(
+            select(func.count(Employee.id)).where(
+                Employee.deleted_at.is_(None),
+                Employee.hire_date >= ninety_days_ago,
+            )
+        )
+        recent_hires_count = recent_hires_count_res.scalar() or 0
+
+        # 6. Department distribution (active staff)
+        dept_res = await session.execute(
+            select(Employee.department, func.count(Employee.id))
+            .where(
+                Employee.deleted_at.is_(None),
+                func.upper(Employee.employment_status) == "ACTIVE",
+            )
+            .group_by(Employee.department)
+            .order_by(func.count(Employee.id).desc())
+        )
+        department_distribution = {dept or "Unassigned": count for dept, count in dept_res.fetchall()}
+
+        # 7. Position distribution (active staff)
+        pos_res = await session.execute(
+            select(Employee.position, func.count(Employee.id))
+            .where(
+                Employee.deleted_at.is_(None),
+                func.upper(Employee.employment_status) == "ACTIVE",
+            )
+            .group_by(Employee.position)
+            .order_by(func.count(Employee.id).desc())
+            .limit(10)
+        )
+        position_distribution = {pos or "Unassigned": count for pos, count in pos_res.fetchall()}
+
+        # 8. Certifications summary
+        total_cert_res = await session.execute(
+            select(func.count(EmployeeCertification.id))
+        )
+        total_certifications = total_cert_res.scalar() or 0
+
+        active_cert_res = await session.execute(
+            select(func.count(EmployeeCertification.id)).where(
+                func.upper(EmployeeCertification.status) == "ACTIVE",
+                or_(EmployeeCertification.expiry_date.is_(None), EmployeeCertification.expiry_date >= today),
+            )
+        )
+        active_certifications = active_cert_res.scalar() or 0
+
+        expiring_soon_res = await session.execute(
+            select(func.count(EmployeeCertification.id)).where(
+                EmployeeCertification.expiry_date.isnot(None),
+                EmployeeCertification.expiry_date >= today,
+                EmployeeCertification.expiry_date <= thirty_days_future,
+            )
+        )
+        expiring_soon_count = expiring_soon_res.scalar() or 0
+
+        expired_cert_res = await session.execute(
+            select(func.count(EmployeeCertification.id)).where(
+                or_(
+                    EmployeeCertification.expiry_date < today,
+                    func.upper(EmployeeCertification.status) == "EXPIRED",
+                )
+            )
+        )
+        expired_certifications_count = expired_cert_res.scalar() or 0
+
+        # Expiring or recently expired certifications with employee details
+        exp_certs_query = (
+            select(EmployeeCertification, Employee)
+            .join(Employee, EmployeeCertification.employee_id == Employee.id)
+            .where(
+                EmployeeCertification.expiry_date.isnot(None),
+                EmployeeCertification.expiry_date <= thirty_days_future,
+            )
+            .order_by(EmployeeCertification.expiry_date.asc())
+            .limit(15)
+        )
+        exp_certs_rows = (await session.execute(exp_certs_query)).all()
+        expiring_certifications = [
+            ExpiringCertificationSummary(
+                id=cert.id,
+                employee_id=emp.id,
+                employee_name=f"{emp.first_name} {emp.last_name}".strip(),
+                department=emp.department,
+                cert_type=cert.cert_type,
+                identifier=cert.identifier,
+                issued_date=cert.issued_date,
+                expiry_date=cert.expiry_date,
+                status="EXPIRED" if cert.expiry_date and cert.expiry_date < today else (
+                    "EXPIRING" if cert.expiry_date and cert.expiry_date <= thirty_days_future else cert.status
+                ),
+                days_until_expiry=(cert.expiry_date - today).days if cert.expiry_date else None,
+            )
+            for cert, emp in exp_certs_rows
+        ]
+
+        # 9. Recent hires list
+        recent_hires_query = (
+            select(Employee)
+            .where(Employee.deleted_at.is_(None))
+            .order_by(Employee.hire_date.desc())
+            .limit(10)
+        )
+        recent_hires_rows = (await session.execute(recent_hires_query)).scalars().all()
+        recent_hires = [
+            RecentHireSummary(
+                id=emp.id,
+                employee_number=emp.employee_number,
+                first_name=emp.first_name,
+                last_name=emp.last_name,
+                position=emp.position,
+                department=emp.department,
+                hire_date=emp.hire_date,
+                photo_url=emp.photo_url,
+            )
+            for emp in recent_hires_rows
+        ]
+
+        # 10. Staffing sessions summary
+        try:
+            total_staffing_res = await session.execute(
+                select(func.count(StaffingSession.id)).where(StaffingSession.deleted_at.is_(None))
+            )
+            total_staffing_sessions = total_staffing_res.scalar() or 0
+
+            recent_staffing_res = await session.execute(
+                select(func.count(StaffingSession.id)).where(
+                    StaffingSession.deleted_at.is_(None),
+                    StaffingSession.session_date >= ninety_days_ago,
+                )
+            )
+            recent_staffing_sessions_count = recent_staffing_res.scalar() or 0
+        except Exception:
+            total_staffing_sessions = 0
+            recent_staffing_sessions_count = 0
+
+        return HRDashboardSummaryResponse(
+            total_employees=total_employees,
+            active_staff_count=active_staff_count,
+            on_leave_count=on_leave_count,
+            terminated_count=terminated_count,
+            recent_hires_count=recent_hires_count,
+            department_distribution=department_distribution,
+            position_distribution=position_distribution,
+            total_certifications=total_certifications,
+            active_certifications=active_certifications,
+            expiring_soon_count=expiring_soon_count,
+            expired_certifications_count=expired_certifications_count,
+            expiring_certifications=expiring_certifications,
+            recent_hires=recent_hires,
+            total_staffing_sessions=total_staffing_sessions,
+            recent_staffing_sessions_count=recent_staffing_sessions_count,
+            fte_metrics=MetricAvailability(
+                value=None,
+                is_available=False,
+                reason="Full-Time Equivalent (FTE) vs Part-Time contract hours are not modeled in current Employee schema.",
+            ),
+            turnover_rate=MetricAvailability(
+                value=None,
+                is_available=False,
+                reason="Formal historical turnover rate methodology requires HR governance retention targets.",
+            ),
+            retention_targets=MetricAvailability(
+                value=None,
+                is_available=False,
+                reason="Retention targets have not been established by CRBCL HR policy.",
+            ),
+            leave_balances=MetricAvailability(
+                value=None,
+                is_available=False,
+                reason="Accrued vacation and sick leave bank balances are not stored in database.",
+            ),
+            formal_onboarding_pipeline=MetricAvailability(
+                value=None,
+                is_available=False,
+                reason="Multi-stage employee onboarding/offboarding workflows are not yet modeled as state-machine tables.",
+            ),
+        )
 
     # 2. Housing
     async def create_housing_unit(self, data: dict[str, Any]) -> HousingUnit:

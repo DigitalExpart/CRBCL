@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.user import User
 from app.permissions.constants import Permissions
-from app.permissions.dependencies import require_permission
+from app.permissions.dependencies import require_any_permission, require_permission
+from app.schemas.hr_dashboard import HRDashboardSummaryResponse
 from app.services.org_ops_service import OrgOpsService
 
 router = APIRouter()
@@ -91,6 +92,16 @@ async def add_employee_certification(
     service = OrgOpsService(db)
     cert = await service.add_certification(employee_id, req.model_dump())
     return {"status": "SUCCESS", "id": str(cert.id), "cert_type": cert.cert_type}
+
+
+@router.get("/hr-dashboard", response_model=HRDashboardSummaryResponse)
+async def get_hr_dashboard(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_any_permission(Permissions.HR_DASHBOARD_READ, Permissions.HR_EMPLOYEE_READ)),
+):
+    """Retrieve authoritative HR metrics, employee distributions, and certification tracking."""
+    service = OrgOpsService(db)
+    return await service.get_hr_dashboard_summary()
 
 
 # ==========================================

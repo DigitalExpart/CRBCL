@@ -9,7 +9,7 @@ export default function AppLayout() {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-border px-4 lg:px-8 flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-30">
+        <header className="h-14 border-b border-border pl-16 pr-4 lg:px-8 flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-30">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">
               Chief Red Bear Children's Lodge • Family Wellness Platform
@@ -23,7 +23,7 @@ export default function AppLayout() {
         </header>
 
         <main className="flex-1 overflow-x-hidden">
-          <div className="p-4 lg:p-8 max-w-[1400px]">
+          <div className="p-3 sm:p-4 lg:p-8 max-w-[1400px]">
             <Outlet />
           </div>
         </main>

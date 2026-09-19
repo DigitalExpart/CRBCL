@@ -249,6 +249,18 @@ export default function SupervisorApprovalQueue() {
     }
   };
 
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "clients" || tabParam === "referrals") {
+      setActiveTab(tabParam);
+    }
+    const reviewId = searchParams.get("reviewId");
+    if (reviewId) {
+      setActiveTab("clients");
+      openReviewModal(reviewId);
+    }
+  }, [searchParams]);
+
   const copyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);

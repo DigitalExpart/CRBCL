@@ -125,41 +125,49 @@ export default function ClientDetail() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-card border border-border/80 rounded-xl p-6 shadow-sm">
+      {/* Header Banner */}
+      <div className="bg-card border border-border/80 rounded-xl p-4 sm:p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/clients')}>
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/clients')} className="shrink-0 mt-1 sm:mt-0">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="w-14 h-14 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-primary font-bold text-xl">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-primary font-bold text-lg sm:text-xl shrink-0">
               {client.first_name?.[0]}{client.last_name?.[0]}
             </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-foreground">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">
                   {client.first_name} {client.last_name}
                 </h1>
-                <Badge variant={client.status === 'Active' ? 'default' : 'secondary'}>
+                <Badge variant={client.status === 'Active' ? 'default' : 'secondary'} className="text-xs">
                   {client.status}
                 </Badge>
-                <Badge variant="outline" className={
+                {client.approval_status === "PENDING_APPROVAL" && (
+                  <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border-amber-300/60 font-medium text-xs gap-1">
+                    <Clock className="w-3 h-3 text-amber-600" /> Pending Review
+                  </Badge>
+                )}
+                <Badge variant="outline" className={`text-xs ${
                   client.risk_level === 'High' || client.risk_level === 'Critical' ? 'border-destructive text-destructive' : ''
-                }>
+                }`}>
                   Risk: {client.risk_level}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-3">
+              <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span className="font-mono font-medium text-foreground/80">#{client.person_id_number || "PENDING-ID"}</span>
+                <span>•</span>
                 <span>DOB: {client.date_of_birth || 'Not recorded'}</span>
                 <span>•</span>
-                <span>Band/Nation: {client.band_nation || 'First Nations'}</span>
+                <span>Nation: {client.band_nation || 'First Nations'}</span>
                 <span>•</span>
-                <span>City: {client.city || 'Regina, SK'}</span>
+                <span>{client.city || 'Regina'}, {client.province || 'SK'}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end sm:self-center">
-            <Button variant="outline" size="sm" asChild>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-0 border-border/60">
+            <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
               <Link to={`/cases?client_id=${client.id}`}>
                 <FileText className="w-4 h-4 mr-1.5" /> View Cases
               </Link>
@@ -167,6 +175,29 @@ export default function ClientDetail() {
           </div>
         </div>
       </div>
+
+      {/* Pending Approval Notice for Reviewers */}
+      {client.approval_status === "PENDING_APPROVAL" && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200">
+          <div className="flex items-center gap-2.5">
+            <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
+            <div>
+              <p className="font-semibold text-sm">Client Record Awaiting Supervisor Approval</p>
+              <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
+                This canonical profile was submitted and requires review before becoming fully active in case management.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-amber-400/60 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-900 dark:text-amber-200 text-xs shrink-0 w-full sm:w-auto"
+            onClick={() => navigate(`/intake/approvals?tab=clients&reviewId=${client.id}`)}
+          >
+            Open in Approval Queue
+          </Button>
+        </div>
+      )}
 
       {/* 14-Tab Detail Workspace */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

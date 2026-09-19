@@ -40,6 +40,9 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   const isDirector = normalizedRoles.includes("director_manager");
   const isBoardMember = normalizedRoles.includes("board_member");
   const isNavigator = normalizedRoles.includes("navigator");
+  const isFrontDesk = normalizedRoles.includes("front_desk");
+  const isSupervisor = normalizedRoles.includes("supervisor");
+  const isHR = normalizedRoles.includes("hr_staff");
 
   // Board Member navigation: strictly restricted to governance oversight
   if (isBoardMember) {
@@ -80,10 +83,27 @@ const getNavItems = (userRoles = [], userEmail = "") => {
     items.push({ label: "Navigator Dashboard", icon: Compass, path: "/navigator" });
   }
 
+  // Front Desk Queue: operational triage
+  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || isItAdmin) {
+    items.push({ label: "Front Desk Queue", icon: ConciergeBell, path: "/front-desk" });
+  }
+
+  // Internal Intake: explicitly restricted to Front Desk & Navigators (and leadership oversight)
+  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || isItAdmin) {
+    items.push({ label: "Intake & Referrals", icon: Inbox, path: "/intake" });
+  }
+
+  // Approvals Queue: clearly discoverable for supervisors, directors, executives, and CEO
+  if (isSupervisor || isDirector || isExecutive || isCEO || isItAdmin) {
+    items.push({ label: "Approvals Queue", icon: Clock, path: "/intake/approvals" });
+  }
+
+  // HR Dashboard: dedicated workspace for HR personnel and leadership
+  if (isHR || isDirector || isExecutive || isCEO || isItAdmin) {
+    items.push({ label: "HR Dashboard", icon: UserCog, path: "/hr" });
+  }
+
   items.push(
-    { label: "Front Desk Queue", icon: ConciergeBell, path: "/front-desk" },
-    { label: "Intake & Referrals", icon: Inbox, path: "/intake" },
-    { label: "Supervisor Queue", icon: Clock, path: "/intake/approvals" },
     { label: "My Schedule", icon: Calendar, path: "/schedule" },
     { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
     { label: "Staffing Facilitator", icon: UserCheck, path: "/staffing" },
@@ -103,7 +123,7 @@ const getNavItems = (userRoles = [], userEmail = "") => {
     { label: "Families", icon: Heart, path: "/families" },
     { label: "Notifications", icon: Bell, path: "/notifications" },
     { label: "Programs", icon: BookOpen, path: "/programs" },
-    { label: "HR & Staff", icon: UserCog, path: "/employees" },
+    { label: "Staff Directory", icon: Users, path: "/employees" },
     { label: "Housing Units", icon: Home, path: "/housing" },
     { label: "Facilities", icon: LayoutGrid, path: "/facilities" },
     { label: "IT Assets", icon: Shield, path: "/assets" },

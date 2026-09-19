@@ -198,9 +198,9 @@ export default function PersonDetail() {
   const age = calculateAge(person.date_of_birth);
 
   return (
-    <div className="space-y-6 pb-16 max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="space-y-6 pb-16 max-w-7xl mx-auto px-0 sm:px-2">
       {/* ── Top Navigation Bar ────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>

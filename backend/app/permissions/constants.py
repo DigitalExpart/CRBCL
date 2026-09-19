@@ -70,6 +70,7 @@ class Permissions(StrEnum):
     HR_EMPLOYEE_ARCHIVE = "hr.employee.archive"
     HR_CERTIFICATION_READ = "hr.certification.read"
     HR_CERTIFICATION_MANAGE = "hr.certification.manage"
+    HR_DASHBOARD_READ = "hr.dashboard.read"
 
     HOUSING_UNIT_READ = "housing.unit.read"
     HOUSING_UNIT_MANAGE = "housing.unit.manage"

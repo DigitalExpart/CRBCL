@@ -125,6 +125,14 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     # Create Navigator Role
     navigator_role = Role(key="navigator", name="Navigator / System Navigation Specialist", is_system=True)
     db_session.add(navigator_role)
+
+    # Create Director Role
+    director_role = Role(key="director_manager", name="Director / Service Manager", is_system=True)
+    db_session.add(director_role)
+
+    # Create HR Staff Role
+    hr_role = Role(key="hr_staff", name="HR Staff", is_system=True)
+    db_session.add(hr_role)
     await db_session.flush()
 
     # Grant Executive Director ALL permissions
@@ -557,6 +565,46 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         rp = RolePermission(role_id=navigator_role.id, permission_id=perms[p_key].id)
         db_session.add(rp)
 
+    # Grant Director permissions
+    for p_key in [
+        Permissions.HR_DASHBOARD_READ,
+        Permissions.HR_EMPLOYEE_READ,
+        Permissions.HR_CERTIFICATION_READ,
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_CREATE,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.CLIENT_APPROVE,
+        Permissions.CLIENT_RETURN,
+        Permissions.CLIENT_DECLINE,
+        Permissions.INTAKE_READ,
+        Permissions.INTAKE_APPROVE,
+        Permissions.INTAKE_RETURN,
+        Permissions.INTAKE_CREATE,
+        Permissions.INTAKE_SUBMIT,
+        Permissions.TIMELINE_READ,
+        Permissions.NOTIFICATION_READ,
+    ]:
+        if p_key in perms:
+            rp = RolePermission(role_id=director_role.id, permission_id=perms[p_key].id)
+            db_session.add(rp)
+
+    # Grant HR Staff permissions
+    for p_key in [
+        Permissions.ADMIN_USERS_MANAGE,
+        Permissions.ADMIN_TEAMS_MANAGE,
+        Permissions.HR_DASHBOARD_READ,
+        Permissions.HR_EMPLOYEE_READ,
+        Permissions.HR_EMPLOYEE_CREATE,
+        Permissions.HR_EMPLOYEE_UPDATE,
+        Permissions.HR_EMPLOYEE_ARCHIVE,
+        Permissions.HR_CERTIFICATION_READ,
+        Permissions.HR_CERTIFICATION_MANAGE,
+        Permissions.NOTIFICATION_READ,
+    ]:
+        if p_key in perms:
+            rp = RolePermission(role_id=hr_role.id, permission_id=perms[p_key].id)
+            db_session.add(rp)
+
     # Create a Test Team
     team = Team(code="cfs_protection", name="Child & Family Services (Protection)", short_name="CFS")
     db_session.add(team)
@@ -571,6 +619,8 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
             "it_admin": it_admin_role,
             "board_member": board_member_role,
             "navigator": navigator_role,
+            "director_manager": director_role,
+            "hr_staff": hr_role,
         },
         "team": team,
     }
@@ -758,6 +808,58 @@ async def board_member_user(db_session: AsyncSession, seed_roles_and_permissions
     await db_session.flush()
 
     ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["board_member"].id)
+    db_session.add(ur)
+
+    tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)
+    db_session.add(tm)
+
+    await db_session.commit()
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
+
+
+@pytest.fixture
+async def director_user(db_session: AsyncSession, seed_roles_and_permissions):
+    """Create an active Director / Service Manager user with token."""
+    user = User(
+        email="director@crbcl.ca",
+        email_normalized="director@crbcl.ca",
+        password_hash=hash_password("password123"),
+        full_name="David Director",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["director_manager"].id)
+    db_session.add(ur)
+
+    tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)
+    db_session.add(tm)
+
+    await db_session.commit()
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
+
+
+@pytest.fixture
+async def hr_user(db_session: AsyncSession, seed_roles_and_permissions):
+    """Create an active HR Staff user with token."""
+    user = User(
+        email="hr@crbcl.ca",
+        email_normalized="hr@crbcl.ca",
+        password_hash=hash_password("password123"),
+        full_name="Hannah HR",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["hr_staff"].id)
     db_session.add(ur)
 
     tm = TeamMembership(user_id=user.id, team_id=seed_roles_and_permissions["team"].id, is_primary=True)

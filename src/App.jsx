@@ -112,6 +112,7 @@ import Families from '@/pages/Families';
 import FamilyDetail from '@/pages/FamilyDetail';
 import Programs from '@/pages/Programs';
 import Employees from '@/pages/Employees';
+import HRDashboard from '@/pages/HRDashboard';
 import Appointments from '@/pages/Appointments';
 import Funding from '@/pages/Funding';
 import Donations from '@/pages/Donations';
@@ -179,6 +180,7 @@ const AuthenticatedApp = () => {
             <Route path="/executive" element={<ExecutiveDashboard />} />
             <Route path="/ceo" element={<CEODashboard />} />
             <Route path="/board" element={<BoardDashboard />} />
+            <Route path="/hr" element={<HRDashboard />} />
             <Route path="/terminology" element={<AdminTerminology />} />
             <Route path="/front-desk" element={<FrontDeskDashboard />} />
             <Route path="/navigator" element={<NavigatorDashboard />} />

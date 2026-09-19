@@ -40,6 +40,16 @@ export default function IntakeList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [pendingCount, setPendingCount] = useState(0);
+  const [canCreateIntake] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
+      const r = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+      const normalized = r.map(x => String(typeof x === "string" ? x : (x?.key || x?.name || "")).toLowerCase().trim());
+      return normalized.some(role => ["front_desk", "navigator"].includes(role));
+    } catch {
+      return false;
+    }
+  });
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -115,13 +125,15 @@ export default function IntakeList() {
             </Button>
           )}
 
-          <Button
-            onClick={() => navigate("/intake/new")}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Log New Intake</span>
-          </Button>
+          {canCreateIntake && (
+            <Button
+              onClick={() => navigate("/intake/new")}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Log New Intake</span>
+            </Button>
+          )}
         </div>
       </div>
 

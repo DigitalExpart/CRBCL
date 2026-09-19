@@ -664,7 +664,7 @@ export default function FrontDeskDashboard() {
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1.5">
                     <Info className="w-3.5 h-3.5 text-primary" />
-                    Original Google Form Payload (Immutable)
+                    External Ingestion Payload (Immutable)
                   </h4>
                   <pre className="text-[11px] font-mono bg-muted/60 p-3 rounded-lg overflow-x-auto max-h-40 border">
                     {JSON.stringify(selectedSubmission.payload_raw || {}, null, 2)}

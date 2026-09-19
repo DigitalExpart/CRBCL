@@ -195,9 +195,12 @@ export default function AddClientModal({ isOpen, onClose, onSuccess }) {
       };
 
       const result = await clientsApi.submitExisting(payload);
+      const isAutoApproved = result?.approval_status === "APPROVED";
       toast({
-        title: "Client Proposal Submitted",
-        description: `${selectedPerson.first_name} ${selectedPerson.last_name} (ID: ${selectedPerson.person_id_number || "Assigned"}) submitted for Supervisor/Director approval.`,
+        title: isAutoApproved ? "Client Directly Approved & Active" : "Client Proposal Submitted",
+        description: isAutoApproved
+          ? `${selectedPerson.first_name} ${selectedPerson.last_name} is now an Active Client (authorized direct approval).`
+          : `${selectedPerson.first_name} ${selectedPerson.last_name} (ID: ${selectedPerson.person_id_number || "Assigned"}) submitted for Supervisor/Director approval.`,
       });
 
       if (onSuccess) onSuccess(result);
@@ -328,9 +331,12 @@ export default function AddClientModal({ isOpen, onClose, onSuccess }) {
         }
       }
 
+      const isAutoApproved = result?.approval_status === "APPROVED";
       toast({
-        title: "Canonical Person Created & Client Proposed",
-        description: `${result.first_name} ${result.last_name} assigned permanent CRBCL ID ${result.person_id_number || ""}. Awaiting supervisor review.`,
+        title: isAutoApproved ? "Canonical Person Created & Client Approved" : "Canonical Person Created & Client Proposed",
+        description: isAutoApproved
+          ? `${result.first_name} ${result.last_name} (CRBCL ID: ${result.person_id_number || ""}) is now an Active Client (authorized direct approval).`
+          : `${result.first_name} ${result.last_name} assigned permanent CRBCL ID ${result.person_id_number || ""}. Awaiting supervisor review.`,
       });
 
       if (onSuccess) onSuccess(result);

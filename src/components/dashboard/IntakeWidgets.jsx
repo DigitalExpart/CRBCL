@@ -27,6 +27,17 @@ export default function IntakeWidgets() {
       .finally(() => setLoading(false));
   }, []);
 
+  const [canCreateIntake] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
+      const r = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+      const normalized = r.map(x => String(typeof x === "string" ? x : (x?.key || x?.name || "")).toLowerCase().trim());
+      return normalized.some(role => ["front_desk", "navigator"].includes(role));
+    } catch {
+      return false;
+    }
+  });
+
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
@@ -47,10 +58,12 @@ export default function IntakeWidgets() {
               </Badge>
             </Link>
           )}
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => navigate("/intake/new")}>
-            <Plus className="w-3 h-3 mr-1" />
-            <span>New Intake</span>
-          </Button>
+          {canCreateIntake && (
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => navigate("/intake/new")}>
+              <Plus className="w-3 h-3 mr-1" />
+              <span>New Intake</span>
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-0">
