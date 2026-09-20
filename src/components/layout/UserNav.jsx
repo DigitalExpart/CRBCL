@@ -176,7 +176,7 @@ export default function UserNav() {
           <span>My Profile & Settings</span>
         </DropdownMenuItem>
 
-        {(isDirector || isItAdmin) && (
+        {isDirector && (
           <DropdownMenuItem
             onClick={() => navigate("/director")}
             className="cursor-pointer"
@@ -186,7 +186,7 @@ export default function UserNav() {
           </DropdownMenuItem>
         )}
 
-        {(isExecutive || isItAdmin) && (
+        {isExecutive && (
           <DropdownMenuItem
             onClick={() => navigate("/executive")}
             className="cursor-pointer"
@@ -196,7 +196,7 @@ export default function UserNav() {
           </DropdownMenuItem>
         )}
 
-        {(isCEO || isItAdmin) && (
+        {isCEO && (
           <DropdownMenuItem
             onClick={() => navigate("/ceo")}
             className="cursor-pointer"

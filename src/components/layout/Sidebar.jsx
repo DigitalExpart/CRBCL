@@ -21,11 +21,15 @@ const getStoredUser = () => {
   }
 };
 
-const getNavItems = (userRoles = [], userEmail = "") => {
+const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
   const normalizedRoles = (Array.isArray(userRoles) ? userRoles : [userRoles])
     .map((r) => (typeof r === "string" ? r : (r?.key || r?.name || r?.role || "")))
     .map((r) => String(r).toLowerCase().trim());
   const email = String(userEmail || "").toLowerCase().trim();
+  const perms = new Set(
+    (Array.isArray(userPermissions) ? userPermissions : [])
+      .map((p) => String(p).toLowerCase().trim())
+  );
 
   const isItAdmin =
     email === "admin@crbcl.ca" ||
@@ -43,6 +47,15 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   const isFrontDesk = normalizedRoles.includes("front_desk");
   const isSupervisor = normalizedRoles.includes("supervisor");
   const isHR = normalizedRoles.includes("hr_staff");
+  const isCaseworker = normalizedRoles.includes("caseworker");
+
+  // Capabilities
+  const hasIntakeRead = perms.has("intake.read");
+  const hasPublicIntakeRead = perms.has("public_intake.read");
+  const hasIntakeApprove = perms.has("intake.approve");
+  const hasHrRead = perms.has("hr.dashboard.read") || perms.has("hr.employee.read");
+  const hasClientRead = perms.has("client.read");
+  const hasCaseRead = perms.has("case.read");
 
   // Board Member navigation: strictly restricted to governance oversight
   if (isBoardMember) {
@@ -65,42 +78,67 @@ const getNavItems = (userRoles = [], userEmail = "") => {
   // Staff Dashboard is universally accessible to all staff, including administrators
   items.push({ label: "Staff Dashboard", icon: LayoutDashboard, path: "/" });
 
-  // Leadership Dashboards: Administrators have access to every dashboard, as do their specific roles
-  if (isCEO || isItAdmin) {
+  // Leadership Dashboards: strictly restricted to leadership roles
+  if (isCEO) {
     items.push({ label: "CEO Dashboard", icon: Crown, path: "/ceo" });
   }
-  if (isExecutive || isCEO || isItAdmin) {
+  if (isExecutive || isCEO) {
     items.push({ label: "Executive Dashboard", icon: TrendingUp, path: "/executive" });
   }
-  if (isDirector || isExecutive || isCEO || isItAdmin) {
+  if (isDirector || isExecutive || isCEO) {
     items.push({ label: "Director's Dashboard", icon: Building, path: "/director" });
   }
-  if (isCEO || isExecutive || isItAdmin) {
+  if (isCEO || isExecutive) {
     items.push({ label: "Board Portal", icon: Landmark, path: "/board" });
   }
 
-  if (isNavigator || isDirector || isExecutive || isCEO || isItAdmin) {
+  // Navigator Dashboard: operational navigator role or leadership oversight
+  if (isNavigator || isDirector || isExecutive || isCEO) {
     items.push({ label: "Navigator Dashboard", icon: Compass, path: "/navigator" });
   }
 
-  // Front Desk Queue: operational triage
-  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || isItAdmin) {
+  // Front Desk Queue: operational triage (Front Desk, Navigators, Leadership oversight, or explicit capability)
+  // IT Admin does NOT see Front Desk Queue unless an independent operational capability authorizes it
+  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || hasPublicIntakeRead) {
     items.push({ label: "Front Desk Queue", icon: ConciergeBell, path: "/front-desk" });
   }
 
-  // Internal Intake: explicitly restricted to Front Desk & Navigators (and leadership oversight)
-  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || isItAdmin) {
+  // Internal Intake: explicitly restricted to Front Desk & Navigators, leadership oversight, or explicit capability
+  // IT Admin does NOT see Intake & Referrals unless an independent operational capability authorizes it
+  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || hasIntakeRead) {
     items.push({ label: "Intake & Referrals", icon: Inbox, path: "/intake" });
   }
 
   // Approvals Queue: clearly discoverable for supervisors, directors, executives, and CEO
-  if (isSupervisor || isDirector || isExecutive || isCEO || isItAdmin) {
+  // IT Admin does NOT see Approvals Queue unless independently authorized
+  if (isSupervisor || isDirector || isExecutive || isCEO || hasIntakeApprove) {
     items.push({ label: "Approvals Queue", icon: Clock, path: "/intake/approvals" });
   }
 
   // HR Dashboard: dedicated workspace for HR personnel and leadership
-  if (isHR || isDirector || isExecutive || isCEO || isItAdmin) {
+  // IT Admin has ZERO protected HR permissions and does NOT see HR Dashboard
+  if (isHR || isDirector || isExecutive || isCEO || hasHrRead) {
     items.push({ label: "HR Dashboard", icon: UserCog, path: "/hr" });
+  }
+
+  // Check whether user is a pure IT Admin without independent operational role
+  const isPureItAdmin = isItAdmin && !isFrontDesk && !isNavigator && !isSupervisor && !isDirector && !isExecutive && !isCEO && !isCaseworker && !isHR && !hasClientRead && !hasCaseRead;
+
+  if (isPureItAdmin) {
+    // Pure IT Admins only receive infrastructure and non-case operational items:
+    items.push(
+      { label: "My Schedule", icon: Calendar, path: "/schedule" },
+      { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
+      { label: "Staff Directory", icon: Users, path: "/employees" },
+      { label: "Housing Units", icon: Home, path: "/housing" },
+      { label: "Facilities", icon: LayoutGrid, path: "/facilities" },
+      { label: "IT Assets", icon: Shield, path: "/assets" },
+      { label: "Fleet & Vehicles", icon: Truck, path: "/fleet" },
+      { label: "Notifications", icon: Bell, path: "/notifications" },
+      { label: "Cultural Terminology", icon: BookOpen, path: "/terminology" },
+      { label: "Ask Red Bear", icon: MessageCircle, path: "/ask-red-bear" },
+    );
+    return items;
   }
 
   items.push(
@@ -148,6 +186,10 @@ export default function Sidebar() {
     return Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
   });
   const [userEmail, setUserEmail] = useState(() => getStoredUser()?.email || "");
+  const [userPermissions, setUserPermissions] = useState(() => {
+    const u = getStoredUser();
+    return Array.isArray(u?.permissions) ? u.permissions : [];
+  });
 
   React.useEffect(() => {
     api.auth.me().then((u) => {
@@ -155,6 +197,7 @@ export default function Sidebar() {
         const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
         setUserRoles(roles);
         setUserEmail(u?.email || "");
+        setUserPermissions(Array.isArray(u?.permissions) ? u.permissions : []);
       }
     }).catch(() => {});
   }, []);
@@ -184,7 +227,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto scrollbar-thin">
-        {getNavItems(userRoles, userEmail).map((item) => {
+        {getNavItems(userRoles, userEmail, userPermissions).map((item) => {
           const isActive = location.pathname === item.path || 
             (item.path !== "/" && location.pathname.startsWith(item.path));
           return (

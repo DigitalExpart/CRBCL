@@ -113,6 +113,8 @@ export default function FrontDeskDashboard() {
   const [manualSummary, setManualSummary] = useState("");
   const [manualDetails, setManualDetails] = useState("");
 
+  const [accessDenied, setAccessDenied] = useState(false);
+
   const fetchStats = async () => {
     try {
       const res = await api.frontDesk.getStats();
@@ -125,6 +127,7 @@ export default function FrontDeskDashboard() {
   const fetchSubmissions = async () => {
     setLoading(true);
     try {
+      setAccessDenied(false);
       const res = await api.frontDesk.getSubmissions({
         status: activeTab === "ALL" ? undefined : activeTab,
         query: searchQuery || undefined,
@@ -133,11 +136,20 @@ export default function FrontDeskDashboard() {
       setSubmissions(res.items || []);
       setTotal(res.pagination?.total || 0);
     } catch (err) {
-      toast({
-        title: "Error Loading Queue",
-        description: err.message || "Failed to load submissions.",
-        variant: "destructive",
-      });
+      if (
+        err.status === 403 ||
+        String(err.message || "").toLowerCase().includes("permission") ||
+        String(err.message || "").toLowerCase().includes("denied") ||
+        String(err.message || "").includes("403")
+      ) {
+        setAccessDenied(true);
+      } else {
+        toast({
+          title: "Error Loading Queue",
+          description: err.message || "Failed to load submissions.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -341,6 +353,28 @@ export default function FrontDeskDashboard() {
         return <Badge variant="outline">Low</Badge>;
     }
   };
+
+  if (accessDenied) {
+    return (
+      <div className="p-6 max-w-3xl mx-auto space-y-6">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 shadow-sm p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-6 h-6" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-foreground">Front Desk Operational Access Denied</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Public triage submissions, community inquiries, and walk-in front desk queues are strictly restricted to authorized Front Desk personnel.
+              Technical administration and Board governance roles do not receive operational triage data.
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => window.location.href = "/"} className="mt-4">
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">

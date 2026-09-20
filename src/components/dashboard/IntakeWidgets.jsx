@@ -14,29 +14,61 @@ export default function IntakeWidgets() {
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const [authData] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
+      const r = (Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []))
+        .map(x => String(typeof x === "string" ? x : (x?.key || x?.name || "")).toLowerCase().trim());
+      const perms = (Array.isArray(u?.permissions) ? u.permissions : [])
+        .map(p => String(p).toLowerCase().trim());
+
+      const isBoard = r.includes("board_member");
+      const isPureItAdmin = r.includes("it_admin") && !r.some(role => ["front_desk", "navigator", "supervisor", "director_manager", "executive_director", "ceo", "caseworker"].includes(role));
+      const hasIntakeAccess = perms.includes("intake.read") || r.some(role => ["front_desk", "navigator", "supervisor", "director_manager", "executive_director", "ceo"].includes(role));
+
+      const canCreate =
+        r.some(role => ["front_desk", "navigator"].includes(role)) &&
+        !r.some(role => ["supervisor", "director_manager", "executive_director", "ceo", "board_member", "it_admin", "caseworker"].includes(role));
+
+      const canApprove = perms.includes("intake.approve") || r.some(role => ["supervisor", "director_manager", "executive_director", "ceo"].includes(role));
+
+      return {
+        isVisible: !isBoard && !isPureItAdmin && hasIntakeAccess,
+        canCreate,
+        canApprove,
+      };
+    } catch {
+      return { isVisible: false, canCreate: false, canApprove: false };
+    }
+  });
+
   useEffect(() => {
-    Promise.all([
-      referralsApi.list({ page: 1, page_size: 5 }),
-      referralsApi.getApprovalQueue({ page: 1, page_size: 1 }),
-    ])
+    if (!authData.isVisible) {
+      setLoading(false);
+      return;
+    }
+
+    const promises = [referralsApi.list({ page: 1, page_size: 5 })];
+    if (authData.canApprove) {
+      promises.push(referralsApi.getApprovalQueue({ page: 1, page_size: 1 }));
+    }
+
+    Promise.all(promises)
       .then(([listRes, queueRes]) => {
-        setRecentIntakes(listRes.items || []);
-        setPendingCount(queueRes.total || 0);
+        setRecentIntakes(listRes?.items || []);
+        if (queueRes) {
+          setPendingCount(queueRes?.total || 0);
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [authData.isVisible, authData.canApprove]);
 
-  const [canCreateIntake] = useState(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
-      const r = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
-      const normalized = r.map(x => String(typeof x === "string" ? x : (x?.key || x?.name || "")).toLowerCase().trim());
-      return normalized.some(role => ["front_desk", "navigator"].includes(role));
-    } catch {
-      return false;
-    }
-  });
+  if (!authData.isVisible) {
+    return null;
+  }
+
+  const canCreateIntake = authData.canCreate;
 
   return (
     <Card className="border shadow-sm">

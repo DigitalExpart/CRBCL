@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Inbox, Plus, Search, AlertTriangle, CheckCircle, Clock, Users, ChevronRight, FileText, RefreshCw
+  Inbox, Plus, Search, AlertTriangle, CheckCircle, Clock, Users, ChevronRight, FileText, RefreshCw, ShieldAlert
 } from "lucide-react";
 import { referralsApi } from "@/api/referrals";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ const PRIORITY_BADGES = {
 export default function IntakeList() {
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -40,12 +41,30 @@ export default function IntakeList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [pendingCount, setPendingCount] = useState(0);
+
   const [canCreateIntake] = useState(() => {
     try {
       const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
-      const r = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
-      const normalized = r.map(x => String(typeof x === "string" ? x : (x?.key || x?.name || "")).toLowerCase().trim());
-      return normalized.some(role => ["front_desk", "navigator"].includes(role));
+      const r = (Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []))
+        .map(x => String(typeof x === "string" ? x : (x?.key || x?.name || "")).toLowerCase().trim());
+      // Explicit rule: Only Front Desk and Navigator can log New Intakes.
+      // Supervisors, Directors, Executives, Caseworkers, Board, and IT Admin MUST have New Intake hidden.
+      const hasIntakeCreator = r.some(role => ["front_desk", "navigator"].includes(role));
+      const hasRestrictedRole = r.some(role => ["supervisor", "director_manager", "executive_director", "ceo", "board_member", "it_admin", "caseworker"].includes(role));
+      return hasIntakeCreator && !hasRestrictedRole;
+    } catch {
+      return false;
+    }
+  });
+
+  const [canApproveIntake] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
+      const r = (Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []))
+        .map(x => String(typeof x === "string" ? x : (x?.key || x?.name || "")).toLowerCase().trim());
+      const perms = (Array.isArray(u?.permissions) ? u.permissions : [])
+        .map(p => String(p).toLowerCase().trim());
+      return perms.includes("intake.approve") || r.some(role => ["supervisor", "director_manager", "executive_director", "ceo"].includes(role));
     } catch {
       return false;
     }
@@ -57,6 +76,7 @@ export default function IntakeList() {
   const fetchReferrals = async () => {
     try {
       setLoading(true);
+      setAccessDenied(false);
       const res = await referralsApi.list({
         page,
         page_size: 15,
@@ -68,15 +88,29 @@ export default function IntakeList() {
       setTotal(res.total || 0);
       setTotalPages(res.total_pages || 1);
 
-      // Fetch pending queue count
-      const queueRes = await referralsApi.getApprovalQueue({ page: 1, page_size: 1 });
-      setPendingCount(queueRes.total || 0);
+      if (canApproveIntake) {
+        try {
+          const queueRes = await referralsApi.getApprovalQueue({ page: 1, page_size: 1 });
+          setPendingCount(queueRes.total || 0);
+        } catch {
+          // non-critical queue count
+        }
+      }
     } catch (err) {
-      toast({
-        title: "Error loading referrals",
-        description: err.message || "Failed to connect to intake server",
-        variant: "destructive",
-      });
+      if (
+        err.status === 403 ||
+        String(err.message || "").toLowerCase().includes("permission") ||
+        String(err.message || "").toLowerCase().includes("denied") ||
+        String(err.message || "").includes("403")
+      ) {
+        setAccessDenied(true);
+      } else {
+        toast({
+          title: "Error loading referrals",
+          description: err.message || "Failed to connect to intake server",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -91,6 +125,28 @@ export default function IntakeList() {
     setPage(1);
     fetchReferrals();
   };
+
+  if (accessDenied) {
+    return (
+      <div className="p-6 max-w-3xl mx-auto space-y-6">
+        <Card className="border border-destructive/30 bg-destructive/5 shadow-sm p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-6 h-6" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-foreground">Operational Intake Boundary Restriction</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Public-intake narratives, operational referral records, and child protection cases are restricted to authorized operational staff.
+              Technical administration and Board governance roles do not possess access to confidential client narratives.
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/")} className="mt-4">
+            Return to Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
