@@ -54,6 +54,22 @@ class UserRepository(BaseRepository[User]):
         result = await self.db.execute(query)
         return list(result.scalars().all()), total
 
+    async def list_users_for_export(
+        self,
+        query_text: str | None = None,
+        is_active: bool | None = None,
+    ) -> list[User]:
+        """Fetch all non-deleted users for authoritative directory export."""
+        query = select(User).where(User.deleted_at.is_(None))
+        if query_text:
+            search_pattern = f"%{query_text}%"
+            query = query.where(User.email.ilike(search_pattern) | User.full_name.ilike(search_pattern))
+        if is_active is not None:
+            query = query.where(User.is_active == is_active)
+        query = query.order_by(User.created_at.asc())
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
     async def assign_roles(
         self, user_id: uuid.UUID, role_keys: list[str], assigned_by: uuid.UUID | None = None
     ) -> None:

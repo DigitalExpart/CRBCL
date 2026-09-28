@@ -5,4 +5,6 @@ export const usersApi = {
   get: (id) => api.entities.User.get(id),
   create: (data) => api.entities.User.create(data),
   update: (id, data) => api.entities.User.update(id, data),
+  exportUserExcel: (params = {}) =>
+    api.get('/api/v1/users/export', { params, responseType: 'blob' }),
 };

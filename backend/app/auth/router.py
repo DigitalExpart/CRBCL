@@ -373,6 +373,10 @@ async def verify_otp(
         user_agent=request.headers.get("user-agent"),
         ip_address=request.client.host if request.client else None,
     )
+    # OTP verification is a genuine login — delegate bookkeeping to the
+    # single authoritative service method so all login paths are consistent.
+    await auth.record_successful_login(user)
+    await auth.db.flush()
     csrf_token = generate_csrf_token()
     _set_auth_cookies(response, access_token, refresh_token, csrf_token)
     await db.commit()

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { 
   Loader2, UserPlus, Search, Shield, Users as UsersIcon, 
   Pencil, Trash2, CheckCircle2, UserCheck, Clock, RefreshCw, 
-  AlertCircle, Building2, ShieldAlert, Activity, XCircle, AlertTriangle
+  AlertCircle, Building2, ShieldAlert, Activity, XCircle, AlertTriangle,
+  Download
 } from "lucide-react";
 import {
   Dialog,
@@ -22,6 +23,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import InviteUserDialog from "@/components/admin/InviteUserDialog";
 import EditUserDialog from "@/components/admin/EditUserDialog";
 import { toast } from "@/components/ui/use-toast";
+import { usersApi } from "@/api/users";
 
 const AVAILABLE_ROLES = [
   { key: "ceo", label: "Chief Executive Officer (CEO)" },
@@ -54,6 +56,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
   const [systemHealth, setSystemHealth] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     api.auth.me().then((u) => {
@@ -183,6 +186,33 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const blob = await usersApi.exportUserExcel();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `crbcl-users-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "Export Complete",
+        description: "User directory exported to Excel successfully.",
+      });
+    } catch (err) {
+      toast({
+        title: "Export Failed",
+        description: err.message || "Failed to export user directory.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
     return (
@@ -228,6 +258,10 @@ export default function AdminDashboard() {
         subtitle="User account management, role approvals, leadership promotions (CEO, Executive Director, Directors), and system governance"
         actions={
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+              <Download className={`w-4 h-4 mr-2 ${exporting ? "animate-spin" : ""}`} />
+              Export Excel
+            </Button>
             <Button variant="outline" size="sm" onClick={loadUsers} disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Refresh

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import uuid
+from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +19,7 @@ from app.permissions.dependencies import require_permission
 from app.repositories.user_repo import UserRepository
 from app.schemas.common import PaginatedResponse, PaginationMeta
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.services.user_export_service import generate_user_excel_export
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -88,6 +90,46 @@ async def list_users(
             offset=offset,
             has_more=(offset + limit) < total,
         ),
+    )
+
+
+@router.get("/export")
+async def export_users_excel(
+    request: Request,
+    query: str | None = Query(default=None),
+    is_active: bool | None = Query(default=None),
+    user: User = Depends(require_permission(Permissions.ADMIN_USERS_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export user directory to an authoritative Excel (.xlsx) spreadsheet.
+
+    Requires ADMIN_USERS_MANAGE permission.
+    Columns: Username, First Name, Last Name, Status, Email, Last Login.
+    """
+    repo = UserRepository(db)
+    users = await repo.list_users_for_export(query_text=query, is_active=is_active)
+
+    content = generate_user_excel_export(users)
+    today_str = date.today().isoformat()
+    filename = f"crbcl-users-export-{today_str}.xlsx"
+
+    audit_service = AuditService(db)
+    await audit_service.log_event(
+        event_type="USER_DIRECTORY_EXPORTED",
+        user_id=user.id,
+        entity_type="user",
+        entity_id=user.id,
+        after_data={"row_count": len(users), "export_format": "xlsx", "filename": filename},
+        ip_address=request.client.host if request.client else None,
+    )
+    await db.commit()
+
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
     )
 
 

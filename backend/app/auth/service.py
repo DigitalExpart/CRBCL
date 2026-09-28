@@ -66,12 +66,27 @@ class AuthService:
             await self.db.flush()
             return None
 
-        # Reset failed attempts on successful authentication
+        # Reset failed attempts and record authoritative login timestamp.
+        await self.record_successful_login(user)
+        await self.db.flush()
+        return user
+
+    async def record_successful_login(self, user: User) -> None:
+        """Record a successful login for any authentication path.
+
+        This is the single authoritative location where User.last_login_at is
+        written after a genuine login event (password or OTP).  Token refresh
+        is NOT a new login and must NOT call this method.
+
+        Side-effects (no flush/commit — caller is responsible):
+          - Resets failed_login_count to 0.
+          - Clears locked_until.
+          - Sets last_login_at to now (UTC).
+        """
+        now = datetime.now(UTC)
         user.failed_login_count = 0
         user.locked_until = None
         user.last_login_at = now
-        await self.db.flush()
-        return user
 
     async def unlock_user(self, user_id: uuid.UUID) -> bool:
         """Administrative unlock for locked accounts."""
