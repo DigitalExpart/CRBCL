@@ -9,23 +9,7 @@ import { api } from "@/api";
 import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
 import { toast } from "@/components/ui/use-toast";
 import { DEPARTMENTS } from "@/constants/departments";
-
-const AVAILABLE_ROLES = [
-  { key: "ceo", label: "Chief Executive Officer (CEO) — Executive Strategy & Board" },
-  { key: "executive_director", label: "Executive Director — Cross-Agency Leadership" },
-  { key: "resource_director", label: "Resource Director — Resource Unit Leadership & Licensing" },
-  { key: "resource_supervisor", label: "Resource Supervisor — Approvals & Recruitment Reviews" },
-  { key: "resource_worker", label: "Resource Worker — Kinship & Foster Caregiver Recruitment" },
-  { key: "director_manager", label: "Director / Manager — Departmental Operations" },
-  { key: "supervisor", label: "Supervisor — Casework Approvals & Reviews" },
-  { key: "caseworker", label: "Caseworker — Direct Client & Case Files" },
-  { key: "case_aide", label: "Case Aide — Support Worker" },
-  { key: "front_desk", label: "Front Desk — Intake Reception & Form Triage" },
-  { key: "finance_staff", label: "Finance Staff — Billing & Invoices" },
-  { key: "cultural_worker", label: "Cultural Worker — Cultural Supports & Elders" },
-  { key: "clinical_staff", label: "Clinical Staff — Medical & Therapy" },
-  { key: "it_admin", label: "IT Administrator — Standalone System Admin" },
-];
+import { ROLES as AVAILABLE_ROLES } from "@/constants/roles";
 
 export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
   const [fullName, setFullName] = useState("");

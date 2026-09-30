@@ -377,3 +377,15 @@ class Permissions(StrEnum):
     # System Navigation & Referral Coordination
     NAVIGATOR_DASHBOARD_READ = "navigator.dashboard.read"
 
+    # Master Dashboard Control Centre & Administrative Oversight
+    ADMIN_DASHBOARD_CONTROL = "admin.dashboard.control"
+
+    # Office Coordinator & Operational Coordination
+    OFFICE_COORDINATOR_DASHBOARD_READ = "office_coordinator.dashboard.read"
+    OPERATIONS_REQUEST_READ = "operations.request.read"
+    OPERATIONS_REQUEST_MANAGE = "operations.request.manage"
+    FLEET_RESERVATION_MANAGE = "fleet.reservation.manage"
+    FLEET_KEY_MANAGE = "fleet.key.manage"
+    ROOM_BOOKING_MANAGE = "room.booking.manage"
+    SUPPLY_INVENTORY_MANAGE = "supply.inventory.manage"
+

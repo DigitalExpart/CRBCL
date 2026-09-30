@@ -161,6 +161,12 @@ ROLES_DATA = [
         "description": "System navigation support, community referral coordination, and intake reception.",
         "is_system": True,
     },
+    {
+        "key": "office_coordinator",
+        "name": "Office Coordinator",
+        "description": "Operations, facilities work orders, advance vehicle reservations, key accountability, supply inventory, and room scheduling.",
+        "is_system": True,
+    },
 ]
 
 # ── 2. Permissions Definition ────────────────────────────────
@@ -528,6 +534,14 @@ PERMISSIONS_DATA = [
     {"key": Permissions.HR_CERTIFICATION_READ, "name": "Read Employee Certifications & Credentials", "category": "hr"},
     {"key": Permissions.HR_CERTIFICATION_MANAGE, "name": "Manage Employee Certifications & Credentials", "category": "hr"},
     {"key": Permissions.HR_DASHBOARD_READ, "name": "Read Human Resources Dashboard", "category": "hr"},
+    {"key": Permissions.ADMIN_DASHBOARD_CONTROL, "name": "Control Center Dashboard Registry & Access Administration", "category": "admin"},
+    {"key": Permissions.OFFICE_COORDINATOR_DASHBOARD_READ, "name": "Read Office Coordinator Operations Dashboard", "category": "operations"},
+    {"key": Permissions.OPERATIONS_REQUEST_READ, "name": "Read Operational Requests & Tickets", "category": "operations"},
+    {"key": Permissions.OPERATIONS_REQUEST_MANAGE, "name": "Manage Operational Requests & Tickets", "category": "operations"},
+    {"key": Permissions.FLEET_RESERVATION_MANAGE, "name": "Manage Advance Vehicle Reservations", "category": "fleet"},
+    {"key": Permissions.FLEET_KEY_MANAGE, "name": "Manage Key Pickup, Return & Custody Accountability", "category": "fleet"},
+    {"key": Permissions.ROOM_BOOKING_MANAGE, "name": "Manage Meeting & Room Bookings", "category": "operations"},
+    {"key": Permissions.SUPPLY_INVENTORY_MANAGE, "name": "Manage Office Supplies & Operational Inventory", "category": "operations"},
 ]
 
 # ── 3. Role-Permission Mappings ──────────────────────────────
@@ -1031,6 +1045,7 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.ADMIN_ROLES_MANAGE,
         Permissions.ADMIN_TEAMS_MANAGE,
         Permissions.ADMIN_CONFIGURATION_MANAGE,
+        Permissions.ADMIN_DASHBOARD_CONTROL,
         Permissions.AUDIT_READ,
         Permissions.ACCESS_EVENT_READ,
     ],
@@ -1323,6 +1338,30 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_READ,
         Permissions.DOCUMENT_UPLOAD,
         Permissions.NOTIFICATION_READ,
+    ],
+    "office_coordinator": [
+        Permissions.OFFICE_COORDINATOR_DASHBOARD_READ,
+        Permissions.OPERATIONS_REQUEST_READ,
+        Permissions.OPERATIONS_REQUEST_MANAGE,
+        Permissions.FLEET_READ,
+        Permissions.FLEET_VEHICLE_READ,
+        Permissions.FLEET_RESERVATION_MANAGE,
+        Permissions.FLEET_KEY_MANAGE,
+        Permissions.FLEET_TRIP_READ,
+        Permissions.FLEET_MAINTENANCE_READ,
+        Permissions.FLEET_INSURANCE_READ,
+        Permissions.FACILITIES_READ,
+        Permissions.FACILITIES_MANAGE,
+        Permissions.FACILITIES_WORKORDER_MANAGE,
+        Permissions.ASSET_ITEM_READ,
+        Permissions.ROOM_BOOKING_MANAGE,
+        Permissions.SUPPLY_INVENTORY_MANAGE,
+        Permissions.CALENDAR_READ_OWN,
+        Permissions.CALENDAR_READ_TEAM,
+        Permissions.CALENDAR_WRITE,
+        Permissions.NOTIFICATION_READ,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
     ],
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/api";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import { ChevronLeft, FolderOpen, Users, Heart, AlertTriangle, Calendar, BookOpen, DollarSign, UserCog, Clock, TrendingUp, Lock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import PageHeader from "@/components/shared/PageHeader";
@@ -34,11 +34,13 @@ const TEAM_FOCUS = {
   20: { cases: true, clients: true, families: true, incidents: true, appointments: true, label: "Social worker intervention & child development" },
   21: { programs: true, appointments: true, clients: true, label: "Cultural programming & language preservation" },
   22: { cases: true, clients: true, programs: true, appointments: true, label: "Young adult transition & aftercare" },
+  23: { operations: true, label: "Office Coordination & Facilities Operations" },
 };
 
 export default function TeamDashboard() {
   const { id } = useParams();
   const teamId = parseInt(id);
+
   const team = TEAMS.find(t => t.id === teamId);
   const focus = TEAM_FOCUS[teamId] || {};
 
@@ -149,6 +151,10 @@ export default function TeamDashboard() {
       isMounted = false;
     };
   }, [teamId, currentUser, hasAccess]);
+
+  if (teamId === 23) {
+    return <Navigate to="/office-coordinator" replace />;
+  }
 
   if (!team) return <div className="p-8 text-center text-muted-foreground">Team not found.</div>;
 

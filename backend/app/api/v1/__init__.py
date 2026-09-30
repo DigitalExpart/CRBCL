@@ -19,6 +19,7 @@ from app.api.v1.clinical_notes import router as clinical_notes_router
 from app.api.v1.communications import router as communications_router
 from app.api.v1.court_events import router as court_events_router
 from app.api.v1.dashboard import router as dashboard_router
+from app.api.v1.dashboard_control import router as dashboard_control_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.families import router as families_router
 from app.api.v1.finance import router as finance_router
@@ -32,6 +33,7 @@ from app.api.v1.notification_preferences import router as notification_preferenc
 from app.api.v1.notification_templates import router as notification_templates_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.ocr import router as ocr_router
+from app.api.v1.operations import router as operations_router
 from app.api.v1.org_ops import router as org_ops_router
 from app.api.v1.passports import router as passports_router
 from app.api.v1.permanency_plans import router as permanency_plans_router
@@ -115,4 +117,6 @@ api_v1_router.include_router(resource_outcomes_router)
 api_v1_router.include_router(front_desk_router)
 api_v1_router.include_router(ceo_dashboard_router)
 api_v1_router.include_router(board_dashboard_router)
+api_v1_router.include_router(dashboard_control_router)
+api_v1_router.include_router(operations_router)
 api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])

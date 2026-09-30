@@ -100,6 +100,13 @@ from app.models.notification import (  # noqa: F401
     NotificationPreference,
     NotificationTemplate,
 )
+from app.models.operations import (  # noqa: F401
+    OperationsRequest,
+    RoomBooking,
+    SupplyItem,
+    VehicleKeyLog,
+    VehicleReservation,
+)
 from app.models.org_ops import (  # noqa: F401
     AssetAssignment,
     Donation,

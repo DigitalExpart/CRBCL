@@ -109,6 +109,8 @@ export default function UserNav() {
     if (roles.includes("finance_staff")) return "Finance";
     if (roles.includes("cultural_worker")) return "Cultural";
     if (roles.includes("caseworker")) return "Caseworker";
+    if (roles.includes("office_coordinator")) return "Office Coordinator";
+    if (roles.includes("front_desk")) return "Front Desk";
     return user?.role ? user.role.replace("_", " ") : "Staff";
   };
 

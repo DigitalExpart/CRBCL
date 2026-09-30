@@ -27,6 +27,7 @@ export const TEAMS = [
   { id: 20, name: "Growing Up Well", short: "Growing Up Well (Social Worker - Intervention) Team", color: "bg-blue-800", responsibilities: "Social worker intervention, child development monitoring, family intervention planning, protective services." },
   { id: 21, name: "Culture Team", short: "Culture Team", color: "bg-amber-800", responsibilities: "Cultural programming, ceremonies, language preservation, traditional teachings, identity strengthening." },
   { id: 22, name: "Post Majority", short: "Post Majority (Young Adult) Team", color: "bg-indigo-800", responsibilities: "Young adult transition support, independent living skills, aftercare services, life skills for youth aging out of care." },
+  { id: 23, name: "Office Coordination & Facilities", short: "Office Coordination & Operations Team", color: "bg-teal-800", responsibilities: "Operational requests, fleet coordination, vehicle reservations, key custody, room booking, and facilities supplies.", directRoute: "/office-coordinator" },
 ];
 
 const getStoredUser = () => {
@@ -95,7 +96,11 @@ export default function Teams() {
   const rawAccess = user?.team_access || [];
   const access = Array.isArray(rawAccess) ? rawAccess : [];
   const hasAll = isAdmin || access.some((a) => String(a).toLowerCase() === "all");
-  const canAccess = (teamId) => hasAll || access.some((a) => String(a) === String(teamId));
+  const isOfficeCoordinator = roles.includes("office_coordinator");
+  const canAccess = (teamId) =>
+    hasAll ||
+    access.some((a) => String(a) === String(teamId)) ||
+    (teamId === 23 && (isOfficeCoordinator || permissions.includes("office_coordinator.dashboard.read") || permissions.includes("operations.request.read")));
 
   return (
     <div className="space-y-6">
@@ -117,7 +122,15 @@ export default function Teams() {
           return (
             <button
               key={team.id}
-              onClick={() => allowed && navigate(`/teams/${team.id}`)}
+              onClick={() => {
+                if (allowed) {
+                  if (team.directRoute) {
+                    navigate(team.directRoute);
+                  } else {
+                    navigate(`/teams/${team.id}`);
+                  }
+                }
+              }}
               disabled={!allowed}
               className={`bg-card rounded-xl border p-5 text-left transition-all group ${
                 allowed

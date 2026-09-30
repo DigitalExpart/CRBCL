@@ -28,9 +28,20 @@ from app.schemas.front_desk import (
     GoogleFormIngestRequest,
     RoutingHistoryResponse,
 )
+from app.services.dashboard_registry_service import DashboardRegistryService
 from app.services.front_desk_service import FrontDeskService
 
 router = APIRouter(prefix="/front-desk", tags=["Front Desk"])
+
+
+async def verify_front_desk_enabled(db: AsyncSession = Depends(get_db)) -> None:
+    """Enforce organization-wide workspace availability for Front Desk."""
+    registry = DashboardRegistryService(db)
+    if not await registry.is_workspace_enabled("front_desk"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": {"code": "WORKSPACE_DISABLED", "message": "Front Desk / First Impression workspace is currently disabled by administrative policy."}},
+        )
 
 
 def _build_submission_response(sub: FrontDeskSubmission) -> FrontDeskSubmissionResponse:
@@ -130,7 +141,7 @@ async def ingest_google_form(
     }
 
 
-@router.get("/stats", response_model=FrontDeskStatsResponse)
+@router.get("/stats", response_model=FrontDeskStatsResponse, dependencies=[Depends(verify_front_desk_enabled)])
 async def get_front_desk_stats(
     user: User = Depends(require_permission(Permissions.PUBLIC_INTAKE_READ)),
     db: AsyncSession = Depends(get_db),
@@ -140,7 +151,7 @@ async def get_front_desk_stats(
     return await service.get_stats()
 
 
-@router.get("/submissions", response_model=PaginatedResponse[FrontDeskSubmissionResponse])
+@router.get("/submissions", response_model=PaginatedResponse[FrontDeskSubmissionResponse], dependencies=[Depends(verify_front_desk_enabled)])
 async def list_submissions(
     status_filter: str | None = Query(default=None, alias="status"),
     department_filter: str | None = Query(default=None, alias="department"),
@@ -171,7 +182,7 @@ async def list_submissions(
     )
 
 
-@router.get("/department-queue", response_model=PaginatedResponse[FrontDeskSubmissionResponse])
+@router.get("/department-queue", response_model=PaginatedResponse[FrontDeskSubmissionResponse], dependencies=[Depends(verify_front_desk_enabled)])
 async def list_department_queue(
     department: str | None = Query(default=None),
     status_filter: str | None = Query(default=None, alias="status"),

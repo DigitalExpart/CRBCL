@@ -48,6 +48,7 @@ const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
   const isSupervisor = normalizedRoles.includes("supervisor");
   const isHR = normalizedRoles.includes("hr_staff");
   const isCaseworker = normalizedRoles.includes("caseworker");
+  const isOfficeCoordinator = normalizedRoles.includes("office_coordinator");
 
   // Capabilities
   const hasIntakeRead = perms.has("intake.read");
@@ -56,6 +57,7 @@ const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
   const hasHrRead = perms.has("hr.dashboard.read") || perms.has("hr.employee.read");
   const hasClientRead = perms.has("client.read");
   const hasCaseRead = perms.has("case.read");
+  const hasOfficeCoordRead = perms.has("office_coordinator.dashboard.read") || perms.has("operations.request.read");
 
   // Board Member navigation: strictly restricted to governance oversight
   if (isBoardMember) {
@@ -97,10 +99,15 @@ const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
     items.push({ label: "Navigator Dashboard", icon: Compass, path: "/navigator" });
   }
 
-  // Front Desk Queue: operational triage (Front Desk, Navigators, Leadership oversight, or explicit capability)
+  // Front Desk / First Impression: operational triage (Front Desk, Navigators, Leadership oversight, or explicit capability)
   // IT Admin does NOT see Front Desk Queue unless an independent operational capability authorizes it
   if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || hasPublicIntakeRead) {
-    items.push({ label: "Front Desk Queue", icon: ConciergeBell, path: "/front-desk" });
+    items.push({ label: "Front Desk / First Impression", icon: ConciergeBell, path: "/front-desk" });
+  }
+
+  // Office Coordinator Workspace: dedicated operational coordination workspace
+  if (isOfficeCoordinator || isDirector || isExecutive || isCEO || hasOfficeCoordRead) {
+    items.push({ label: "Office Coordinator", icon: Building, path: "/office-coordinator" });
   }
 
   // Internal Intake: explicitly restricted to Front Desk & Navigators, leadership oversight, or explicit capability
@@ -122,7 +129,7 @@ const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
   }
 
   // Check whether user is a pure IT Admin without independent operational role
-  const isPureItAdmin = isItAdmin && !isFrontDesk && !isNavigator && !isSupervisor && !isDirector && !isExecutive && !isCEO && !isCaseworker && !isHR && !hasClientRead && !hasCaseRead;
+  const isPureItAdmin = isItAdmin && !isFrontDesk && !isOfficeCoordinator && !isNavigator && !isSupervisor && !isDirector && !isExecutive && !isCEO && !isCaseworker && !isHR && !hasClientRead && !hasCaseRead && !hasOfficeCoordRead;
 
   if (isPureItAdmin) {
     // Pure IT Admins only receive infrastructure and non-case operational items:

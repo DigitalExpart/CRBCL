@@ -133,6 +133,10 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     # Create HR Staff Role
     hr_role = Role(key="hr_staff", name="HR Staff", is_system=True)
     db_session.add(hr_role)
+
+    # Create Office Coordinator Role
+    oc_role = Role(key="office_coordinator", name="Office Coordinator", is_system=True)
+    db_session.add(oc_role)
     await db_session.flush()
 
     # Grant Executive Director ALL permissions
@@ -530,6 +534,7 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
         Permissions.ADMIN_ROLES_MANAGE,
         Permissions.ADMIN_TEAMS_MANAGE,
         Permissions.ADMIN_CONFIGURATION_MANAGE,
+        Permissions.ADMIN_DASHBOARD_CONTROL,
         Permissions.AUDIT_READ,
         # Phase 9 Technical Admin
         Permissions.NOTIFICATION_TEMPLATE_READ,
@@ -605,6 +610,25 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
             rp = RolePermission(role_id=hr_role.id, permission_id=perms[p_key].id)
             db_session.add(rp)
 
+    # Grant Office Coordinator permissions
+    for p_key in [
+        Permissions.OFFICE_COORDINATOR_DASHBOARD_READ,
+        Permissions.OPERATIONS_REQUEST_READ,
+        Permissions.OPERATIONS_REQUEST_MANAGE,
+        Permissions.FLEET_RESERVATION_MANAGE,
+        Permissions.FLEET_KEY_MANAGE,
+        Permissions.ROOM_BOOKING_MANAGE,
+        Permissions.SUPPLY_INVENTORY_MANAGE,
+        Permissions.FLEET_VEHICLE_READ,
+        Permissions.FLEET_TRIP_READ,
+        Permissions.FLEET_MAINTENANCE_READ,
+        Permissions.FLEET_INSURANCE_READ,
+        Permissions.NOTIFICATION_READ,
+    ]:
+        if p_key in perms:
+            rp = RolePermission(role_id=oc_role.id, permission_id=perms[p_key].id)
+            db_session.add(rp)
+
     # Create a Test Team
     team = Team(code="cfs_protection", name="Child & Family Services (Protection)", short_name="CFS")
     db_session.add(team)
@@ -621,6 +645,7 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
             "navigator": navigator_role,
             "director_manager": director_role,
             "hr_staff": hr_role,
+            "office_coordinator": oc_role,
         },
         "team": team,
     }
@@ -693,6 +718,28 @@ async def it_admin_user(db_session: AsyncSession, seed_roles_and_permissions):
     await db_session.flush()
 
     ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["it_admin"].id)
+    db_session.add(ur)
+    await db_session.commit()
+
+    token = create_access_token(user.id)
+    return {"user": user, "token": token, "headers": {"Authorization": f"Bearer {token}"}}
+
+
+@pytest.fixture
+async def office_coordinator_user(db_session: AsyncSession, seed_roles_and_permissions):
+    """Create an active office coordinator user."""
+    user = User(
+        email="coordinator@crbcl.ca",
+        email_normalized="coordinator@crbcl.ca",
+        password_hash=hash_password("password123"),
+        full_name="Olivia Coordinator",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    ur = UserRole(user_id=user.id, role_id=seed_roles_and_permissions["roles"]["office_coordinator"].id)
     db_session.add(ur)
     await db_session.commit()
 

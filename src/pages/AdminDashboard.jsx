@@ -24,22 +24,8 @@ import InviteUserDialog from "@/components/admin/InviteUserDialog";
 import EditUserDialog from "@/components/admin/EditUserDialog";
 import { toast } from "@/components/ui/use-toast";
 import { usersApi } from "@/api/users";
-
-const AVAILABLE_ROLES = [
-  { key: "ceo", label: "Chief Executive Officer (CEO)" },
-  { key: "executive_director", label: "Executive Director" },
-  { key: "resource_director", label: "Resource Director" },
-  { key: "resource_supervisor", label: "Resource Supervisor" },
-  { key: "resource_worker", label: "Resource Worker" },
-  { key: "director_manager", label: "Director / Manager" },
-  { key: "supervisor", label: "Supervisor" },
-  { key: "caseworker", label: "Caseworker" },
-  { key: "case_aide", label: "Case Aide" },
-  { key: "finance_staff", label: "Finance Staff" },
-  { key: "cultural_worker", label: "Cultural Worker" },
-  { key: "clinical_staff", label: "Clinical Staff" },
-  { key: "it_admin", label: "IT Administrator" },
-];
+import DashboardControlCentre from "@/components/admin/DashboardControlCentre";
+import { ROLES as AVAILABLE_ROLES } from "@/constants/roles";
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
@@ -384,6 +370,17 @@ export default function AdminDashboard() {
           )}
         </button>
         <button
+          onClick={() => setActiveTab("control_centre")}
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            activeTab === "control_centre"
+              ? "border-primary text-primary font-semibold"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Shield className="w-4 h-4" />
+          Dashboard Control Centre
+        </button>
+        <button
           onClick={() => setActiveTab("system")}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
             activeTab === "system"
@@ -676,6 +673,11 @@ export default function AdminDashboard() {
             </ul>
           </div>
         </div>
+      )}
+
+      {/* TAB 4: MASTER DASHBOARD CONTROL CENTRE */}
+      {activeTab === "control_centre" && (
+        <DashboardControlCentre />
       )}
 
       {/* Delete User Confirmation Modal */}
