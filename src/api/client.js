@@ -624,17 +624,27 @@ class AuthService {
     return null;
   }
 
-  logout(redirectUrl = '/login') {
+  logout(redirectUrl = null) {
+    let target = redirectUrl;
+    if (target === null || target === undefined) {
+      const user = StorageManager.get(USER_KEY);
+      const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+      const isItAdmin = user?.role === "admin" || roles.includes("admin") || roles.includes("it_admin") || user?.email === "admin@crbcl.ca";
+      const isAdminPath = typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
+      target = (isItAdmin || isAdminPath) ? "/admin/login" : "/login";
+    }
     this.setToken(null);
     StorageManager.remove(USER_KEY);
-    if (redirectUrl) {
-      window.location.href = redirectUrl;
+    if (target) {
+      window.location.href = target;
     }
   }
 
   redirectToLogin(redirectUrl = null) {
+    const isAdminPath = typeof window !== "undefined" && (window.location.pathname.startsWith("/admin") || (redirectUrl && redirectUrl.startsWith("/admin")));
+    const baseLogin = isAdminPath ? "/admin/login" : "/login";
     const returnTo = redirectUrl ? `?returnTo=${encodeURIComponent(redirectUrl)}` : '';
-    window.location.href = `/login${returnTo}`;
+    window.location.href = `${baseLogin}${returnTo}`;
   }
 }
 

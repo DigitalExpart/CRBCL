@@ -25,13 +25,21 @@ export default function Login() {
       const res = await api.auth.loginViaEmailPassword(email, password);
       const user = res?.user || (await api.auth.me().catch(() => null));
       const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
-      const isItAdmin = user?.role === "admin" || roles.includes("admin") || roles.includes("it_admin") || user?.email === "admin@crbcl.ca";
+      const isItAdmin =
+        user?.role === "admin" ||
+        roles.includes("admin") ||
+        roles.includes("it_admin") ||
+        user?.email === "admin@crbcl.ca" ||
+        email.trim().toLowerCase() === "admin@crbcl.ca";
 
-      // Block any account with admin/it_admin role from the staff portal
+      // Direct IT administrators to the dedicated IT Admin Portal
       if (isItAdmin) {
         api.auth.logout(null);
-        setError("Access Denied: Administrator accounts cannot sign in through this portal.");
+        setError("Administrator accounts must sign in via the IT Admin Portal. Redirecting to /admin/login...");
         setLoading(false);
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 1200);
         return;
       }
 
@@ -79,12 +87,20 @@ export default function Login() {
       title="Welcome back"
       subtitle="Log in to your account"
       footer={
-        <>
-          Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            Create one
-          </Link>
-        </>
+        <div className="space-y-3 text-center text-xs">
+          <div>
+            Don't have an account?{" "}
+            <Link to="/register" className="text-primary font-medium hover:underline">
+              Create one
+            </Link>
+          </div>
+          <div className="pt-2 border-t border-border/60">
+            <span className="text-muted-foreground">IT Administrator or System Admin? </span>
+            <Link to="/admin/login" className="text-primary font-medium hover:underline inline-flex items-center">
+              Go to IT Admin Portal &rarr;
+            </Link>
+          </div>
+        </div>
       }
     >
       <Button
@@ -106,9 +122,19 @@ export default function Login() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-start gap-2">
-          <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <span>{error}</span>
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex flex-col gap-1.5">
+          <div className="flex items-start gap-2">
+            <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+          {error.includes("Administrator") && (
+            <Link
+              to="/admin/login"
+              className="text-xs font-semibold text-primary underline hover:text-primary/80 ml-6"
+            >
+              Click here to go directly to the IT Admin Portal &rarr;
+            </Link>
+          )}
         </div>
       )}
 

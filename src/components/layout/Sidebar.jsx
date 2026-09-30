@@ -210,7 +210,8 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = () => {
-    api.auth.logout("/login");
+    const isItAdmin = window.location.pathname.startsWith("/admin") || userEmail === "admin@crbcl.ca" || userRoles.includes("it_admin") || userRoles.includes("admin");
+    api.auth.logout(isItAdmin ? "/admin/login" : "/login");
   };
 
   const navContent = (

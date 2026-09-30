@@ -66,12 +66,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = (shouldRedirect = true) => {
+    const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+    const isItAdmin = user?.role === "admin" || roles.includes("admin") || roles.includes("it_admin") || user?.email === "admin@crbcl.ca" || (typeof window !== "undefined" && window.location.pathname.startsWith("/admin"));
+    const target = isItAdmin ? "/admin/login" : "/login";
     setUser(null);
     setIsAuthenticated(false);
     if (shouldRedirect) {
-      api.auth.logout('/login');
+      api.auth.logout(target);
     } else {
-      api.auth.logout();
+      api.auth.logout(null);
     }
   };
 

@@ -237,7 +237,7 @@ export default function UserNav() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          onClick={() => api.auth.logout("/login")}
+          onClick={() => api.auth.logout((isItAdmin || window.location.pathname.startsWith("/admin")) ? "/admin/login" : "/login")}
           className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
         >
           <LogOut className="mr-2 h-4 w-4" />
