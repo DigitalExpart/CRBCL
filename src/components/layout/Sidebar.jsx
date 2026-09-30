@@ -94,59 +94,34 @@ const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
     items.push({ label: "Board Portal", icon: Landmark, path: "/board" });
   }
 
-  // Navigator Dashboard: operational navigator role or leadership oversight
-  if (isNavigator || isDirector || isExecutive || isCEO) {
+  // Navigator Dashboard: operational navigator role, leadership oversight, or Administrator
+  if (isNavigator || isDirector || isExecutive || isCEO || isItAdmin) {
     items.push({ label: "Navigator Dashboard", icon: Compass, path: "/navigator" });
   }
 
-  // Front Desk / First Impression: operational triage (Front Desk, Navigators, Leadership oversight, or explicit capability)
-  // IT Admin does NOT see Front Desk Queue unless an independent operational capability authorizes it
-  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || hasPublicIntakeRead) {
+  // Front Desk / First Impression: operational triage (Front Desk, Navigators, Leadership oversight, IT Admin, or explicit capability)
+  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || hasPublicIntakeRead || isItAdmin) {
     items.push({ label: "Front Desk / First Impression", icon: ConciergeBell, path: "/front-desk" });
   }
 
   // Office Coordinator Workspace: dedicated operational coordination workspace
-  if (isOfficeCoordinator || isDirector || isExecutive || isCEO || hasOfficeCoordRead) {
+  if (isOfficeCoordinator || isDirector || isExecutive || isCEO || hasOfficeCoordRead || isItAdmin) {
     items.push({ label: "Office Coordinator", icon: Building, path: "/office-coordinator" });
   }
 
-  // Internal Intake: explicitly restricted to Front Desk & Navigators, leadership oversight, or explicit capability
-  // IT Admin does NOT see Intake & Referrals unless an independent operational capability authorizes it
-  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || hasIntakeRead) {
+  // Internal Intake: explicitly accessible to Front Desk & Navigators, leadership oversight, IT Admin, or explicit capability
+  if (isFrontDesk || isNavigator || isDirector || isExecutive || isCEO || hasIntakeRead || isItAdmin) {
     items.push({ label: "Intake & Referrals", icon: Inbox, path: "/intake" });
   }
 
-  // Approvals Queue: clearly discoverable for supervisors, directors, executives, and CEO
-  // IT Admin does NOT see Approvals Queue unless independently authorized
-  if (isSupervisor || isDirector || isExecutive || isCEO || hasIntakeApprove) {
+  // Approvals Queue: clearly discoverable for supervisors, directors, executives, CEO, and IT Admin
+  if (isSupervisor || isDirector || isExecutive || isCEO || hasIntakeApprove || isItAdmin) {
     items.push({ label: "Approvals Queue", icon: Clock, path: "/intake/approvals" });
   }
 
-  // HR Dashboard: dedicated workspace for HR personnel and leadership
-  // IT Admin has ZERO protected HR permissions and does NOT see HR Dashboard
-  if (isHR || isDirector || isExecutive || isCEO || hasHrRead) {
+  // HR Dashboard: dedicated workspace for HR personnel, leadership, and IT Admin
+  if (isHR || isDirector || isExecutive || isCEO || hasHrRead || isItAdmin) {
     items.push({ label: "HR Dashboard", icon: UserCog, path: "/hr" });
-  }
-
-  // Check whether user is a pure IT Admin without independent operational role
-  const isPureItAdmin = isItAdmin && !isFrontDesk && !isOfficeCoordinator && !isNavigator && !isSupervisor && !isDirector && !isExecutive && !isCEO && !isCaseworker && !isHR && !hasClientRead && !hasCaseRead && !hasOfficeCoordRead;
-
-  if (isPureItAdmin) {
-    // Pure IT Admins only receive infrastructure and non-case operational items:
-    items.push(
-      { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
-      { label: "My Schedule", icon: Calendar, path: "/schedule" },
-      { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
-      { label: "Staff Directory", icon: Users, path: "/employees" },
-      { label: "Housing Units", icon: Home, path: "/housing" },
-      { label: "Facilities", icon: LayoutGrid, path: "/facilities" },
-      { label: "IT Assets", icon: Shield, path: "/assets" },
-      { label: "Fleet & Vehicles", icon: Truck, path: "/fleet" },
-      { label: "Notifications", icon: Bell, path: "/notifications" },
-      { label: "Cultural Terminology", icon: BookOpen, path: "/terminology" },
-      { label: "Ask Red Bear", icon: MessageCircle, path: "/ask-red-bear" },
-    );
-    return items;
   }
 
   items.push(

@@ -7,7 +7,9 @@ import {
   Loader2, UserPlus, Search, Shield, Users as UsersIcon, 
   Pencil, Trash2, CheckCircle2, UserCheck, Clock, RefreshCw, 
   AlertCircle, Building2, ShieldAlert, Activity, XCircle, AlertTriangle,
-  Download
+  Download, LayoutDashboard, ArrowRight, ConciergeBell,
+  Compass, Inbox, UserCog, FolderOpen, Heart, DollarSign, BarChart3,
+  CheckSquare, Truck, Home, LayoutGrid
 } from "lucide-react";
 import {
   Dialog,
@@ -27,6 +29,233 @@ import { usersApi } from "@/api/users";
 import DashboardControlCentre from "@/components/admin/DashboardControlCentre";
 import { ROLES as AVAILABLE_ROLES } from "@/constants/roles";
 
+const ALL_STAFF_DASHBOARDS = [
+  {
+    name: "Front Desk / First Impression",
+    route: "/front-desk",
+    category: "Intake & Reception",
+    description: "Public community inquiries, Google Form webhook submissions, triage review, caller registration, and departmental routing.",
+    icon: ConciergeBell,
+    badge: "Operational Access Active",
+  },
+  {
+    name: "Office Coordinator Workspace",
+    route: "/office-coordinator",
+    category: "Operations & Facilities",
+    description: "Centralized operational request queue, advance vehicle reservations, key custody tracking, room scheduling, and supply inventory.",
+    icon: Building2,
+    badge: "Operational Access Active",
+  },
+  {
+    name: "Staff Dashboard",
+    route: "/",
+    category: "General Operations",
+    description: "Universal personal staff dashboard for daily schedule, operational tasks, quick links, and agency announcements.",
+    icon: LayoutDashboard,
+    badge: "Universal Access Active",
+  },
+  {
+    name: "Navigator / System Navigation",
+    route: "/navigator",
+    category: "Intake & Navigation",
+    description: "Client service navigation, community referrals triage, and cross-departmental coordination.",
+    icon: Compass,
+    badge: "Operational Access Active",
+  },
+  {
+    name: "Team Dashboards Hub",
+    route: "/teams",
+    category: "Programs & Teams",
+    description: "Directory of all 24 programmatic and operational teams with quick focus views.",
+    icon: LayoutGrid,
+    badge: "All Teams Unrestricted",
+  },
+  {
+    name: "Intake & Referrals Queue",
+    route: "/intake",
+    category: "Intake & Referrals",
+    description: "Formal child welfare intake investigations, referral screening, and intake safety determinations.",
+    icon: Inbox,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Supervisory Approvals Queue",
+    route: "/intake/approvals",
+    category: "Intake & Referrals",
+    description: "Supervisory review and approval workflow for submitted intake investigations and decisions.",
+    icon: Clock,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Human Resources Dashboard",
+    route: "/hr",
+    category: "Human Resources",
+    description: "Staff directory, professional licenses, CPR/First Aid certifications, and HR personnel oversight.",
+    icon: UserCog,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Case Management",
+    route: "/cases",
+    category: "Case & Client",
+    description: "Active child welfare and family wellness case files, clinical case notes, and safety plans.",
+    icon: FolderOpen,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Clients & Longitudinal Profiles",
+    route: "/clients",
+    category: "Case & Client",
+    description: "Canonical person identities, service enrollment histories, and client wellness profiles.",
+    icon: UsersIcon,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Families Registry",
+    route: "/families",
+    category: "Case & Client",
+    description: "Kinship genealogies, household compositions, and family connection trees.",
+    icon: Heart,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Resource Team & Licensing",
+    route: "/resource-team",
+    category: "Resource & Placements",
+    description: "Customary care licensing, foster caregiver recruitment, and placement capacity oversight.",
+    icon: Building2,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Placement Homes & Capacity",
+    route: "/placement-homes",
+    category: "Resource & Placements",
+    description: "Bed availability, background checks, annual license renewals, and home visit logs.",
+    icon: Home,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Caregiver Recruitment Pipeline",
+    route: "/resource-team/recruitment",
+    category: "Resource & Placements",
+    description: "Prospective caregiver application tracking from initial inquiry through homestudy and approval.",
+    icon: UserCheck,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Placement Matching Decision-Support",
+    route: "/placement-matching",
+    category: "Resource & Placements",
+    description: "Explainable matching decision support based on cultural affinity, sibling preservation, and proximity.",
+    icon: CheckSquare,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Finance, Billing & Procurement",
+    route: "/finance",
+    category: "Finance & Administration",
+    description: "Purchase orders, per diem invoices, maintenance rate cards, and financial ledger audit tracking.",
+    icon: DollarSign,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Reporting Hub & Analytics",
+    route: "/reports",
+    category: "Quality & Reporting",
+    description: "Ad-hoc reporting, statutory filings, child/parent passports, and QA practice audit checklists.",
+    icon: BarChart3,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Quality Assurance & Audits",
+    route: "/qa",
+    category: "Quality & Reporting",
+    description: "Practice quality standards, audit checklists, compliance reviews, and file reviews.",
+    icon: CheckSquare,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Staffing Facilitator",
+    route: "/staffing",
+    category: "Case & Operations",
+    description: "Multi-disciplinary team staffing conferences, case plan reviews, and clinical action items.",
+    icon: UserCheck,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Fleet & Vehicles",
+    route: "/fleet",
+    category: "Operations & Facilities",
+    description: "Vehicle asset registry, trip checkouts, scheduled maintenance, and insurance policies.",
+    icon: Truck,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Housing Units & Shelters",
+    route: "/housing",
+    category: "Operations & Facilities",
+    description: "Emergency shelter beds, supportive transitional housing units, and occupancy management.",
+    icon: Home,
+    badge: "Full Access Active",
+  },
+  {
+    name: "Facilities & Buildings",
+    route: "/facilities",
+    category: "Operations & Facilities",
+    description: "CRBCL buildings, offices, program sites, fire safety inspections, and maintenance work orders.",
+    icon: Building2,
+    badge: "Full Access Active",
+  },
+  {
+    name: "IT Hardware Assets",
+    route: "/assets",
+    category: "Operations & Facilities",
+    description: "Hardware asset tags, laptop & mobile deployments, serial tracking, and warranty schedules.",
+    icon: Shield,
+    badge: "Full Access Active",
+  },
+  {
+    name: "My Schedule & Team Calendar",
+    route: "/schedule",
+    category: "General Operations",
+    description: "Personal casework schedule, team shifts, and community appointment calendars.",
+    icon: Clock,
+    badge: "Full Access Active",
+  },
+  {
+    name: "CEO Command Centre",
+    route: "/ceo",
+    category: "Executive Leadership",
+    description: "Strategic initiative milestones, capital allocation tracking, and executive leadership indicators.",
+    icon: Shield,
+    badge: "Executive Oversight Active",
+  },
+  {
+    name: "Executive Director Dashboard",
+    route: "/executive",
+    category: "Executive Leadership",
+    description: "Cross-agency operations, service trends, caseload escalations, and executive governance oversight.",
+    icon: Shield,
+    badge: "Executive Oversight Active",
+  },
+  {
+    name: "Director's Dashboard",
+    route: "/director",
+    category: "Executive Leadership",
+    description: "Program-level metrics, operational workflow escalations, and supervisory reviews.",
+    icon: Building2,
+    badge: "Executive Oversight Active",
+  },
+  {
+    name: "Board Governance Portal",
+    route: "/board",
+    category: "Board of Governors",
+    description: "Board of Governors governance portal, formal decision records, and in-camera publication controls.",
+    icon: Building2,
+    badge: "Governance Access Active",
+  },
+];
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +272,8 @@ export default function AdminDashboard() {
   const [systemHealth, setSystemHealth] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [dashboardsSearch, setDashboardsSearch] = useState("");
+  const [dashboardsCategory, setDashboardsCategory] = useState("All");
 
   useEffect(() => {
     api.auth.me().then((u) => {
@@ -308,13 +539,22 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold">{itAdminCount}</p>
-            <p className="text-xs text-muted-foreground">IT Administrators</p>
+        <div
+          onClick={() => setActiveTab("staff_dashboards")}
+          className={`cursor-pointer border rounded-xl p-4 transition-all ${
+            activeTab === "staff_dashboards"
+              ? "bg-indigo-500/10 border-indigo-500/50 shadow-sm ring-1 ring-indigo-500/30"
+              : "bg-card border-border hover:border-border/80"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center">
+              <LayoutDashboard className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{ALL_STAFF_DASHBOARDS.length}</p>
+              <p className="text-xs text-muted-foreground">Staff Dashboards & Workspaces</p>
+            </div>
           </div>
         </div>
 
@@ -369,6 +609,20 @@ export default function AdminDashboard() {
               {pendingUsers.length}
             </span>
           )}
+        </button>
+        <button
+          onClick={() => setActiveTab("staff_dashboards")}
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+            activeTab === "staff_dashboards"
+              ? "border-primary text-primary font-semibold"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          Staff Dashboards & Workspaces
+          <span className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full font-bold">
+            {ALL_STAFF_DASHBOARDS.length}
+          </span>
         </button>
         <button
           onClick={() => setActiveTab("control_centre")}
@@ -678,6 +932,112 @@ export default function AdminDashboard() {
               <li><strong>Instant Provisioning</strong>: Accounts created from the Admin Dashboard are immediately active without OTP verification delays.</li>
               <li><strong>Account Removal</strong>: Permanent account deletion revokes active sessions and clears team memberships immediately.</li>
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: ALL STAFF DASHBOARDS & WORKSPACES ACCESS */}
+      {activeTab === "staff_dashboards" && (
+        <div className="space-y-6">
+          <div className="bg-primary/10 border border-primary/20 rounded-xl p-5 flex items-start gap-4 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary">
+              <LayoutDashboard className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-semibold text-base text-foreground flex items-center gap-2">
+                Unified Staff Dashboard & Workspace Directory
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-medium">
+                  Universal Admin Access Active
+                </span>
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                As System Administrator, you possess direct operational and administrative access to all {ALL_STAFF_DASHBOARDS.length} staff dashboards,
+                intake pipelines, and specialized team workspaces across the platform. Click any dashboard card below to launch the workspace immediately.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+              <Input
+                placeholder="Search staff dashboards by name, route, keyword..."
+                value={dashboardsSearch}
+                onChange={(e) => setDashboardsSearch(e.target.value)}
+                className="pl-9 bg-card"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1">
+              {["All", "Intake & Reception", "Operations & Facilities", "Case & Client", "Resource & Placements", "Quality & Reporting", "Finance & Administration", "Executive Leadership"].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setDashboardsCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                    dashboardsCategory === cat
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ALL_STAFF_DASHBOARDS.filter((d) => {
+              const matchesSearch =
+                d.name.toLowerCase().includes(dashboardsSearch.toLowerCase()) ||
+                d.route.toLowerCase().includes(dashboardsSearch.toLowerCase()) ||
+                d.description.toLowerCase().includes(dashboardsSearch.toLowerCase()) ||
+                d.category.toLowerCase().includes(dashboardsSearch.toLowerCase());
+              const matchesCategory =
+                dashboardsCategory === "All" || d.category === dashboardsCategory;
+              return matchesSearch && matchesCategory;
+            }).map((dashboard) => {
+              const IconComp = dashboard.icon;
+              return (
+                <div
+                  key={dashboard.route}
+                  className="bg-card border border-border rounded-xl p-5 shadow-sm hover:border-primary/50 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                        <IconComp className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        {dashboard.badge}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold text-sm text-foreground">{dashboard.name}</h4>
+                      <code className="text-[11px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        {dashboard.route}
+                      </code>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {dashboard.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-border/60 mt-4 flex items-center justify-between gap-3">
+                    <span className="text-[11px] text-muted-foreground font-medium">
+                      {dashboard.category}
+                    </span>
+                    <Link to={dashboard.route}>
+                      <Button size="sm" className="h-8 gap-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground">
+                        Launch Dashboard
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

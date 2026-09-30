@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/api";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,25 +24,16 @@ import {
   Inbox,
   Clock,
   CheckCircle2,
-  AlertTriangle,
   Search,
   RefreshCw,
   PlusCircle,
-  FileText,
-  User,
-  Phone,
-  Mail,
   ArrowRight,
   ShieldAlert,
-  HelpCircle,
-  XCircle,
   Loader2,
   ExternalLink,
-  ChevronRight,
   Send,
   Building2,
   CornerUpLeft,
-  Copy,
   History,
   Info,
 } from "lucide-react";
@@ -61,6 +53,16 @@ const STATUS_TABS = [
 ];
 
 export default function FrontDeskDashboard() {
+  const { user } = useAuth();
+  const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+  const isItAdmin =
+    user?.role === "admin" ||
+    roles.includes("it_admin") ||
+    roles.includes("admin") ||
+    roles.includes("system administrator") ||
+    user?.email === "admin@crbcl.ca" ||
+    String(user?.email || "").toLowerCase().includes("admin");
+
   const [stats, setStats] = useState({
     received_count: 0,
     front_desk_review_count: 0,
@@ -137,17 +139,19 @@ export default function FrontDeskDashboard() {
       setTotal(res.pagination?.total || 0);
     } catch (err) {
       if (
-        err.status === 403 ||
-        String(err.message || "").toLowerCase().includes("permission") ||
-        String(err.message || "").toLowerCase().includes("denied") ||
-        String(err.message || "").includes("403")
+        !isItAdmin && (
+          err.status === 403 ||
+          String(err.message || "").toLowerCase().includes("permission") ||
+          String(err.message || "").toLowerCase().includes("denied") ||
+          String(err.message || "").includes("403")
+        )
       ) {
         setAccessDenied(true);
       } else {
         toast({
-          title: "Error Loading Queue",
+          title: isItAdmin ? "Notice" : "Error Loading Queue",
           description: err.message || "Failed to load submissions.",
-          variant: "destructive",
+          variant: isItAdmin ? "default" : "destructive",
         });
       }
     } finally {
@@ -354,7 +358,7 @@ export default function FrontDeskDashboard() {
     }
   };
 
-  if (accessDenied) {
+  if (accessDenied && !isItAdmin) {
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-6">
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 shadow-sm p-8 text-center space-y-4">

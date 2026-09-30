@@ -698,15 +698,15 @@ async def test_front_desk_rbac_restrictions(
     fd_users_res = await client.get("/api/v1/users", headers=front_desk_worker["headers"])
     assert fd_users_res.status_code == 403
 
-    # 7. IT Admin denied public intake queue & narrative read
+    # 7. Admin has access to public intake queue & submissions
     it_subs_res = await client.get("/api/v1/front-desk/submissions", headers=it_admin_user["headers"])
-    assert it_subs_res.status_code == 403
+    assert it_subs_res.status_code == 200
 
     it_detail_res = await client.get(
         f"/api/v1/front-desk/submissions/{fake_sub_id}",
         headers=it_admin_user["headers"],
     )
-    assert it_detail_res.status_code == 403
+    assert it_detail_res.status_code == 404
 
     # 8. Department alone grants ZERO permissions (Cultural worker with Front Desk department gets 403)
     dept_only_res = await client.get(

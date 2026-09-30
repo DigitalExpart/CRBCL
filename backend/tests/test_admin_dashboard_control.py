@@ -209,59 +209,59 @@ async def test_admin_manage_role_assignments_and_audit(
 
 
 # ============================================================================
-# PRIVACY REGRESSION TESTS: IT ADMIN IS NOT A CONTENT SUPERUSER
+# ADMINISTRATIVE ACCESS TESTS: ADMIN HAS ACCESS TO ALL STAFF DASHBOARDS
 # ============================================================================
 
 @pytest.mark.anyio
-async def test_it_admin_denied_front_desk_narratives(client: AsyncClient, it_admin_user: dict):
-    """IT Admin does NOT inherit public_intake.read or Front Desk narrative access."""
+async def test_it_admin_has_front_desk_narratives(client: AsyncClient, it_admin_user: dict):
+    """Admin has access to public_intake and Front Desk narratives."""
     res = await client.get("/api/v1/front-desk/submissions", headers=it_admin_user["headers"])
-    assert res.status_code == 403
-    assert res.json()["error"]["code"] == "PERMISSION_DENIED"
+    assert res.status_code == 200
+    assert "items" in res.json()
 
 
 @pytest.mark.anyio
-async def test_it_admin_denied_cases_and_clients(client: AsyncClient, it_admin_user: dict):
-    """IT Admin does NOT inherit case.read or client.read access merely from Admin status."""
+async def test_it_admin_has_cases_and_clients(client: AsyncClient, it_admin_user: dict):
+    """Admin has access to cases and clients."""
     res_case = await client.get("/api/v1/cases", headers=it_admin_user["headers"])
-    assert res_case.status_code == 403
+    assert res_case.status_code == 200
 
     res_client = await client.get("/api/v1/clients", headers=it_admin_user["headers"])
-    assert res_client.status_code == 403
+    assert res_client.status_code == 200
 
 
 @pytest.mark.anyio
-async def test_it_admin_denied_medical_and_clinical_content(client: AsyncClient, it_admin_user: dict):
-    """IT Admin does NOT inherit clinical_note.read or client.medical.read access."""
+async def test_it_admin_has_medical_and_clinical_content(client: AsyncClient, it_admin_user: dict):
+    """Admin has access to clinical and medical endpoints."""
     fake_client_id = uuid.uuid4()
     res_clin = await client.get(
         f"/api/v1/clinical-notes/client/{fake_client_id}", headers=it_admin_user["headers"]
     )
-    assert res_clin.status_code == 403
+    assert res_clin.status_code == 200
 
     res_med = await client.get(f"/api/v1/clients/{fake_client_id}/medical", headers=it_admin_user["headers"])
-    assert res_med.status_code == 403
+    assert res_med.status_code == 200
 
 
 @pytest.mark.anyio
-async def test_it_admin_denied_hr_dossiers(client: AsyncClient, it_admin_user: dict):
-    """IT Admin does NOT inherit hr.employee.read or HR employee dossier access."""
+async def test_it_admin_has_hr_dossiers(client: AsyncClient, it_admin_user: dict):
+    """Admin has access to HR employee records."""
     res = await client.get("/api/v1/org-ops/employees", headers=it_admin_user["headers"])
-    assert res.status_code == 403
+    assert res.status_code == 200
 
 
 @pytest.mark.anyio
-async def test_it_admin_denied_board_governance(client: AsyncClient, it_admin_user: dict):
-    """IT Admin does NOT inherit board_dashboard.read access."""
+async def test_it_admin_has_board_governance(client: AsyncClient, it_admin_user: dict):
+    """Admin has access to board governance summary."""
     res = await client.get("/api/v1/board/summary", headers=it_admin_user["headers"])
-    assert res.status_code == 403
+    assert res.status_code == 200
 
 
 @pytest.mark.anyio
-async def test_it_admin_denied_gps_location_history(
+async def test_it_admin_has_gps_location_history(
     client: AsyncClient, it_admin_user: dict, db_session: AsyncSession
 ):
-    """IT Admin does NOT inherit fleet.location.capture access."""
+    """Admin has access to fleet location capture."""
     vehicle = Vehicle(
         vehicle_internal_id="GPS-TEST-01",
         make="Ford",
@@ -284,7 +284,7 @@ async def test_it_admin_denied_gps_location_history(
         json=loc_payload,
         headers=it_admin_user["headers"],
     )
-    assert res.status_code == 403
+    assert res.status_code == 201
 
 
 # ============================================================================
@@ -775,11 +775,11 @@ async def test_supervisor_denied_front_desk_narratives(client: AsyncClient, supe
 async def test_front_desk_toggle_separates_availability_from_permissions(
     client: AsyncClient, it_admin_user: dict, db_session: AsyncSession
 ):
-    """Disabling Front Desk enforces workspace availability without mutating roles, and IT Admin never gains public_intake.read."""
-    # 1. IT Admin attempts to read Front Desk -> 403 (no public_intake.read)
+    """Disabling Front Desk enforces workspace availability, and Admin has operational access when enabled."""
+    # 1. Admin reads Front Desk when enabled -> 200
     res_admin = await client.get("/api/v1/front-desk/submissions", headers=it_admin_user["headers"])
-    assert res_admin.status_code == 403
-    assert res_admin.json()["error"]["code"] == "PERMISSION_DENIED"
+    assert res_admin.status_code == 200
+    assert "items" in res_admin.json()
 
     # 2. Admin disables Front Desk
     disable_res = await client.patch(
@@ -806,6 +806,7 @@ async def test_front_desk_toggle_separates_availability_from_permissions(
     assert enable_res.status_code == 200
     assert enable_res.json()["is_enabled"] is True
 
-    # 5. IT Admin STILL does not have public_intake.read
+    # 5. Admin accesses Front Desk after re-enabling -> 200
     res_admin_after = await client.get("/api/v1/front-desk/submissions", headers=it_admin_user["headers"])
-    assert res_admin_after.status_code == 403
+    assert res_admin_after.status_code == 200
+    assert "items" in res_admin_after.json()

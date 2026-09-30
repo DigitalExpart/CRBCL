@@ -147,18 +147,17 @@ export default function DashboardControlCentre() {
 
   return (
     <div className="space-y-6">
-      {/* Security Architectural Notice Banner */}
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
-        <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-        <div className="text-xs text-amber-900 dark:text-amber-200 space-y-1">
-          <p className="font-semibold text-sm text-amber-800 dark:text-amber-300">
-            Administrative Governance & Data Isolation Boundary
+      {/* Administrative Unified Access Banner */}
+      <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
+        <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+        <div className="text-xs text-foreground space-y-1">
+          <p className="font-semibold text-sm text-primary">
+            Unified Administrator Access & Platform Governance
           </p>
-          <p>
+          <p className="text-muted-foreground">
             The Dashboard Control Centre manages organizational availability and authoritative role assignments.
-            Under CRBCL data-sovereignty rules, <strong>administration of access does NOT grant access to protected content</strong>.
-            IT Administrators do not receive permission to view child welfare case files, person records, clinical/medical notes,
-            Front Desk caller narratives, HR dossiers, Board in-camera proceedings, or physical GPS telemetry.
+            System Administrators hold full access to oversee, launch, and support all staff dashboards—including Front Desk,
+            Office Coordinator, Navigator, Intake, HR, Case Management, and team workspaces across the platform.
           </p>
         </div>
       </div>
