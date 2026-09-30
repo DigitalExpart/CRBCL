@@ -35,6 +35,7 @@ const TEAM_FOCUS = {
   21: { programs: true, appointments: true, clients: true, label: "Cultural programming & language preservation" },
   22: { cases: true, clients: true, programs: true, appointments: true, label: "Young adult transition & aftercare" },
   23: { operations: true, label: "Office Coordination & Facilities Operations" },
+  24: { front_desk: true, label: "Front Desk & Public Intake Reception" },
 };
 
 export default function TeamDashboard() {

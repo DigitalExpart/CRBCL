@@ -134,6 +134,7 @@ const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
   if (isPureItAdmin) {
     // Pure IT Admins only receive infrastructure and non-case operational items:
     items.push(
+      { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
       { label: "My Schedule", icon: Calendar, path: "/schedule" },
       { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
       { label: "Staff Directory", icon: Users, path: "/employees" },

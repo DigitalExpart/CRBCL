@@ -28,6 +28,7 @@ export const TEAMS = [
   { id: 21, name: "Culture Team", short: "Culture Team", color: "bg-amber-800", responsibilities: "Cultural programming, ceremonies, language preservation, traditional teachings, identity strengthening." },
   { id: 22, name: "Post Majority", short: "Post Majority (Young Adult) Team", color: "bg-indigo-800", responsibilities: "Young adult transition support, independent living skills, aftercare services, life skills for youth aging out of care." },
   { id: 23, name: "Office Coordination & Facilities", short: "Office Coordination & Operations Team", color: "bg-teal-800", responsibilities: "Operational requests, fleet coordination, vehicle reservations, key custody, room booking, and facilities supplies.", directRoute: "/office-coordinator" },
+  { id: 24, name: "Front Desk / First Impression", short: "Front Desk & Reception Triage Team", color: "bg-amber-700", responsibilities: "Community reception, public inquiry triage, Google Forms intake processing, visitor coordination, and referral routing.", directRoute: "/front-desk" },
 ];
 
 const getStoredUser = () => {
@@ -97,10 +98,13 @@ export default function Teams() {
   const access = Array.isArray(rawAccess) ? rawAccess : [];
   const hasAll = isAdmin || access.some((a) => String(a).toLowerCase() === "all");
   const isOfficeCoordinator = roles.includes("office_coordinator");
+  const isFrontDesk = roles.includes("front_desk");
+  const hasPublicIntakeRead = permissions.includes("public_intake.read") || permissions.includes("public_intake.triage");
   const canAccess = (teamId) =>
     hasAll ||
     access.some((a) => String(a) === String(teamId)) ||
-    (teamId === 23 && (isOfficeCoordinator || permissions.includes("office_coordinator.dashboard.read") || permissions.includes("operations.request.read")));
+    (teamId === 23 && (isOfficeCoordinator || permissions.includes("office_coordinator.dashboard.read") || permissions.includes("operations.request.read"))) ||
+    (teamId === 24 && (isFrontDesk || hasPublicIntakeRead || permissions.includes("front_desk.dashboard.read")));
 
   return (
     <div className="space-y-6">
