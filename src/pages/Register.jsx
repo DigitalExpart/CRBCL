@@ -10,11 +10,13 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
 import { DEPARTMENTS } from "@/constants/departments";
+import { ROLES } from "@/constants/roles";
 
 export default function Register() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [department, setDepartment] = useState("");
+  const [requestedRole, setRequestedRole] = useState("caseworker");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -44,6 +46,7 @@ export default function Register() {
         firstName,
         lastName,
         department,
+        requestedRole,
       });
       setShowOtp(true);
     } catch (err) {
@@ -234,6 +237,33 @@ export default function Register() {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* Requested Staff Role */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="requestedRole">Requested Staff Role</Label>
+            <span className="text-[11px] text-muted-foreground">Subject to Admin approval</span>
+          </div>
+          <div className="relative">
+            <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
+            <select
+              id="requestedRole"
+              value={requestedRole}
+              onChange={(e) => setRequestedRole(e.target.value)}
+              className="flex h-12 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              required
+            >
+              {ROLES.map((r) => (
+                <option key={r.key} value={r.key}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Role selection will be reviewed by an IT Administrator. Account remains pending until approval.
+          </p>
         </div>
 
         {/* Email */}

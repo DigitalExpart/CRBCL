@@ -55,6 +55,12 @@ def _build_user_response(user: User) -> UserResponse:
     if is_admin_or_leadership and (not team_access or "all" not in [str(t).lower() for t in team_access]):
         team_access = ["all"]
 
+    requested_role = None
+    if hasattr(user, "preferences") and user.preferences:
+        req_pref = next((p for p in user.preferences if p.key == "requested_role"), None)
+        if req_pref and req_pref.value:
+            requested_role = req_pref.value
+
     return UserResponse(
         id=user.id,
         email=user.email,
@@ -66,6 +72,7 @@ def _build_user_response(user: User) -> UserResponse:
         is_verified=user.is_verified,
         roles=roles,
         team_access=team_access,
+        requested_role=requested_role,
         created_at=user.created_at,
         updated_at=user.updated_at,
     )
@@ -167,6 +174,7 @@ async def approve_user(
     target_user.is_verified = True
     await repo.assign_roles(target_user.id, [role_key], assigned_by=user.id)
     await db.commit()
+    db.expire_all()
     refreshed = await repo.get_with_roles_and_teams(user_id)
     return _build_user_response(refreshed)
 

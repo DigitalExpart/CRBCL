@@ -32,6 +32,7 @@ export default function DashboardControlCentre() {
   const [editingWorkspace, setEditingWorkspace] = useState(null);
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [savingRoles, setSavingRoles] = useState(false);
+  const [confirmProtectedGrant, setConfirmProtectedGrant] = useState(false);
   const [togglingKey, setTogglingKey] = useState(null);
 
   const fetchWorkspaces = async () => {
@@ -92,6 +93,7 @@ export default function DashboardControlCentre() {
   const handleOpenRoleModal = (workspace) => {
     setEditingWorkspace(workspace);
     setSelectedRoles([...workspace.authorized_roles]);
+    setConfirmProtectedGrant(false);
   };
 
   const handleToggleRole = (roleKey) => {
@@ -392,6 +394,21 @@ export default function DashboardControlCentre() {
               })}
             </div>
 
+            {editingWorkspace.has_protected_data && (
+              <div className="pt-2 border-t border-border flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="confirm-protected"
+                  checked={confirmProtectedGrant}
+                  onChange={(e) => setConfirmProtectedGrant(e.target.checked)}
+                  className="mt-0.5 rounded border-muted-foreground/40 text-primary focus:ring-primary h-4 w-4"
+                />
+                <label htmlFor="confirm-protected" className="text-xs text-foreground cursor-pointer">
+                  <strong>Explicit Authorization Confirmation:</strong> I confirm that selected roles require access to confidential community, child welfare, clinical, or governance records.
+                </label>
+              </div>
+            )}
+
             <DialogFooter className="flex items-center justify-between sm:justify-between w-full">
               <div className="text-xs text-muted-foreground">
                 {selectedRoles.length} role{selectedRoles.length !== 1 ? "s" : ""} selected
@@ -400,7 +417,11 @@ export default function DashboardControlCentre() {
                 <Button variant="ghost" onClick={() => setEditingWorkspace(null)} disabled={savingRoles}>
                   Cancel
                 </Button>
-                <Button onClick={handleSaveRoles} disabled={savingRoles} className="gap-2">
+                <Button
+                  onClick={handleSaveRoles}
+                  disabled={savingRoles || (editingWorkspace.has_protected_data && !confirmProtectedGrant)}
+                  className="gap-2"
+                >
                   {savingRoles && <Loader2 className="w-4 h-4 animate-spin" />}
                   Save Role Permissions
                 </Button>

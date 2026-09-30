@@ -1360,8 +1360,6 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.CALENDAR_READ_TEAM,
         Permissions.CALENDAR_WRITE,
         Permissions.NOTIFICATION_READ,
-        Permissions.DOCUMENT_READ,
-        Permissions.DOCUMENT_UPLOAD,
     ],
 }
 

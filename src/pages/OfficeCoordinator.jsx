@@ -1031,17 +1031,13 @@ export default function OfficeCoordinator() {
           </DialogHeader>
           <form onSubmit={handleCreateRoom} className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label className="text-xs">Room / Space Name</Label>
-              <Select value={roomForm.room_name} onValueChange={(v) => setRoomForm({ ...roomForm, room_name: v })}>
-                <SelectTrigger><SelectValue placeholder="Choose room..." /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Main Boardroom">Main Boardroom (Capacity 20)</SelectItem>
-                  <SelectItem value="Meeting Room A">Meeting Room A (Capacity 8)</SelectItem>
-                  <SelectItem value="Meeting Room B">Meeting Room B (Capacity 6)</SelectItem>
-                  <SelectItem value="Family Circle Room">Family Circle Room (Ceremonial)</SelectItem>
-                  <SelectItem value="Multi-Purpose Hall">Multi-Purpose Hall (Capacity 50)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label className="text-xs">Room / Resource Name</Label>
+              <Input
+                placeholder="Enter configured room or facility space name"
+                value={roomForm.room_name}
+                onChange={(e) => setRoomForm({ ...roomForm, room_name: e.target.value })}
+                required
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Meeting Title</Label>

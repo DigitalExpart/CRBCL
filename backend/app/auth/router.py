@@ -6,7 +6,7 @@ import json
 import logging
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
@@ -293,6 +293,29 @@ async def change_password(
     )
 
 
+VALID_PLATFORM_ROLES: frozenset[str] = frozenset({
+    "ceo",
+    "executive_director",
+    "director_manager",
+    "supervisor",
+    "caseworker",
+    "case_aide",
+    "finance_staff",
+    "hr_staff",
+    "it_admin",
+    "cultural_worker",
+    "clinical_staff",
+    "external_worker",
+    "resource_director",
+    "resource_supervisor",
+    "resource_worker",
+    "front_desk",
+    "board_member",
+    "navigator",
+    "office_coordinator",
+})
+
+
 @router.post("/register", response_model=RegisterResponse)
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     auth = AuthService(db)
@@ -303,11 +326,28 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
             detail={"error": {"code": "EMAIL_EXISTS", "message": "An account with this email already exists"}},
         )
 
+    requested_role = (body.requested_role or "caseworker").strip().lower()
+    if requested_role not in VALID_PLATFORM_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": {"code": "INVALID_ROLE", "message": f"Requested role '{requested_role}' is not a valid platform role"}},
+        )
+
+    role_check = await db.execute(select(Role).where(Role.key == requested_role, Role.is_active.is_(True)))
+    if not role_check.scalar_one_or_none():
+        total_roles_count = (await db.execute(select(func.count(Role.id)))).scalar_one()
+        if total_roles_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": {"code": "INVALID_ROLE", "message": f"Requested role '{requested_role}' is not active or recognized"}},
+            )
+
     full_name = body.full_name or f"{body.first_name} {body.last_name}".strip()
     user = await auth.register_user(
         body.email,
         body.password,
         full_name=full_name,
+        requested_role=requested_role,
         department=body.department or None,
     )
 
@@ -323,12 +363,13 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
         admin_ids = set(admin_res.scalars().all())
 
         dept_label = f" ({body.department})" if body.department else ""
+        role_label = requested_role.replace("_", " ").title()
         for admin_id in admin_ids:
             notif = Notification(
                 recipient_id=admin_id,
                 type="STAFF_REGISTRATION_REQUEST",
                 title="New Staff Sign-Up Request",
-                message=f"{full_name or body.email}{dept_label} has signed up and is awaiting access verification.",
+                message=f"{full_name or body.email}{dept_label} has requested the '{role_label}' role and is awaiting administrative approval.",
                 priority="HIGH",
                 related_entity_type="user",
                 related_entity_id=user.id,

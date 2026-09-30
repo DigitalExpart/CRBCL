@@ -100,7 +100,8 @@ export default function AdminDashboard() {
   }, [loadUsers, checkHealth]);
 
   const handleApprove = async (userId) => {
-    const roleKey = selectedRole[userId] || "caseworker";
+    const pendingTarget = users.find((u) => u.id === userId);
+    const roleKey = selectedRole[userId] || pendingTarget?.requested_role || "caseworker";
     setApprovingId(userId);
     try {
       await api.patch(`/api/v1/users/${userId}/approve?role_key=${roleKey}`);
@@ -538,6 +539,7 @@ export default function AdminDashboard() {
                       <th className="text-left font-medium px-4 py-3">Applicant Name</th>
                       <th className="text-left font-medium px-4 py-3">Work Email</th>
                       <th className="text-left font-medium px-4 py-3">Department</th>
+                      <th className="text-left font-medium px-4 py-3">Requested Role</th>
                       <th className="text-left font-medium px-4 py-3">Assign Role</th>
                       <th className="text-right font-medium px-4 py-3">Actions</th>
                     </tr>
@@ -558,8 +560,13 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                            {u.requested_role ? u.requested_role.replace("_", " ").toUpperCase() : "CASEWORKER"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
                           <select
-                            value={selectedRole[u.id] || "caseworker"}
+                            value={selectedRole[u.id] || u.requested_role || "caseworker"}
                             onChange={(e) => setSelectedRole({ ...selectedRole, [u.id]: e.target.value })}
                             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-primary font-medium"
                           >

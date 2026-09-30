@@ -16,8 +16,7 @@ from app.auth.security import (
     verify_password,
 )
 from app.core.config import get_settings
-from app.models.role import Role, UserRole
-from app.models.user import Session, User
+from app.models.user import Session, User, UserPreference
 
 
 def _calculate_lockout_duration(failed_attempts: int) -> timedelta | None:
@@ -182,10 +181,15 @@ class AuthService:
         email: str,
         password: str,
         full_name: str = "",
-        default_role_key: str = "caseworker",
+        requested_role: str | None = None,
         department: str | None = None,
     ) -> User:
-        """Create a new user account and assign default role."""
+        """Create a new pending user account and record requested role.
+
+        Under CRBCL data-governance rules, newly registered users remain unverified
+        and receive NO active role capabilities until an authorized IT Administrator
+        explicitly reviews and approves the account in the Admin Portal.
+        """
         normalized = email.strip().lower()
         user = User(
             email=email.strip(),
@@ -199,16 +203,10 @@ class AuthService:
         self.db.add(user)
         await self.db.flush()
 
-        # Assign default caseworker role
-        role_res = await self.db.execute(select(Role).where(Role.key == default_role_key, Role.is_active.is_(True)))
-        role = role_res.scalar_one_or_none()
-        if not role:
-            fallback_res = await self.db.execute(select(Role).where(Role.is_active.is_(True)).limit(1))
-            role = fallback_res.scalar_one_or_none()
-
-        if role:
-            user_role = UserRole(user_id=user.id, role_id=role.id)
-            self.db.add(user_role)
+        # Persist requested_role in preferences for administrative approval review
+        if requested_role:
+            pref = UserPreference(user_id=user.id, key="requested_role", value=requested_role)
+            self.db.add(pref)
             await self.db.flush()
 
         return user

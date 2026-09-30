@@ -48,6 +48,7 @@ class UserResponse(BaseModel):
     is_verified: bool
     roles: list[str] = []
     team_access: list[str] = []
+    requested_role: str | None = None
     created_at: datetime
     updated_at: datetime
 

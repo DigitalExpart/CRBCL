@@ -446,8 +446,9 @@ class AuthService {
     window.location.href = `${base}/api/v1/auth/oauth/${provider}?returnTo=${encodeURIComponent(redirectUrl)}`;
   }
 
-  async register({ email, password, firstName, lastName, fullName, department }) {
+  async register({ email, password, firstName, lastName, fullName, department, requestedRole, requested_role }) {
     const computedFullName = fullName || `${firstName || ''} ${lastName || ''}`.trim();
+    const roleReq = requested_role || requestedRole || 'caseworker';
     const res = await this.apiClient.fetch('/api/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -458,6 +459,7 @@ class AuthService {
         last_name: lastName || '',
         full_name: computedFullName,
         department: department || '',
+        requested_role: roleReq,
       }),
     });
     if (!res.ok) {

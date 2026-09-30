@@ -33,6 +33,8 @@ from app.models.operations import (
     VehicleKeyLog,
     VehicleReservation,
 )
+from app.models.user import UserPreference
+from app.services.email_service import EmailService
 
 # ============================================================================
 # ADMIN DASHBOARD CONTROL CENTRE TESTS
@@ -226,6 +228,19 @@ async def test_it_admin_denied_cases_and_clients(client: AsyncClient, it_admin_u
 
     res_client = await client.get("/api/v1/clients", headers=it_admin_user["headers"])
     assert res_client.status_code == 403
+
+
+@pytest.mark.anyio
+async def test_it_admin_denied_medical_and_clinical_content(client: AsyncClient, it_admin_user: dict):
+    """IT Admin does NOT inherit clinical_note.read or client.medical.read access."""
+    fake_client_id = uuid.uuid4()
+    res_clin = await client.get(
+        f"/api/v1/clinical-notes/client/{fake_client_id}", headers=it_admin_user["headers"]
+    )
+    assert res_clin.status_code == 403
+
+    res_med = await client.get(f"/api/v1/clients/{fake_client_id}/medical", headers=it_admin_user["headers"])
+    assert res_med.status_code == 403
 
 
 @pytest.mark.anyio
@@ -572,3 +587,225 @@ async def test_zero_fuel_pin_storage_discipline(client: AsyncClient, office_coor
     assert res.status_code == 201
     data = res.json()
     assert "fuel_pin" not in data
+
+
+# ============================================================================
+# REMEDIATION TESTS: REGISTRATION ROLE SELECTION, PRIVACY & APPROVAL GATING
+# ============================================================================
+
+@pytest.mark.anyio
+async def test_staff_registration_requested_role_flow_and_admin_approval(
+    client: AsyncClient, it_admin_user: dict, db_session: AsyncSession
+):
+    """Staff can request Office Coordinator at signup; account remains pending until approved."""
+    test_email = f"applicant.{uuid.uuid4().hex[:8]}@crbcl.ca"
+
+    # 1. Applicant registers requesting office_coordinator role
+    reg_res = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": test_email,
+            "password": "SecurePassword123!",
+            "first_name": "Applicant",
+            "last_name": "Coordinator",
+            "department": "Operations",
+            "requested_role": "office_coordinator",
+        },
+    )
+    assert reg_res.status_code == 200
+    user_id = reg_res.json()["user_id"]
+
+    # 2. Confirm preference record stores requested_role and user is unverified
+    pref_res = await db_session.execute(
+        select(UserPreference).where(
+            UserPreference.user_id == uuid.UUID(user_id),
+            UserPreference.key == "requested_role",
+        )
+    )
+    pref = pref_res.scalar_one_or_none()
+    assert pref is not None
+    assert pref.value == "office_coordinator"
+
+    # Pre-OTP verification check in directory: unverified, zero roles assigned
+    pre_list = await client.get("/api/v1/users", headers=it_admin_user["headers"])
+    assert pre_list.status_code == 200
+    pre_user = next((u for u in pre_list.json()["items"] if u["id"] == user_id), None)
+    assert pre_user is not None
+    assert pre_user["is_verified"] is False
+    assert pre_user["roles"] == []
+    assert pre_user["requested_role"] == "office_coordinator"
+
+    # 3. Complete email verification via OTP
+    svc = EmailService(db_session)
+    valid_code = await svc.create_and_send_verification_code(test_email)
+    await db_session.commit()
+
+    otp_res = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"email": test_email, "otp_code": valid_code},
+    )
+    assert otp_res.status_code == 200
+    applicant_token = otp_res.json()["access_token"]
+    applicant_headers = {"Authorization": f"Bearer {applicant_token}"}
+
+    # 4. Critical Security Check: User does NOT have active office_coordinator role yet
+    assert "office_coordinator" not in otp_res.json()["user"]["roles"]
+    assert otp_res.json()["user"]["roles"] == []
+
+    # 5. User cannot self-activate or access operational endpoints
+    ops_res = await client.get("/api/v1/operations/overview", headers=applicant_headers)
+    assert ops_res.status_code == 403
+
+    # 6. User appears in Admin directory with requested_role and zero roles (pending admin approval)
+    list_res = await client.get("/api/v1/users", headers=it_admin_user["headers"])
+    assert list_res.status_code == 200
+    matching_user = next((u for u in list_res.json()["items"] if u["id"] == user_id), None)
+    assert matching_user is not None
+    assert matching_user["requested_role"] == "office_coordinator"
+    assert matching_user["roles"] == []
+
+    # 7. Admin approves user with office_coordinator role
+    approve_res = await client.patch(
+        f"/api/v1/users/{user_id}/approve?role_key=office_coordinator",
+        headers=it_admin_user["headers"],
+    )
+    assert approve_res.status_code == 200
+    assert "office_coordinator" in approve_res.json()["roles"]
+    assert approve_res.json()["is_verified"] is True
+
+    # 8. User can now log in and access Office Coordinator workspace
+    reauth_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": test_email, "password": "SecurePassword123!"},
+    )
+    assert reauth_res.status_code == 200
+    approved_token = reauth_res.json()["access_token"]
+    approved_headers = {"Authorization": f"Bearer {approved_token}"}
+
+    allowed_res = await client.get("/api/v1/operations/overview", headers=approved_headers)
+    assert allowed_res.status_code == 200
+
+
+@pytest.mark.anyio
+async def test_registration_rejects_invalid_role_key(client: AsyncClient):
+    """Registration fails with HTTP 400 if an unknown role key is requested."""
+    res = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": f"hacker.{uuid.uuid4().hex[:8]}@crbcl.ca",
+            "password": "SecurePassword123!",
+            "first_name": "Bad",
+            "last_name": "Actor",
+            "department": "Operations",
+            "requested_role": "super_root_admin_hacker",
+        },
+    )
+    assert res.status_code == 400
+    assert res.json()["error"]["code"] == "INVALID_ROLE"
+
+
+@pytest.mark.anyio
+async def test_registration_privilege_escalation_prevented(
+    client: AsyncClient, it_admin_user: dict, db_session: AsyncSession
+):
+    """Requesting it_admin does not confer administrative access upon registration."""
+    test_email = f"exploit.{uuid.uuid4().hex[:8]}@crbcl.ca"
+    reg_res = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": test_email,
+            "password": "SecurePassword123!",
+            "first_name": "Privilege",
+            "last_name": "Escalator",
+            "department": "IT",
+            "requested_role": "it_admin",
+        },
+    )
+    assert reg_res.status_code == 200
+
+    svc = EmailService(db_session)
+    valid_code = await svc.create_and_send_verification_code(test_email)
+    await db_session.commit()
+
+    otp_res = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"email": test_email, "otp_code": valid_code},
+    )
+    assert otp_res.status_code == 200
+    token = otp_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Verify user does NOT have it_admin role
+    assert "it_admin" not in otp_res.json()["user"]["roles"]
+
+    # Attempt to access Admin Dashboard Control Centre -> 403 Forbidden
+    ctrl_res = await client.get("/api/v1/admin/dashboards", headers=headers)
+    assert ctrl_res.status_code == 403
+
+
+@pytest.mark.anyio
+async def test_office_coordinator_zero_document_privilege(
+    client: AsyncClient, office_coordinator_user: dict
+):
+    """Office Coordinator has NO broad document read access and cannot access clinical/board/medical endpoints."""
+    fake_client_id = uuid.uuid4()
+    # Clinical notes access denied
+    res_clin = await client.get(
+        f"/api/v1/clinical-notes/client/{fake_client_id}", headers=office_coordinator_user["headers"]
+    )
+    assert res_clin.status_code == 403
+
+    # Board governance summary denied
+    res_board = await client.get("/api/v1/board/summary", headers=office_coordinator_user["headers"])
+    assert res_board.status_code == 403
+
+    # Client medical profile denied
+    res_med = await client.get(f"/api/v1/clients/{fake_client_id}/medical", headers=office_coordinator_user["headers"])
+    assert res_med.status_code == 403
+
+
+@pytest.mark.anyio
+async def test_supervisor_denied_front_desk_narratives(client: AsyncClient, supervisor_user: dict):
+    """Supervisor does NOT automatically receive Front Desk inquiry narratives."""
+    res = await client.get("/api/v1/front-desk/submissions", headers=supervisor_user["headers"])
+    assert res.status_code == 403
+
+
+@pytest.mark.anyio
+async def test_front_desk_toggle_separates_availability_from_permissions(
+    client: AsyncClient, it_admin_user: dict, db_session: AsyncSession
+):
+    """Disabling Front Desk enforces workspace availability without mutating roles, and IT Admin never gains public_intake.read."""
+    # 1. IT Admin attempts to read Front Desk -> 403 (no public_intake.read)
+    res_admin = await client.get("/api/v1/front-desk/submissions", headers=it_admin_user["headers"])
+    assert res_admin.status_code == 403
+    assert res_admin.json()["error"]["code"] == "PERMISSION_DENIED"
+
+    # 2. Admin disables Front Desk
+    disable_res = await client.patch(
+        "/api/v1/admin/dashboards/front_desk/status",
+        headers=it_admin_user["headers"],
+        json={"is_enabled": False, "reason": "System maintenance"},
+    )
+    assert disable_res.status_code == 200
+    assert disable_res.json()["is_enabled"] is False
+
+    # 3. Direct probe returns disabled
+    probe_res = await client.get(
+        "/api/v1/dashboards/front_desk/availability", headers=it_admin_user["headers"]
+    )
+    assert probe_res.status_code == 200
+    assert probe_res.json()["is_enabled"] is False
+
+    # 4. IT Admin re-enables Front Desk
+    enable_res = await client.patch(
+        "/api/v1/admin/dashboards/front_desk/status",
+        headers=it_admin_user["headers"],
+        json={"is_enabled": True, "reason": "Maintenance complete"},
+    )
+    assert enable_res.status_code == 200
+    assert enable_res.json()["is_enabled"] is True
+
+    # 5. IT Admin STILL does not have public_intake.read
+    res_admin_after = await client.get("/api/v1/front-desk/submissions", headers=it_admin_user["headers"])
+    assert res_admin_after.status_code == 403

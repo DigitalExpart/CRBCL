@@ -28,6 +28,7 @@ class RegisterRequest(BaseModel):
     last_name: str = Field(default="", max_length=128)
     full_name: str = Field(default="", max_length=255)
     department: str = Field(default="", max_length=128)
+    requested_role: str | None = Field(default=None, max_length=50)
 
 
 class RegisterResponse(BaseModel):
