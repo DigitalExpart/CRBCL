@@ -12,14 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { api } from "@/api";
 import {
   User,
-  Users,
   LogOut,
   ChevronDown,
-  Shield,
-  Crown,
-  TrendingUp,
-  Building,
-  LayoutDashboard,
 } from "lucide-react";
 
 export default function UserNav() {
@@ -33,7 +27,7 @@ export default function UserNav() {
       if (stored) {
         setUser(JSON.parse(stored));
       }
-    } catch (e) {}
+    } catch {}
 
     // 2. Fetch fresh user state from server
     api.auth
@@ -70,10 +64,6 @@ export default function UserNav() {
     normalizedRoles.includes("it_admin") ||
     normalizedRoles.includes("administrator") ||
     normalizedRoles.includes("system administrator");
-
-  const isCEO = normalizedRoles.includes("ceo");
-  const isExecutive = normalizedRoles.includes("executive_director");
-  const isDirector = normalizedRoles.includes("director_manager");
 
   const getInitials = (name, email) => {
     if (name && name.trim()) {
@@ -178,61 +168,6 @@ export default function UserNav() {
           <span>My Profile & Settings</span>
         </DropdownMenuItem>
 
-        {isDirector && (
-          <DropdownMenuItem
-            onClick={() => navigate("/director")}
-            className="cursor-pointer"
-          >
-            <Building className="mr-2 h-4 w-4 text-amber-600" />
-            <span>Director's Dashboard</span>
-          </DropdownMenuItem>
-        )}
-
-        {isExecutive && (
-          <DropdownMenuItem
-            onClick={() => navigate("/executive")}
-            className="cursor-pointer"
-          >
-            <TrendingUp className="mr-2 h-4 w-4 text-indigo-600" />
-            <span>Executive Dashboard</span>
-          </DropdownMenuItem>
-        )}
-
-        {isCEO && (
-          <DropdownMenuItem
-            onClick={() => navigate("/ceo")}
-            className="cursor-pointer"
-          >
-            <Crown className="mr-2 h-4 w-4 text-emerald-600" />
-            <span>CEO Dashboard</span>
-          </DropdownMenuItem>
-        )}
-
-        {isItAdmin && (
-          <DropdownMenuItem
-            onClick={() => navigate("/admin")}
-            className="cursor-pointer"
-          >
-            <Shield className="mr-2 h-4 w-4 text-blue-600" />
-            <span>Admin & IT Portal</span>
-          </DropdownMenuItem>
-        )}
-
-        <DropdownMenuItem
-          onClick={() => navigate("/")}
-          className="cursor-pointer"
-        >
-          <LayoutDashboard className="mr-2 h-4 w-4 text-muted-foreground" />
-          <span>Staff Dashboard</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem
-          onClick={() => navigate("/teams")}
-          className="cursor-pointer"
-        >
-          <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-          <span>Team Dashboards</span>
-        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
