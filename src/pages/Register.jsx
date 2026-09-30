@@ -220,7 +220,7 @@ export default function Register() {
 
         {/* Department Selection */}
         <div className="space-y-2">
-          <Label htmlFor="department">Department</Label>
+          <Label htmlFor="department">Department / Work Unit</Label>
           <div className="relative">
             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
             <select
@@ -230,6 +230,7 @@ export default function Register() {
               className="flex h-12 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               required
             >
+              <option value="" disabled>Select Department / Work Area...</option>
               {DEPARTMENTS.map((dept) => (
                 <option key={dept} value={dept}>
                   {dept}
@@ -242,7 +243,7 @@ export default function Register() {
         {/* Requested Staff Role */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="requestedRole">Requested Staff Role</Label>
+            <Label htmlFor="requestedRole">Requested Staff Role / Position</Label>
             <span className="text-[11px] text-muted-foreground">Subject to Admin approval</span>
           </div>
           <div className="relative">
@@ -262,7 +263,7 @@ export default function Register() {
             </select>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Role selection will be reviewed by an IT Administrator. Account remains pending until approval.
+            Select your staff position (e.g. Front Desk, Office Coordinator, Caseworker, Supervisor). Role selection is reviewed and approved by an IT Administrator.
           </p>
         </div>
 

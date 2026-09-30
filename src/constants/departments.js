@@ -17,6 +17,8 @@ export const DEPARTMENTS = [
   "Finance & Administration",
   "Human Resources",
   "Operations & Facilities",
+  "Front Desk / First Impression",
+  "Intake & Referrals",
   "Housing (Home Fire)",
   "IT & Systems",
   "Communications",
