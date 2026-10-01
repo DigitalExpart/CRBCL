@@ -219,14 +219,14 @@ export default function Cases() {
             <table className="w-full text-sm text-left">
               <thead className="bg-muted/50 text-muted-foreground font-medium text-xs border-b border-border">
                 <tr>
-                  <th className="py-3.5 px-4">Case #</th>
-                  <th className="py-3.5 px-4">Title & Description</th>
-                  <th className="py-3.5 px-4">Type / Stage</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Assigned Worker</th>
-                  <th className="py-3.5 px-4">Priority / Risk</th>
-                  <th className="py-3.5 px-4">Intake Date</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Case #</th>
+                  <th className="py-3.5 px-4 min-w-[220px]">Title & Description</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Type / Stage</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Assigned Worker</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Priority / Risk</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Intake Date</th>
+                  <th className="py-3.5 px-4 text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
@@ -235,7 +235,7 @@ export default function Cases() {
                     key={c.id}
                     className="hover:bg-muted/30 transition-colors group cursor-pointer"
                   >
-                    <td className="py-3.5 px-4 font-mono font-medium text-primary">
+                    <td className="py-3.5 px-4 font-mono font-medium text-primary whitespace-nowrap">
                       <Link to={`/cases/${c.id}`} className="hover:underline">
                         {c.case_number || "Draft File"}
                       </Link>
@@ -252,47 +252,54 @@ export default function Cases() {
                         )}
                       </Link>
                     </td>
-                    <td className="py-3.5 px-4 space-y-1">
-                      <Badge variant="outline" className="text-xs">
-                        {c.case_type || "Standard"}
-                      </Badge>
-                      {c.stage && (
-                        <div className="text-[11px] text-muted-foreground font-mono">
-                          {c.stage}
-                        </div>
-                      )}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1 items-start">
+                        <Badge variant="outline" className="text-xs font-normal">
+                          {c.case_type || "Standard"}
+                        </Badge>
+                        {c.stage && (
+                          <div className="text-[11px] text-muted-foreground font-mono">
+                            {c.stage}
+                          </div>
+                        )}
+                      </div>
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <StatusBadge status={c.status || "Open"} />
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 text-xs text-foreground">
                         <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
                         <span>{c.assigned_worker_name || "Unassigned"}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 space-x-1.5">
-                      {c.priority && (
-                        <Badge
-                          variant="outline"
-                          className={`text-[11px] ${getPriorityColor(c.priority)}`}
-                        >
-                          {c.priority}
-                        </Badge>
-                      )}
-                      {c.risk_level && (
-                        <Badge
-                          variant="outline"
-                          className={`text-[11px] ${getPriorityColor(c.risk_level)}`}
-                        >
-                          {c.risk_level} Risk
-                        </Badge>
-                      )}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 flex-nowrap">
+                        {c.priority && (
+                          <Badge
+                            variant="outline"
+                            className={`text-[11px] whitespace-nowrap font-medium px-2 py-0.5 ${getPriorityColor(c.priority)}`}
+                          >
+                            {c.priority}
+                          </Badge>
+                        )}
+                        {c.risk_level && (
+                          <Badge
+                            variant="outline"
+                            className={`text-[11px] whitespace-nowrap font-medium px-2 py-0.5 ${getPriorityColor(c.risk_level)}`}
+                          >
+                            {c.risk_level} Risk
+                          </Badge>
+                        )}
+                        {!c.priority && !c.risk_level && (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </div>
                     </td>
-                    <td className="py-3.5 px-4 text-xs text-muted-foreground">
+                    <td className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
                       {c.intake_date || (c.created_at ? new Date(c.created_at).toLocaleDateString() : "—")}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
                       <Link to={`/cases/${c.id}`}>
                         <Button variant="ghost" size="sm" className="h-8 text-xs">
                           Open 360°
