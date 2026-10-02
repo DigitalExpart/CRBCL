@@ -174,16 +174,11 @@ class PersonService:
         user_roles_res = await self.db.execute(user_roles_stmt)
         user_roles = set(user_roles_res.scalars().all())
 
-        is_admin = (
-            current_user.email == "admin@crbcl.ca"
-            or "admin" in (current_user.email or "").lower()
-            or getattr(current_user, "is_system", False)
-            or "admin" in user_roles
-            or "it_admin" in user_roles
-        )
-        if is_admin:
-            return user_roles
-
+        if "it_admin" in user_roles and not any(r in user_roles for r in ["executive_director", "ceo"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": {"code": "ROLE_ACCESS_DENIED", "message": f"IT Administrators cannot {action_label} Client records."}},
+            )
         if "board_member" in user_roles and not any(r in user_roles for r in ["executive_director", "ceo"]):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
