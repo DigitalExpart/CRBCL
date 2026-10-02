@@ -74,6 +74,11 @@ class Settings(BaseSettings):
     # ── Front Desk / Google Form Webhook ─────────────────────
     front_desk_webhook_secret: str = "crbcl-frontdesk-secret-key"
 
+    # ── Speech-to-Text Transcription (Privacy-Safe Provider Abstraction) ──
+    speech_to_text_enabled: bool = False
+    speech_provider: Literal["disabled", "fake", "local"] = "disabled"
+    speech_max_file_size_bytes: int = 10 * 1024 * 1024  # 10 MB conservative technical limit
+
     # ── Derived helpers ──────────────────────────────────────
     @property
     def is_development(self) -> bool:

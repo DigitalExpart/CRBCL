@@ -95,4 +95,39 @@ export const caseNotesApi = {
     return await res.json();
   },
   exportCsvUrl: (caseId) => `/api/v1/cases/${caseId}/notes/export`,
+
+  // Speech-to-Text Transcription for Drafting
+  getTranscriptionStatus: async (caseId) => {
+    const res = await api.fetch(`/api/v1/cases/${caseId}/notes/transcribe/status`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || err?.detail?.error?.message || 'Failed to check speech service status');
+    }
+    return await res.json();
+  },
+
+  transcribeAudio: async (caseId, audioBlob, language = 'en') => {
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'recording.webm');
+    formData.append('language', language);
+
+    const res = await api.fetch(`/api/v1/cases/${caseId}/notes/transcribe`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        (res.status === 503
+          ? 'Speech-to-text is unavailable until an approved transcription provider is configured.'
+          : 'Transcription failed');
+      const errorObj = new Error(msg);
+      errorObj.status = res.status;
+      errorObj.code = err?.error?.code || err?.detail?.error?.code;
+      throw errorObj;
+    }
+    return await res.json();
+  },
 };

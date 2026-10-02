@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -24,6 +24,7 @@ from app.schemas.case_management import (
 from app.schemas.common import PaginatedResponse, PaginationMeta
 from app.services.case_note_service import CaseNoteService
 from app.services.case_service import CaseService
+from app.services.speech_service import SpeechService
 
 router = APIRouter(tags=["Case Notes"])
 
@@ -218,3 +219,64 @@ async def export_case_notes(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename=case_{case_id}_notes.csv"},
     )
+
+
+@router.get("/cases/{case_id}/notes/transcribe/status")
+async def get_case_note_transcription_status(
+    case_id: uuid.UUID,
+    user: User = Depends(require_permission(Permissions.CASE_NOTE_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return availability and configuration status of the speech-to-text service for Case Notes."""
+    case_service = CaseService(db)
+    await case_service.get_case_or_404(case_id, user)
+    service = SpeechService(db)
+    return service.get_status()
+
+
+@router.post("/cases/{case_id}/notes/transcribe")
+async def transcribe_case_note_audio(
+    case_id: uuid.UUID,
+    response: Response,
+    file: UploadFile = File(...),
+    language: str = Form(default="en"),
+    user: User = Depends(require_permission(Permissions.CASE_NOTE_CREATE)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Transcribe in-memory audio recording for drafting assistance in a Case Note.
+
+    STRICT ARCHITECTURAL SEPARATION:
+    Transcribe != Save Case Note.
+    This endpoint:
+    - NEVER creates, updates, signs, finalizes, or publishes a Case Note.
+    - NEVER retains or persists raw audio.
+    - NEVER persists transcript narrative in audit logs.
+    - Requires case-level authorization and CASE_NOTE_CREATE permission.
+    """
+    # Defensive role boundary check: pure administrative or non-case roles cannot transcribe
+    user_role_keys = {ur.role.key for ur in user.roles if ur.role and ur.role.is_active}
+    prohibited_roles_alone = {"it_admin", "office_coordinator", "front_desk", "board_member"}
+    if user_role_keys and user_role_keys.issubset(prohibited_roles_alone):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": {"code": "ROLE_ACCESS_DENIED", "message": "Role is not authorized for Case Note operations."}},
+        )
+
+    # In-memory read of uploaded audio buffer
+    audio_bytes = await file.read()
+    content_type = file.content_type or "application/octet-stream"
+
+    speech_service = SpeechService(db)
+    result = await speech_service.transcribe_case_note_audio(
+        case_id=case_id,
+        audio_bytes=audio_bytes,
+        content_type=content_type,
+        current_user=user,
+        language=language,
+    )
+
+    # Privacy controls: Prevent proxy or shared cache storage of transcription result
+    response.headers["Cache-Control"] = "no-store, private"
+    response.headers["Pragma"] = "no-cache"
+
+    return result

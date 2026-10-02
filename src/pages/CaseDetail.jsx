@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CaseFormDialog from "@/components/cases/CaseFormDialog";
 import AddPersonToCaseModal from "@/components/cases/AddPersonToCaseModal";
+import CaseNoteDictationControl from "@/components/cases/CaseNoteDictationControl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PlansTab from "@/components/plans/PlansTab";
 import ActiveEffortsTab from "@/components/placements/ActiveEffortsTab";
@@ -1348,8 +1349,19 @@ export default function CaseDetail() {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Clinical Narrative *</label>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-medium text-muted-foreground">Clinical Narrative *</label>
+                <CaseNoteDictationControl
+                  caseId={id}
+                  onTranscriptReady={(transcript) => {
+                    setNoteForm((prev) => ({
+                      ...prev,
+                      content: prev.content ? `${prev.content}\n\n${transcript}` : transcript,
+                    }));
+                  }}
+                />
+              </div>
               <Textarea
                 placeholder="Narrative summary of discussion, observations, cultural elements, and agreed action items…"
                 value={noteForm.content}
@@ -1404,8 +1416,19 @@ export default function CaseDetail() {
                 onChange={(e) => setAddendumForm({ ...addendumForm, reason: e.target.value })}
               />
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Addendum Narrative *</label>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-medium text-muted-foreground">Addendum Narrative *</label>
+                <CaseNoteDictationControl
+                  caseId={id}
+                  onTranscriptReady={(transcript) => {
+                    setAddendumForm((prev) => ({
+                      ...prev,
+                      content: prev.content ? `${prev.content}\n\n${transcript}` : transcript,
+                    }));
+                  }}
+                />
+              </div>
               <Textarea
                 placeholder="Additional facts or corrections…"
                 value={addendumForm.content}
