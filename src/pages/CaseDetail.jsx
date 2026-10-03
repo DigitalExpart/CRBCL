@@ -21,6 +21,7 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import CaseFormDialog from "@/components/cases/CaseFormDialog";
 import AddPersonToCaseModal from "@/components/cases/AddPersonToCaseModal";
 import CaseNoteDictationControl from "@/components/cases/CaseNoteDictationControl";
+import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PlansTab from "@/components/plans/PlansTab";
 import ActiveEffortsTab from "@/components/placements/ActiveEffortsTab";
@@ -33,6 +34,11 @@ export default function CaseDetail() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "snapshot";
+
+  const { user } = useAuth();
+  const userPerms = Array.isArray(user?.permissions) ? user.permissions.map((p) => String(p).toLowerCase()) : [];
+  const canCreateCaseNote = userPerms.includes("case_note.create");
+  const canAddAddendum = userPerms.includes("case_note.addendum");
 
   const [caseData, setCaseData] = useState(null);
   const [snapshot, setSnapshot] = useState(null);
@@ -789,7 +795,7 @@ export default function CaseDetail() {
                         >
                           <Lock className="w-3 h-3 mr-1" /> Lock Note
                         </Button>
-                      ) : (
+                      ) : canAddAddendum ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -798,7 +804,7 @@ export default function CaseDetail() {
                         >
                           <Plus className="w-3 h-3 mr-1" /> Add Addendum
                         </Button>
-                      )}
+                      ) : null}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4 text-sm text-foreground">
@@ -1352,15 +1358,18 @@ export default function CaseDetail() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
                 <label className="text-xs font-medium text-muted-foreground">Clinical Narrative *</label>
-                <CaseNoteDictationControl
-                  caseId={id}
-                  onTranscriptReady={(transcript) => {
-                    setNoteForm((prev) => ({
-                      ...prev,
-                      content: prev.content ? `${prev.content}\n\n${transcript}` : transcript,
-                    }));
-                  }}
-                />
+                {canCreateCaseNote && (
+                  <CaseNoteDictationControl
+                    caseId={id}
+                    purpose="case_note"
+                    onTranscriptReady={(transcript) => {
+                      setNoteForm((prev) => ({
+                        ...prev,
+                        content: prev.content ? `${prev.content}\n\n${transcript}` : transcript,
+                      }));
+                    }}
+                  />
+                )}
               </div>
               <Textarea
                 placeholder="Narrative summary of discussion, observations, cultural elements, and agreed action items…"
@@ -1419,15 +1428,19 @@ export default function CaseDetail() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
                 <label className="text-xs font-medium text-muted-foreground">Addendum Narrative *</label>
-                <CaseNoteDictationControl
-                  caseId={id}
-                  onTranscriptReady={(transcript) => {
-                    setAddendumForm((prev) => ({
-                      ...prev,
-                      content: prev.content ? `${prev.content}\n\n${transcript}` : transcript,
-                    }));
-                  }}
-                />
+                {canAddAddendum && (
+                  <CaseNoteDictationControl
+                    caseId={id}
+                    purpose="addendum"
+                    noteId={showAddendumModal}
+                    onTranscriptReady={(transcript) => {
+                      setAddendumForm((prev) => ({
+                        ...prev,
+                        content: prev.content ? `${prev.content}\n\n${transcript}` : transcript,
+                      }));
+                    }}
+                  />
+                )}
               </div>
               <Textarea
                 placeholder="Additional facts or corrections…"

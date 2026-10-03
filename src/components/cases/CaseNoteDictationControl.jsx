@@ -19,6 +19,8 @@ export default function CaseNoteDictationControl({
   onTranscriptReady,
   disabled = false,
   language = 'en',
+  purpose = 'case_note',
+  noteId = null,
 }) {
   const [status, setStatus] = useState('idle'); // idle | requesting | recording | processing | success | error
   const [errorMessage, setErrorMessage] = useState('');
@@ -126,7 +128,10 @@ export default function CaseNoteDictationControl({
 
         setStatus('processing');
         try {
-          const result = await caseNotesApi.transcribeAudio(caseId, audioBlob, language);
+          const result = await caseNotesApi.transcribeAudio(caseId, audioBlob, language, {
+            purpose,
+            noteId,
+          });
           if (result?.transcript && onTranscriptReady) {
             onTranscriptReady(result.transcript);
             setStatus('success');

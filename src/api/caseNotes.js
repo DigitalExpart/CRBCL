@@ -106,10 +106,16 @@ export const caseNotesApi = {
     return await res.json();
   },
 
-  transcribeAudio: async (caseId, audioBlob, language = 'en') => {
+  transcribeAudio: async (caseId, audioBlob, language = 'en', options = {}) => {
     const formData = new FormData();
     formData.append('file', audioBlob, 'recording.webm');
     formData.append('language', language);
+    if (options.purpose) {
+      formData.append('purpose', options.purpose);
+    }
+    if (options.noteId) {
+      formData.append('note_id', options.noteId);
+    }
 
     const res = await api.fetch(`/api/v1/cases/${caseId}/notes/transcribe`, {
       method: 'POST',

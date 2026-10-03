@@ -72,8 +72,10 @@ class SpeechService:
         content_type: str,
         current_user: User,
         language: str = "en",
+        purpose: str = "case_note",
+        note_id: uuid.UUID | None = None,
     ) -> dict[str, Any]:
-        """Transcribe in-memory audio for use as draft assistance in a Case Note.
+        """Transcribe in-memory audio for use as draft assistance in a Case Note or Addendum.
 
         Enforces:
         - Case existence and case-level conflict-of-interest restriction checks
@@ -160,17 +162,22 @@ class SpeechService:
             ) from exc
         except Exception as exc:
             # Audit failure metadata
+            fail_metadata = {
+                "provider": provider.provider_id,
+                "content_type": normalized_content_type,
+                "audio_bytes_length": len(audio_bytes),
+                "outcome": "failed",
+                "purpose": purpose,
+            }
+            if note_id:
+                fail_metadata["note_id"] = str(note_id)
+
             await self.audit.log_event(
                 event_type="speech_transcription_failed",
                 user_id=current_user.id,
                 entity_type="case",
                 entity_id=case_id,
-                metadata={
-                    "provider": provider.provider_id,
-                    "content_type": normalized_content_type,
-                    "audio_bytes_length": len(audio_bytes),
-                    "outcome": "failed",
-                },
+                metadata=fail_metadata,
             )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -178,17 +185,22 @@ class SpeechService:
             ) from exc
 
         # 5. Metadata-Only Audit Log (Strict Privacy: NO audio, NO transcript persisted)
+        success_metadata = {
+            "provider": provider.provider_id,
+            "content_type": normalized_content_type,
+            "audio_bytes_length": len(audio_bytes),
+            "outcome": "success",
+            "purpose": purpose,
+        }
+        if note_id:
+            success_metadata["note_id"] = str(note_id)
+
         await self.audit.log_event(
             event_type="speech_transcription_succeeded",
             user_id=current_user.id,
             entity_type="case",
             entity_id=case_id,
-            metadata={
-                "provider": provider.provider_id,
-                "content_type": normalized_content_type,
-                "audio_bytes_length": len(audio_bytes),
-                "outcome": "success",
-            },
+            metadata=success_metadata,
         )
 
         return {

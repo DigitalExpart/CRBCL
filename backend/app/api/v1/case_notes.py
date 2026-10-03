@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.user import User
 from app.permissions.constants import Permissions
-from app.permissions.dependencies import require_permission
+from app.permissions.dependencies import require_any_permission, require_permission
+from app.permissions.service import PermissionService
 from app.repositories.case_note_repo import CaseNoteRepository
 from app.schemas.case_management import (
     CaseMetricsResponse,
@@ -240,18 +241,22 @@ async def transcribe_case_note_audio(
     response: Response,
     file: UploadFile = File(...),
     language: str = Form(default="en"),
-    user: User = Depends(require_permission(Permissions.CASE_NOTE_CREATE)),
+    purpose: str = Form(default="case_note"),
+    note_id: uuid.UUID | None = Form(default=None),
+    user: User = Depends(require_any_permission(Permissions.CASE_NOTE_CREATE, Permissions.CASE_NOTE_ADDENDUM)),
     db: AsyncSession = Depends(get_db),
 ):
-    """Transcribe in-memory audio recording for drafting assistance in a Case Note.
+    """Transcribe in-memory audio recording for drafting assistance in a Case Note or Addendum.
 
     STRICT ARCHITECTURAL SEPARATION:
-    Transcribe != Save Case Note.
+    Transcribe != Save Case Note or Addendum.
     This endpoint:
-    - NEVER creates, updates, signs, finalizes, or publishes a Case Note.
+    - NEVER creates, updates, signs, finalizes, or publishes a Case Note or Addendum.
     - NEVER retains or persists raw audio.
     - NEVER persists transcript narrative in audit logs.
-    - Requires case-level authorization and CASE_NOTE_CREATE permission.
+    - Requires case-level authorization and validated context capability:
+      * purpose="case_note" -> requires CASE_NOTE_CREATE permission.
+      * purpose="addendum"  -> requires CASE_NOTE_ADDENDUM permission, valid target note_id belonging to case_id.
     """
     # Defensive role boundary check: pure administrative or non-case roles cannot transcribe
     user_role_keys = {ur.role.key for ur in user.roles if ur.role and ur.role.is_active}
@@ -260,6 +265,40 @@ async def transcribe_case_note_audio(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"error": {"code": "ROLE_ACCESS_DENIED", "message": "Role is not authorized for Case Note operations."}},
+        )
+
+    perm_service = PermissionService(db)
+    normalized_purpose = (purpose or "").strip().lower()
+
+    if normalized_purpose == "case_note":
+        if not await perm_service.user_has_permission(user.id, Permissions.CASE_NOTE_CREATE):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": {"code": "PERMISSION_DENIED", "message": f"User does not have required permission: {Permissions.CASE_NOTE_CREATE}"}},
+            )
+    elif normalized_purpose == "addendum":
+        if not await perm_service.user_has_permission(user.id, Permissions.CASE_NOTE_ADDENDUM):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": {"code": "PERMISSION_DENIED", "message": f"User does not have required permission: {Permissions.CASE_NOTE_ADDENDUM}"}},
+            )
+        if not note_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": {"code": "NOTE_ID_REQUIRED", "message": "note_id is required for addendum transcription context."}},
+            )
+        # Verify target note exists, is not deleted, and current user is not restricted from note's case
+        note_service = CaseNoteService(db)
+        target_note = await note_service.get_note_or_404(note_id, user)
+        if target_note.case_id != case_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": {"code": "INVALID_NOTE_CASE", "message": "Target note does not belong to the specified case."}},
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": {"code": "INVALID_PURPOSE", "message": f"Invalid transcription purpose '{purpose}'. Must be 'case_note' or 'addendum'."}},
         )
 
     # In-memory read of uploaded audio buffer
@@ -273,6 +312,8 @@ async def transcribe_case_note_audio(
         content_type=content_type,
         current_user=user,
         language=language,
+        purpose=normalized_purpose,
+        note_id=note_id if normalized_purpose == "addendum" else None,
     )
 
     # Privacy controls: Prevent proxy or shared cache storage of transcription result
