@@ -58,12 +58,18 @@ class SpeechService:
         provider = get_speech_provider(self.settings)
         is_enabled = self.is_speech_to_text_enabled()
         is_available = is_enabled and provider.is_available
-        return {
+        status_info = {
             "enabled": is_enabled,
             "provider": provider.provider_id,
             "available": is_available,
+            "model": getattr(self.settings, "speech_model", "tiny"),
+            "readiness": "ready" if is_available else ("disabled" if not is_enabled else "not_configured"),
             "max_file_size_bytes": self.settings.speech_max_file_size_bytes,
         }
+        if hasattr(provider, "get_readiness_info"):
+            readiness_meta = provider.get_readiness_info()
+            status_info["model_loaded"] = readiness_meta.get("loaded", False)
+        return status_info
 
     async def transcribe_case_note_audio(
         self,

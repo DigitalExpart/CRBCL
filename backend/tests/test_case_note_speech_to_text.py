@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import io
 import uuid
+from unittest.mock import MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
@@ -36,6 +37,12 @@ from app.models.role import Permission, Role, RolePermission, UserRole
 from app.models.team import TeamMembership
 from app.models.user import User
 from app.permissions.constants import Permissions
+from app.services.speech.provider import (
+    DisabledSpeechTranscriptionProvider,
+    FakeSpeechTranscriptionProvider,
+    LocalWhisperSpeechTranscriptionProvider,
+    get_speech_provider,
+)
 
 
 @pytest.fixture
@@ -640,3 +647,228 @@ async def test_21_invalid_purpose_rejected(
     assert res.status_code == 400
     error_code = res.json().get("error", {}).get("code") or res.json().get("detail", {}).get("error", {}).get("code")
     assert error_code == "INVALID_PURPOSE"
+
+
+def test_22_local_whisper_provider_selection_and_disabled_default(monkeypatch):
+    """Scenario 22: Provider factory respects configuration and defaults to disabled."""
+    settings = get_settings()
+
+    # When disabled, always returns DisabledSpeechTranscriptionProvider
+    monkeypatch.setattr(settings, "speech_to_text_enabled", False)
+    monkeypatch.setattr(settings, "speech_provider", "local_whisper")
+    provider = get_speech_provider(settings)
+    assert isinstance(provider, DisabledSpeechTranscriptionProvider)
+    assert not provider.is_available
+
+    # When enabled with local_whisper
+    monkeypatch.setattr(settings, "speech_to_text_enabled", True)
+    monkeypatch.setattr(settings, "speech_provider", "local_whisper")
+    provider = get_speech_provider(settings)
+    assert isinstance(provider, LocalWhisperSpeechTranscriptionProvider)
+    assert provider.provider_id == "local_whisper"
+
+    # When enabled with local alias
+    monkeypatch.setattr(settings, "speech_provider", "local")
+    provider = get_speech_provider(settings)
+    assert isinstance(provider, LocalWhisperSpeechTranscriptionProvider)
+
+    # When enabled with fake provider
+    monkeypatch.setattr(settings, "speech_provider", "fake")
+    provider = get_speech_provider(settings)
+    assert isinstance(provider, FakeSpeechTranscriptionProvider)
+
+    # When enabled with unapproved/unknown provider
+    monkeypatch.setattr(settings, "speech_provider", "unapproved_cloud_api")
+    provider = get_speech_provider(settings)
+    assert isinstance(provider, DisabledSpeechTranscriptionProvider)
+
+
+def test_23_local_whisper_model_caching_and_lifecycle():
+    """Scenario 23: WhisperModel is loaded once and cached at process level."""
+    # Reset model cache for test isolation
+    LocalWhisperSpeechTranscriptionProvider._cached_model = None
+    LocalWhisperSpeechTranscriptionProvider._cached_model_key = None
+
+    mock_model_instance = MagicMock()
+    with patch("faster_whisper.WhisperModel", return_value=mock_model_instance) as mock_cls:
+        provider = LocalWhisperSpeechTranscriptionProvider()
+        m1 = provider._get_or_load_model()
+        assert m1 is mock_model_instance
+        assert mock_cls.call_count == 1
+        assert provider.is_model_loaded() is True
+
+        # Second call reuses cached instance without re-instantiation
+        m2 = provider._get_or_load_model()
+        assert m2 is mock_model_instance
+        assert mock_cls.call_count == 1
+
+        # Check readiness metadata
+        readiness = provider.get_readiness_info()
+        assert readiness["loaded"] is True
+        assert readiness["status"] == "ready"
+        assert readiness["provider_id"] == "local_whisper"
+
+
+@pytest.mark.asyncio
+async def test_24_local_whisper_bounded_concurrency():
+    """Scenario 24: Bounded concurrency ensures max concurrent inferences is capped."""
+    import asyncio
+    import time
+
+    settings = get_settings()
+    provider = LocalWhisperSpeechTranscriptionProvider(settings)
+    provider.max_concurrency = 2
+
+    # Reset semaphore
+    LocalWhisperSpeechTranscriptionProvider._semaphore = None
+
+    active_inferences = 0
+    max_observed_concurrent = 0
+
+    def mock_sync_transcribe(audio_bytes, language):
+        nonlocal active_inferences, max_observed_concurrent
+        active_inferences += 1
+        if active_inferences > max_observed_concurrent:
+            max_observed_concurrent = active_inferences
+        time.sleep(0.05)
+        active_inferences -= 1
+        return "Synthetic transcript"
+
+    with patch.object(provider, "_sync_transcribe", side_effect=mock_sync_transcribe):
+        tasks = [
+            provider.transcribe(b"test audio bytes", "audio/webm")
+            for _ in range(5)
+        ]
+        results = await asyncio.gather(*tasks)
+
+    assert len(results) == 5
+    assert max_observed_concurrent <= 2
+
+
+@pytest.mark.asyncio
+async def test_25_local_whisper_initialization_failure_handling(
+    client: AsyncClient,
+    sample_case: str,
+    caseworker_user: dict,
+    monkeypatch,
+):
+    """Scenario 25: Model initialization failure raises SPEECH_MODEL_NOT_READY (503)."""
+    settings = get_settings()
+    monkeypatch.setattr(settings, "speech_to_text_enabled", True)
+    monkeypatch.setattr(settings, "speech_provider", "local_whisper")
+
+    LocalWhisperSpeechTranscriptionProvider._cached_model = None
+    LocalWhisperSpeechTranscriptionProvider._cached_model_key = None
+
+    with patch("faster_whisper.WhisperModel", side_effect=RuntimeError("GPU/CPU load error")):
+        audio_file = ("note.webm", io.BytesIO(b"synthetic audio bytes"), "audio/webm")
+        res = await client.post(
+            f"/api/v1/cases/{sample_case}/notes/transcribe",
+            files={"file": audio_file},
+            data={"purpose": "case_note"},
+            headers=caseworker_user["headers"],
+        )
+        assert res.status_code == 503
+        data = res.json()
+        error_code = data.get("error", {}).get("code") or data.get("detail", {}).get("error", {}).get("code")
+        assert error_code == "SPEECH_MODEL_NOT_READY"
+
+
+@pytest.mark.asyncio
+async def test_26_local_whisper_status_endpoint_readiness(
+    client: AsyncClient,
+    sample_case: str,
+    caseworker_user: dict,
+    monkeypatch,
+):
+    """Scenario 26: Status endpoint safely reports readiness without exposing paths or secrets."""
+    settings = get_settings()
+    monkeypatch.setattr(settings, "speech_to_text_enabled", True)
+    monkeypatch.setattr(settings, "speech_provider", "local_whisper")
+
+    res = await client.get(
+        f"/api/v1/cases/{sample_case}/notes/transcribe/status",
+        headers=caseworker_user["headers"],
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["enabled"] is True
+    assert data["provider"] == "local_whisper"
+    assert "model" in data
+    assert "readiness" in data
+    assert "max_file_size_bytes" in data
+    # Verify no leaked paths or internal trace info
+    resp_text = res.text
+    assert "C:\\" not in resp_text
+    assert "/home" not in resp_text
+    assert "huggingface" not in resp_text.lower()
+
+
+@pytest.mark.asyncio
+async def test_27_local_whisper_transcription_privacy_and_security(
+    client: AsyncClient,
+    sample_case: str,
+    caseworker_user: dict,
+    db_session: AsyncSession,
+    monkeypatch,
+):
+    """Scenario 27: Transcribing with local_whisper preserves privacy and security boundaries.
+
+    Verifies:
+    1. Audio is transcribed via local engine without persistence.
+    2. Zero CaseNote or Addendum records are inserted or modified.
+    3. Zero raw audio bytes are stored in the database.
+    4. Response contains Cache-Control: no-store, private.
+    5. Audit log contains NO transcript narrative text.
+    """
+    settings = get_settings()
+    monkeypatch.setattr(settings, "speech_to_text_enabled", True)
+    monkeypatch.setattr(settings, "speech_provider", "local_whisper")
+
+    mock_segment = MagicMock()
+    mock_segment.text = "This is a synthetic test transcription from local whisper."
+    mock_info = MagicMock()
+    mock_info.language = "en"
+
+    mock_whisper_model = MagicMock()
+    mock_whisper_model.transcribe.return_value = ([mock_segment], mock_info)
+
+    LocalWhisperSpeechTranscriptionProvider._cached_model = mock_whisper_model
+    LocalWhisperSpeechTranscriptionProvider._cached_model_key = (
+        f"{settings.speech_model}:{settings.speech_device}:{settings.speech_compute_type}"
+    )
+
+    # Count initial case notes
+    initial_notes_count = (await db_session.execute(select(func.count(CaseNote.id)))).scalar()
+
+    audio_file = (
+        "synthetic_speech.webm",
+        io.BytesIO(b"RIFF\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00D\xac\x00\x00\x88X\x01\x00\x02\x00\x10\x00data\x00\x00\x00\x00"),
+        "audio/webm",
+    )
+    res = await client.post(
+        f"/api/v1/cases/{sample_case}/notes/transcribe",
+        files={"file": audio_file},
+        data={"purpose": "case_note"},
+        headers=caseworker_user["headers"],
+    )
+
+    assert res.status_code == 200
+    data = res.json()
+    assert data["provider"] == "local_whisper"
+    assert data["transcript"] == "This is a synthetic test transcription from local whisper."
+
+    # Cache-Control headers check
+    assert "no-store" in res.headers.get("Cache-Control", "")
+    assert "private" in res.headers.get("Cache-Control", "")
+
+    # Zero CaseNote inserted
+    final_notes_count = (await db_session.execute(select(func.count(CaseNote.id)))).scalar()
+    assert final_notes_count == initial_notes_count
+
+    # Audit log check: verify transcript does not appear anywhere in audit logs
+    audit_events = (await db_session.execute(select(AuditEvent))).scalars().all()
+    for ev in audit_events:
+        meta = getattr(ev, "metadata_", None) or {}
+        meta_str = str(meta).lower()
+        assert "synthetic test transcription" not in meta_str

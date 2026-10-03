@@ -26,6 +26,26 @@ export default function CaseNoteDictationControl({
   const [errorMessage, setErrorMessage] = useState('');
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isSupported, setIsSupported] = useState(true);
+  const [backendStatus, setBackendStatus] = useState(null);
+
+  // Check backend readiness
+  useEffect(() => {
+    if (!caseId) return;
+    let isMounted = true;
+    caseNotesApi
+      .getTranscriptionStatus(caseId)
+      .then((data) => {
+        if (isMounted && data) {
+          setBackendStatus(data);
+        }
+      })
+      .catch(() => {
+        // Silently ignore probe failures
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [caseId]);
 
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -215,13 +235,29 @@ export default function CaseNoteDictationControl({
           <button
             type="button"
             onClick={startRecording}
-            disabled={disabled}
+            disabled={
+              disabled ||
+              (backendStatus && !backendStatus.enabled) ||
+              (backendStatus && backendStatus.enabled && !backendStatus.available)
+            }
             aria-label="Dictate case note via microphone"
-            title="Click to dictate case note. Audio is processed securely and appended to your draft."
+            title={
+              backendStatus && !backendStatus.enabled
+                ? 'Speech-to-text is currently disabled by system policy.'
+                : backendStatus && !backendStatus.available
+                ? 'Speech transcription provider is not ready.'
+                : 'Click to dictate case note. Audio is processed securely and appended to your draft.'
+            }
             className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-foreground"
           >
             <Mic className="w-3.5 h-3.5 text-primary" />
-            <span>Dictate Note</span>
+            <span>
+              {backendStatus && !backendStatus.enabled
+                ? 'Dictation Disabled'
+                : backendStatus && !backendStatus.available
+                ? 'Model Not Ready'
+                : 'Dictate Note'}
+            </span>
           </button>
         )}
 

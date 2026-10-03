@@ -74,9 +74,13 @@ class Settings(BaseSettings):
     # ── Front Desk / Google Form Webhook ─────────────────────
     front_desk_webhook_secret: str = "crbcl-frontdesk-secret-key"
 
-    # ── Speech-to-Text Transcription (Privacy-Safe Provider Abstraction) ──
+    # ── Speech-to-Text Transcription (Privacy-Safe Self-Hosted Abstraction) ──
     speech_to_text_enabled: bool = False
-    speech_provider: Literal["disabled", "fake", "local"] = "disabled"
+    speech_provider: Literal["disabled", "fake", "local", "local_whisper"] = "disabled"
+    speech_model: str = "tiny"
+    speech_device: str = "cpu"
+    speech_compute_type: str = "int8"
+    speech_max_concurrency: int = 2
     speech_max_file_size_bytes: int = 10 * 1024 * 1024  # 10 MB conservative technical limit
 
     # ── Derived helpers ──────────────────────────────────────
