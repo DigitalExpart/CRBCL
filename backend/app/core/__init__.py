@@ -9,7 +9,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -75,13 +75,34 @@ class Settings(BaseSettings):
     front_desk_webhook_secret: str = "crbcl-frontdesk-secret-key"
 
     # ── Speech-to-Text Transcription (Privacy-Safe Self-Hosted Abstraction) ──
-    speech_to_text_enabled: bool = False
-    speech_provider: Literal["disabled", "fake", "local", "local_whisper"] = "disabled"
-    speech_model: str = "tiny"
-    speech_device: str = "cpu"
-    speech_compute_type: str = "int8"
-    speech_max_concurrency: int = 2
-    speech_max_file_size_bytes: int = 10 * 1024 * 1024  # 10 MB conservative technical limit
+    speech_to_text_enabled: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("speech_to_text_enabled", "crbcl_speech_to_text_enabled"),
+    )
+    speech_provider: Literal["disabled", "fake", "local", "local_whisper"] = Field(
+        default="disabled",
+        validation_alias=AliasChoices("speech_provider", "crbcl_speech_provider"),
+    )
+    speech_model: str = Field(
+        default="tiny",
+        validation_alias=AliasChoices("speech_model", "crbcl_speech_model"),
+    )
+    speech_device: str = Field(
+        default="cpu",
+        validation_alias=AliasChoices("speech_device", "crbcl_speech_device"),
+    )
+    speech_compute_type: str = Field(
+        default="int8",
+        validation_alias=AliasChoices("speech_compute_type", "crbcl_speech_compute_type"),
+    )
+    speech_max_concurrency: int = Field(
+        default=1,
+        validation_alias=AliasChoices("speech_max_concurrency", "crbcl_speech_max_concurrency"),
+    )
+    speech_max_file_size_bytes: int = Field(
+        default=10 * 1024 * 1024,
+        validation_alias=AliasChoices("speech_max_file_size_bytes", "crbcl_speech_max_file_size_bytes"),
+    )
 
     # ── Derived helpers ──────────────────────────────────────
     @property

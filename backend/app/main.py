@@ -36,6 +36,17 @@ CSRF_EXEMPT_PATHS = {
 async def lifespan(app: FastAPI):
     settings = get_settings()
     logger.info("Starting %s in %s mode...", settings.app_name, settings.app_env)
+    if settings.speech_to_text_enabled and settings.speech_provider in ("local", "local_whisper"):
+        try:
+            from app.services.speech.provider import get_speech_provider
+            provider = get_speech_provider(settings)
+            if hasattr(provider, "_get_or_load_model"):
+                import asyncio
+                logger.info("Warming up local speech model (%s)...", settings.speech_model)
+                await asyncio.to_thread(provider._get_or_load_model)
+                logger.info("Speech model warmup completed successfully.")
+        except Exception as exc:
+            logger.warning("Speech model warmup failed (will retry on demand): %s", exc)
     yield
     logger.info("Shutting down %s...", settings.app_name)
 

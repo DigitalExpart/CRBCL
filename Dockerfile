@@ -12,7 +12,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY backend/pyproject.toml ./
 RUN pip install --no-cache-dir -e "."
 
+# Pre-download and bake tiny Whisper model into the container image cache
+RUN python -c "from faster_whisper import WhisperModel; WhisperModel('tiny', device='cpu', compute_type='int8')"
+
 COPY backend/ .
+
+# Production speech defaults (conservative concurrency=1 for initial rollout)
+ENV SPEECH_TO_TEXT_ENABLED=true \
+    SPEECH_PROVIDER=local_whisper \
+    SPEECH_MODEL=tiny \
+    SPEECH_MAX_CONCURRENCY=1
 
 EXPOSE 8000
 
