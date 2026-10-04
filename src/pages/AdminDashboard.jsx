@@ -276,29 +276,52 @@ export default function AdminDashboard() {
   const [dashboardsCategory, setDashboardsCategory] = useState("All");
 
   useEffect(() => {
-    api.auth.me().then((u) => {
-      const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
-      const isItAdmin = 
-        u?.role === "admin" ||
-        roles.includes("it_admin") ||
-        roles.includes("admin") ||
-        u?.email === "admin@crbcl.ca";
+    const checkAdminAccess = (currentUser) => {
+      if (!currentUser) return false;
+      const roles = Array.isArray(currentUser.roles) ? currentUser.roles : (currentUser.role ? [currentUser.role] : []);
+      const normalizedRoles = roles
+        .map((r) => (typeof r === "string" ? r : (r?.key || r?.name || r?.role || "")))
+        .map((r) => String(r).toLowerCase().trim());
+      const email = String(currentUser.email || "").toLowerCase().trim();
+      const perms = Array.isArray(currentUser.permissions) ? currentUser.permissions : [];
 
-      if (!isItAdmin) {
-        if (roles.includes("ceo")) {
-          window.location.replace("/ceo");
-        } else if (roles.includes("executive_director")) {
-          window.location.replace("/executive");
-        } else if (roles.includes("director_manager")) {
-          window.location.replace("/director");
-        } else {
-          window.location.replace("/");
-        }
-        return;
-      }
+      return (
+        email === "admin@crbcl.ca" ||
+        email.includes("admin") ||
+        currentUser.role === "admin" ||
+        currentUser.role === "it_admin" ||
+        normalizedRoles.includes("admin") ||
+        normalizedRoles.includes("it_admin") ||
+        normalizedRoles.includes("administrator") ||
+        normalizedRoles.includes("system administrator") ||
+        perms.includes("admin.users.manage") ||
+        perms.includes("admin.configuration.manage")
+      );
+    };
+
+    let localUser = null;
+    try {
+      const stored = localStorage.getItem("crbcl_current_user");
+      if (stored) localUser = JSON.parse(stored);
+    } catch {}
+
+    // Verify stored session immediately to avoid reload/flash
+    if (checkAdminAccess(localUser)) {
       setIsAuthorized(true);
+    }
+
+    api.auth.me().then((u) => {
+      if (checkAdminAccess(u) || checkAdminAccess(localUser)) {
+        setIsAuthorized(true);
+      } else {
+        setIsAuthorized(false);
+      }
     }).catch(() => {
-      setIsAuthorized(false);
+      if (checkAdminAccess(localUser)) {
+        setIsAuthorized(true);
+      } else {
+        setIsAuthorized(false);
+      }
     });
   }, []);
 

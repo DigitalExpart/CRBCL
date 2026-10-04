@@ -126,6 +126,16 @@ def _build_user_info(user: User) -> UserInfo:
     if is_admin_or_leadership and (not team_access or "all" not in [str(t).lower() for t in team_access]):
         team_access = ["all"]
 
+    is_super_admin = (
+        user.email == "admin@crbcl.ca"
+        or getattr(user, "is_system", False)
+        or any(r in roles for r in ["admin", "system_admin", "administrator", "super_admin", "system administrator"])
+    )
+    if is_super_admin:
+        from app.permissions.constants import Permissions
+
+        permissions.update(p.value for p in Permissions)
+
     return UserInfo(
         id=user.id,
         email=user.email,

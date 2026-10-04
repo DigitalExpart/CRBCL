@@ -14,6 +14,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { toast } from "@/components/ui/use-toast";
+import { api } from "@/api";
 
 export default function OfficeCoordinator() {
   const [activeTab, setActiveTab] = useState("overview"); // overview | requests | reservations | keys | rooms | supplies | fleet_ref | integrations
@@ -47,7 +48,7 @@ export default function OfficeCoordinator() {
   // Check workspace availability first
   const checkAvailability = async () => {
     try {
-      const res = await fetch("/api/v1/dashboards/office_coordinator/availability", { credentials: "include" });
+      const res = await api.fetch("/api/v1/dashboards/office_coordinator/availability");
       if (res.ok) {
         const data = await res.json();
         if (!data.is_enabled) {
@@ -65,42 +66,42 @@ export default function OfficeCoordinator() {
       await checkAvailability();
 
       // Load overview
-      const ovRes = await fetch("/api/v1/operations/overview", { credentials: "include" });
+      const ovRes = await api.fetch("/api/v1/operations/overview");
       if (ovRes.ok) {
         const ovData = await ovRes.json();
         setOverview(ovData);
       }
 
       // Load operational requests
-      const reqRes = await fetch("/api/v1/operations/requests?limit=50", { credentials: "include" });
+      const reqRes = await api.fetch("/api/v1/operations/requests?limit=50");
       if (reqRes.ok) {
         const reqData = await reqRes.json();
         setRequests(reqData.items || []);
       }
 
       // Load reservations
-      const resRes = await fetch("/api/v1/operations/reservations?limit=50", { credentials: "include" });
+      const resRes = await api.fetch("/api/v1/operations/reservations?limit=50");
       if (resRes.ok) {
         const resData = await resRes.json();
         setReservations(resData.items || []);
       }
 
       // Load keys
-      const keyRes = await fetch("/api/v1/operations/keys?limit=50", { credentials: "include" });
+      const keyRes = await api.fetch("/api/v1/operations/keys?limit=50");
       if (keyRes.ok) {
         const keyData = await keyRes.json();
         setKeyLogs(keyData.items || []);
       }
 
       // Load rooms
-      const roomRes = await fetch("/api/v1/operations/rooms?limit=50", { credentials: "include" });
+      const roomRes = await api.fetch("/api/v1/operations/rooms?limit=50");
       if (roomRes.ok) {
         const roomData = await roomRes.json();
         setRooms(roomData.items || []);
       }
 
       // Load supplies
-      const supRes = await fetch("/api/v1/operations/supplies?limit=50", { credentials: "include" });
+      const supRes = await api.fetch("/api/v1/operations/supplies?limit=50");
       if (supRes.ok) {
         const supData = await supRes.json();
         setSupplies(supData.items || []);
@@ -108,7 +109,7 @@ export default function OfficeCoordinator() {
 
       // Load canonical vehicles for reservation picker
       try {
-        const vRes = await fetch("/api/v1/fleet/vehicles?limit=100", { credentials: "include" });
+        const vRes = await api.fetch("/api/v1/fleet/vehicles?limit=100");
         if (vRes.ok) {
           const vData = await vRes.json();
           setVehicles(vData.items || []);
@@ -117,7 +118,7 @@ export default function OfficeCoordinator() {
 
       // Load staff list for key assignments
       try {
-        const uRes = await fetch("/api/v1/users?limit=100", { credentials: "include" });
+        const uRes = await api.fetch("/api/v1/users?limit=100");
         if (uRes.ok) {
           const uData = await uRes.json();
           setStaffUsers(uData.items || []);
@@ -139,10 +140,9 @@ export default function OfficeCoordinator() {
   const handleCreateRequest = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/v1/operations/requests", {
+      const res = await api.fetch("/api/v1/operations/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(reqForm),
       });
       if (!res.ok) throw new Error("Failed to submit operational request");
@@ -159,10 +159,9 @@ export default function OfficeCoordinator() {
   const handleCreateReservation = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/v1/operations/reservations", {
+      const res = await api.fetch("/api/v1/operations/reservations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           ...resForm,
           start_time: new Date(resForm.start_time).toISOString(),
@@ -185,10 +184,9 @@ export default function OfficeCoordinator() {
   const handleCheckoutKey = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/v1/operations/keys/checkout", {
+      const res = await api.fetch("/api/v1/operations/keys/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(keyForm),
       });
       if (!res.ok) throw new Error("Failed to checkout vehicle key");
@@ -203,10 +201,9 @@ export default function OfficeCoordinator() {
 
   const handleReturnKey = async (keyLogId) => {
     try {
-      const res = await fetch(`/api/v1/operations/keys/${keyLogId}/return`, {
+      const res = await api.fetch(`/api/v1/operations/keys/${keyLogId}/return`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ notes: "Returned in good order" }),
       });
       if (!res.ok) throw new Error("Failed to return key");
@@ -221,10 +218,9 @@ export default function OfficeCoordinator() {
   const handleCreateRoom = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/v1/operations/rooms", {
+      const res = await api.fetch("/api/v1/operations/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           ...roomForm,
           start_time: new Date(roomForm.start_time).toISOString(),
@@ -247,10 +243,9 @@ export default function OfficeCoordinator() {
   const handleCreateSupply = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/v1/operations/supplies", {
+      const res = await api.fetch("/api/v1/operations/supplies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(supplyForm),
       });
       if (!res.ok) throw new Error("Failed to create supply item");

@@ -809,3 +809,49 @@ async def test_front_desk_toggle_separates_availability_from_permissions(
     # 5. IT Admin STILL does not have public_intake.read
     res_admin_after = await client.get("/api/v1/front-desk/submissions", headers=it_admin_user["headers"])
     assert res_admin_after.status_code == 403
+
+
+@pytest.mark.anyio
+async def test_super_administrator_has_access_to_all_dashboards(
+    client: AsyncClient, db_session: AsyncSession
+):
+    """Super Administrator (admin@crbcl.ca / is_system=True) has authoritative operational access across all dashboards."""
+    from app.auth.security import create_access_token, hash_password
+    from app.models.user import User
+
+    admin = User(
+        email="admin@crbcl.ca",
+        email_normalized="admin@crbcl.ca",
+        password_hash=hash_password("admin_pass_123"),
+        full_name="CRBCL System Administrator",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(admin)
+    await db_session.commit()
+
+    admin_token = create_access_token(admin.id)
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # 1. Auth Me profile returns all authoritative permissions
+    me_res = await client.get("/api/v1/auth/me", headers=admin_headers)
+    assert me_res.status_code == 200
+    me_data = me_res.json()
+    assert "public_intake.read" in me_data["permissions"]
+    assert "admin.configuration.manage" in me_data["permissions"]
+    assert "office_coordinator.dashboard.read" in me_data["permissions"]
+
+    # 2. Master Dashboard Registry is fully readable
+    dash_res = await client.get("/api/v1/admin/dashboards", headers=admin_headers)
+    assert dash_res.status_code == 200
+    assert len(dash_res.json()) >= 25
+
+    # 3. Front Desk submissions queue is fully readable (no 403 Permission Denied)
+    fd_res = await client.get("/api/v1/front-desk/submissions", headers=admin_headers)
+    assert fd_res.status_code == 200
+    assert "items" in fd_res.json()
+
+    # 4. Office Coordinator availability is fully accessible
+    oc_res = await client.get("/api/v1/dashboards/office_coordinator/availability", headers=admin_headers)
+    assert oc_res.status_code == 200
+    assert oc_res.json()["is_enabled"] is True

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import PageHeader from "@/components/shared/PageHeader";
+import { api } from "@/api";
 
 const SUGGESTED_PROMPTS = [
   "Summarize my active cases",
@@ -38,12 +39,10 @@ export default function AskRedBear() {
 
     try {
       // Call backend API /api/v1/ask-red-bear/query
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/v1/ask-red-bear/query", {
+      const res = await api.fetch("/api/v1/ask-red-bear/query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ prompt: msg })
       });

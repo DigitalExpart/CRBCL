@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { ROLES } from "@/constants/roles";
+import { api } from "@/api";
 
 const CATEGORIES = [
   "All",
@@ -37,9 +38,8 @@ export default function DashboardControlCentre() {
 
   const fetchWorkspaces = async () => {
     try {
-      const res = await fetch("/api/v1/admin/dashboards", {
+      const res = await api.fetch("/api/v1/admin/dashboards", {
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to load dashboard registry");
       const data = await res.json();
@@ -63,10 +63,9 @@ export default function DashboardControlCentre() {
     setTogglingKey(workspace.key);
     const newStatus = !workspace.is_enabled;
     try {
-      const res = await fetch(`/api/v1/admin/dashboards/${workspace.key}/status`, {
+      const res = await api.fetch(`/api/v1/admin/dashboards/${workspace.key}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ is_enabled: newStatus }),
       });
       if (!res.ok) {
@@ -106,10 +105,9 @@ export default function DashboardControlCentre() {
     if (!editingWorkspace) return;
     setSavingRoles(true);
     try {
-      const res = await fetch(`/api/v1/admin/dashboards/${editingWorkspace.key}/roles`, {
+      const res = await api.fetch(`/api/v1/admin/dashboards/${editingWorkspace.key}/roles`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ role_keys: selectedRoles }),
       });
       if (!res.ok) {

@@ -17,8 +17,44 @@ class PermissionService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def is_super_admin(self, user_id: uuid.UUID) -> bool:
+        """Check if user has full administrative platform access across all workspaces and dashboards."""
+        user_res = await self.db.execute(select(User).where(User.id == user_id))
+        user_obj = user_res.scalar_one_or_none()
+        if not user_obj:
+            return False
+
+        email = (user_obj.email or "").lower()
+        if (
+            email == "admin@crbcl.ca"
+            or getattr(user_obj, "is_system", False)
+        ):
+            return True
+
+        roles_stmt = (
+            select(Role.key)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .where(
+                UserRole.user_id == user_id,
+                Role.is_active == True,  # noqa: E712
+            )
+        )
+        roles_res = await self.db.execute(roles_stmt)
+        user_roles = {r.lower() for r in roles_res.scalars().all()}
+        super_admin_roles = {"admin", "system_admin", "administrator", "super_admin", "system administrator"}
+        return bool(user_roles & super_admin_roles)
+
     async def get_user_permissions(self, user_id: uuid.UUID) -> set[str]:
         """Load all active permissions for a user across all active assigned roles with a single fast JOIN."""
+        if await self.is_super_admin(user_id):
+            from app.permissions.constants import Permissions
+
+            all_perms_res = await self.db.execute(
+                select(Permission.key).where(Permission.is_active == True)  # noqa: E712
+            )
+            all_db_keys = set(all_perms_res.scalars().all())
+            return all_db_keys | {p.value for p in Permissions}
+
         stmt = (
             select(Permission.key)
             .join(RolePermission, RolePermission.permission_id == Permission.id)
@@ -85,6 +121,8 @@ class PermissionService:
 
     async def user_has_permission(self, user_id: uuid.UUID, permission_key: str) -> bool:
         """Check if user has a specific permission key."""
+        if await self.is_super_admin(user_id):
+            return True
         perms = await self.get_user_permissions(user_id)
         return permission_key in perms
 
