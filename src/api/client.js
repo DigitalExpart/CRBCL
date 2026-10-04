@@ -852,10 +852,29 @@ export class ApiClient {
   }
 
   async get(endpoint, options = {}) {
-    const res = await this.fetch(endpoint, { method: 'GET', ...options });
+    let url = endpoint;
+    if (options.params && typeof options.params === 'object') {
+      const searchParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(options.params)) {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value);
+        }
+      }
+      const qs = searchParams.toString();
+      if (qs) {
+        url = url.includes('?') ? `${url}&${qs}` : `${url}?${qs}`;
+      }
+    }
+    const res = await this.fetch(url, { method: 'GET', ...options });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+    }
+    if (options.responseType === 'blob') {
+      return await res.blob();
+    }
+    if (options.responseType === 'text') {
+      return await res.text();
     }
     return await res.json();
   }
