@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import PageHeader from "@/components/shared/PageHeader";
 import { api } from "@/api";
+import { askRedBearApi } from "@/api/askRedBear";
+import SpeechDictationControl from "@/components/shared/SpeechDictationControl";
 
 const SUGGESTED_PROMPTS = [
   "Summarize my active cases",
@@ -72,7 +74,7 @@ export default function AskRedBear() {
           }
         ]);
       }
-    } catch (err) {
+    } catch {
       setMessages(prev => [
         ...prev, 
         { 
@@ -87,6 +89,15 @@ export default function AskRedBear() {
       setLoading(false);
       inputRef.current?.focus();
     }
+  };
+
+  const handleTranscriptReady = (transcript) => {
+    if (!transcript || !transcript.trim()) return;
+    setInput((prev) => {
+      const trimmedPrev = prev ? prev.trim() : "";
+      if (!trimmedPrev) return transcript.trim();
+      return `${trimmedPrev} ${transcript.trim()}`;
+    });
   };
 
   const handleKeyDown = (e) => {
@@ -203,7 +214,21 @@ export default function AskRedBear() {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-border pt-4 mt-auto">
+      <div className="border-t border-border pt-3 mt-auto">
+        <div className="flex items-center justify-between mb-2">
+          <SpeechDictationControl
+            getStatus={askRedBearApi.getTranscriptionStatus}
+            onTranscribe={(audioBlob) => askRedBearApi.transcribeAudio(audioBlob, "en")}
+            onTranscriptReady={handleTranscriptReady}
+            disabled={loading}
+            idleLabel="Dictate Prompt"
+            idleTitle="Click to dictate prompt via microphone. Audio is processed securely and appended to your input."
+            recordingLabel="Listening"
+            processingLabel="Transcribing prompt…"
+            successLabel="Transcript appended to prompt"
+            regionLabel="Ask Red Bear speech dictation assistant"
+          />
+        </div>
         <div className="flex gap-2 items-end">
           <Textarea
             ref={inputRef}

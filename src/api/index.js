@@ -20,3 +20,4 @@ export { staffingApi } from './staffing';
 export { notificationsApi } from './notifications';
 export { personsApi } from './persons';
 export { orgOpsApi } from './orgOps';
+export { askRedBearApi } from './askRedBear';

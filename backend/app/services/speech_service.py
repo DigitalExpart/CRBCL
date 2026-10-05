@@ -71,29 +71,16 @@ class SpeechService:
             status_info["model_loaded"] = readiness_meta.get("loaded", False)
         return status_info
 
-    async def transcribe_case_note_audio(
+    async def _validate_and_transcribe_buffer(
         self,
-        case_id: uuid.UUID,
         audio_bytes: bytes,
         content_type: str,
-        current_user: User,
         language: str = "en",
-        purpose: str = "case_note",
-        note_id: uuid.UUID | None = None,
-    ) -> dict[str, Any]:
-        """Transcribe in-memory audio for use as draft assistance in a Case Note or Addendum.
+    ) -> tuple[str, str, str]:
+        """Validate audio buffer and execute in-memory transcription with configured provider.
 
-        Enforces:
-        - Case existence and case-level conflict-of-interest restriction checks
-        - Speech-to-text feature toggle check
-        - Provider readiness check
-        - Audio validation (non-empty, size within technical limit, approved MIME type)
-        - Metadata-only audit logging (no audio, no transcript content persisted)
+        Returns tuple of (transcript, provider_id, normalized_content_type).
         """
-        # 1. Authorization & Case Validation
-        await self.case_service.get_case_or_404(case_id, current_user)
-
-        # 2. Feature Enabled Check
         if not self.is_speech_to_text_enabled():
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -117,7 +104,6 @@ class SpeechService:
                 },
             )
 
-        # 3. Audio Validation
         if not audio_bytes or len(audio_bytes) == 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -136,7 +122,6 @@ class SpeechService:
                 },
             )
 
-        # Normalize content type (strip options like codecs=opus)
         normalized_content_type = content_type.split(";")[0].strip().lower() if content_type else ""
         if normalized_content_type not in ALLOWED_AUDIO_CONTENT_TYPES:
             raise HTTPException(
@@ -149,27 +134,55 @@ class SpeechService:
                 },
             )
 
-        # 4. In-Memory Transcription Execution
         try:
             transcript = await provider.transcribe(
                 audio_bytes=audio_bytes,
                 content_type=normalized_content_type,
                 language=language,
             )
-        except SpeechProviderUnavailableException as exc:
+            return transcript, provider.provider_id, normalized_content_type
+        except (SpeechProviderUnavailableException, SpeechTranscriptionException) as exc:
             raise HTTPException(
                 status_code=exc.status_code,
                 detail={"error": {"code": exc.code, "message": exc.message}},
             ) from exc
-        except SpeechTranscriptionException as exc:
-            raise HTTPException(
-                status_code=exc.status_code,
-                detail={"error": {"code": exc.code, "message": exc.message}},
-            ) from exc
+
+    async def transcribe_case_note_audio(
+        self,
+        case_id: uuid.UUID,
+        audio_bytes: bytes,
+        content_type: str,
+        current_user: User,
+        language: str = "en",
+        purpose: str = "case_note",
+        note_id: uuid.UUID | None = None,
+    ) -> dict[str, Any]:
+        """Transcribe in-memory audio for use as draft assistance in a Case Note or Addendum.
+
+        Enforces:
+        - Case existence and case-level conflict-of-interest restriction checks
+        - Speech-to-text feature toggle check
+        - Provider readiness check
+        - Audio validation (non-empty, size within technical limit, approved MIME type)
+        - Metadata-only audit logging (no audio, no transcript content persisted)
+        """
+        # 1. Authorization & Case Validation
+        await self.case_service.get_case_or_404(case_id, current_user)
+
+        normalized_content_type = content_type.split(";")[0].strip().lower() if content_type else ""
+        provider_id = getattr(get_speech_provider(self.settings), "provider_id", "unknown")
+
+        try:
+            transcript, provider_id, normalized_content_type = await self._validate_and_transcribe_buffer(
+                audio_bytes=audio_bytes,
+                content_type=content_type,
+                language=language,
+            )
+        except HTTPException:
+            raise
         except Exception as exc:
-            # Audit failure metadata
             fail_metadata = {
-                "provider": provider.provider_id,
+                "provider": provider_id,
                 "content_type": normalized_content_type,
                 "audio_bytes_length": len(audio_bytes),
                 "outcome": "failed",
@@ -190,9 +203,9 @@ class SpeechService:
                 detail={"error": {"code": "TRANSCRIPTION_FAILED", "message": "Failed to transcribe audio."}},
             ) from exc
 
-        # 5. Metadata-Only Audit Log (Strict Privacy: NO audio, NO transcript persisted)
+        # Metadata-Only Audit Log (Strict Privacy: NO audio, NO transcript persisted)
         success_metadata = {
-            "provider": provider.provider_id,
+            "provider": provider_id,
             "content_type": normalized_content_type,
             "audio_bytes_length": len(audio_bytes),
             "outcome": "success",
@@ -211,6 +224,146 @@ class SpeechService:
 
         return {
             "transcript": transcript,
-            "provider": provider.provider_id,
+            "provider": provider_id,
             "language": language,
         }
+
+    async def transcribe_ask_red_bear_audio(
+        self,
+        audio_bytes: bytes,
+        content_type: str,
+        current_user: User,
+        language: str = "en",
+        case_id: uuid.UUID | None = None,
+    ) -> dict[str, Any]:
+        """Transcribe in-memory audio for use as prompt assistance in Ask Red Bear.
+
+        Enforces:
+        - If case_id is supplied, verifies case existence and access restrictions
+        - Speech-to-text feature toggle check
+        - Provider readiness check
+        - Audio validation (non-empty, size within technical limit, approved MIME type)
+        - Metadata-only audit logging (no audio, no transcript content persisted)
+        - Never submits or persists to Ask Red Bear
+        """
+        if case_id:
+            await self.case_service.get_case_or_404(case_id, current_user)
+
+        normalized_content_type = content_type.split(";")[0].strip().lower() if content_type else ""
+        provider_id = getattr(get_speech_provider(self.settings), "provider_id", "unknown")
+
+        try:
+            transcript, provider_id, normalized_content_type = await self._validate_and_transcribe_buffer(
+                audio_bytes=audio_bytes,
+                content_type=content_type,
+                language=language,
+            )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            fail_metadata = {
+                "provider": provider_id,
+                "content_type": normalized_content_type,
+                "audio_bytes_length": len(audio_bytes),
+                "outcome": "failed",
+                "purpose": "ask_red_bear",
+            }
+            if case_id:
+                fail_metadata["case_id"] = str(case_id)
+
+            await self.audit.log_event(
+                event_type="speech_transcription_failed",
+                user_id=current_user.id,
+                entity_type="ask_red_bear",
+                entity_id=case_id or current_user.id,
+                metadata=fail_metadata,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"error": {"code": "TRANSCRIPTION_FAILED", "message": "Failed to transcribe audio."}},
+            ) from exc
+
+        # Metadata-Only Audit Log (Strict Privacy: NO audio, NO transcript persisted)
+        success_metadata = {
+            "provider": provider_id,
+            "content_type": normalized_content_type,
+            "audio_bytes_length": len(audio_bytes),
+            "outcome": "success",
+            "purpose": "ask_red_bear",
+        }
+        if case_id:
+            success_metadata["case_id"] = str(case_id)
+
+        await self.audit.log_event(
+            event_type="speech_transcription_succeeded",
+            user_id=current_user.id,
+            entity_type="ask_red_bear",
+            entity_id=case_id or current_user.id,
+            metadata=success_metadata,
+        )
+
+        return {
+            "transcript": transcript,
+            "provider": provider_id,
+            "language": language,
+        }
+
+    async def transcribe_audio(
+        self,
+        audio_bytes: bytes,
+        content_type: str,
+        current_user: User,
+        purpose: str = "case_note",
+        language: str = "en",
+        case_id: uuid.UUID | None = None,
+        note_id: uuid.UUID | None = None,
+    ) -> dict[str, Any]:
+        """Unified dispatch for privacy-first audio transcription across supported contexts."""
+        normalized_purpose = (purpose or "").strip().lower()
+        if normalized_purpose == "case_note":
+            if not case_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"error": {"code": "CASE_ID_REQUIRED", "message": "case_id is required for case_note transcription context."}},
+                )
+            return await self.transcribe_case_note_audio(
+                case_id=case_id,
+                audio_bytes=audio_bytes,
+                content_type=content_type,
+                current_user=current_user,
+                language=language,
+                purpose="case_note",
+            )
+        elif normalized_purpose == "addendum":
+            if not case_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"error": {"code": "CASE_ID_REQUIRED", "message": "case_id is required for addendum transcription context."}},
+                )
+            if not note_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"error": {"code": "NOTE_ID_REQUIRED", "message": "note_id is required for addendum transcription context."}},
+                )
+            return await self.transcribe_case_note_audio(
+                case_id=case_id,
+                audio_bytes=audio_bytes,
+                content_type=content_type,
+                current_user=current_user,
+                language=language,
+                purpose="addendum",
+                note_id=note_id,
+            )
+        elif normalized_purpose == "ask_red_bear":
+            return await self.transcribe_ask_red_bear_audio(
+                audio_bytes=audio_bytes,
+                content_type=content_type,
+                current_user=current_user,
+                language=language,
+                case_id=case_id,
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": {"code": "INVALID_PURPOSE", "message": f"Invalid transcription purpose '{purpose}'. Must be 'case_note', 'addendum', or 'ask_red_bear'."}},
+            )
