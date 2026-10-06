@@ -53,3 +53,67 @@ class UserResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class AppearancePreferences(BaseModel):
+    theme_mode: str = Field(default="system", description="light | dark | system")
+    accent_theme: str = Field(default="crbcl", description="crbcl | burgundy | earth | forest | prairie | ocean | teal | neutral")
+    density: str = Field(default="comfortable", description="comfortable | compact")
+    sidebar_collapsed: bool = Field(default=False)
+    card_radius: str = Field(default="rounded", description="rounded | subtle")
+    reduced_motion: bool = Field(default=False)
+    high_contrast: bool = Field(default=False)
+    default_landing_dashboard: str | None = Field(default=None, max_length=60)
+
+    @validator("theme_mode")
+    def validate_theme_mode(cls, v):
+        allowed = {"light", "dark", "system"}
+        if v not in allowed:
+            raise ValueError(f"Invalid theme_mode: {v}. Must be one of {allowed}")
+        return v
+
+    @validator("accent_theme")
+    def validate_accent_theme(cls, v):
+        allowed = {"crbcl", "burgundy", "earth", "forest", "prairie", "ocean", "teal", "neutral"}
+        if v not in allowed:
+            raise ValueError(f"Invalid accent_theme: {v}. Must be one of {allowed}")
+        return v
+
+    @validator("density")
+    def validate_density(cls, v):
+        allowed = {"comfortable", "compact"}
+        if v not in allowed:
+            raise ValueError(f"Invalid density: {v}. Must be one of {allowed}")
+        return v
+
+    @validator("card_radius")
+    def validate_card_radius(cls, v):
+        allowed = {"rounded", "subtle"}
+        if v not in allowed:
+            raise ValueError(f"Invalid card_radius: {v}. Must be one of {allowed}")
+        return v
+
+    @validator("default_landing_dashboard")
+    def validate_dashboard_path(cls, v):
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        if not v.startswith("/") or v.startswith("//") or ".." in v:
+            raise ValueError("Invalid landing dashboard path: must be relative root path")
+        if any(c in v for c in "<>'\"\\;`\n\r"):
+            raise ValueError("Disallowed characters in landing dashboard path")
+        return v
+
+
+class UserPreferencesPayload(BaseModel):
+    appearance: AppearancePreferences = Field(default_factory=AppearancePreferences)
+    dashboard_widgets: list[dict[str, object]] | None = None
+
+    model_config = {"extra": "forbid"}
+
+
+class UserPreferencesResponse(BaseModel):
+    appearance: AppearancePreferences
+    dashboard_widgets: list[dict[str, object]] = []

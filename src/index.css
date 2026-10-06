@@ -87,6 +87,142 @@
     --warning: 36 90% 55%;
     --warning-foreground: 20 20% 10%;
   }
+
+  /* CRBCL Accent Palettes — Light Mode */
+  .theme-crbcl {
+    --primary: 4 60% 38%;
+    --ring: 4 60% 38%;
+    --sidebar-primary: 4 60% 50%;
+    --sidebar-ring: 4 60% 50%;
+    --chart-1: 4 60% 38%;
+  }
+  .theme-burgundy {
+    --primary: 348 60% 32%;
+    --ring: 348 60% 32%;
+    --sidebar-primary: 348 60% 45%;
+    --sidebar-ring: 348 60% 45%;
+    --chart-1: 348 60% 32%;
+  }
+  .theme-earth {
+    --primary: 24 65% 38%;
+    --ring: 24 65% 38%;
+    --sidebar-primary: 24 65% 48%;
+    --sidebar-ring: 24 65% 48%;
+    --chart-1: 24 65% 38%;
+  }
+  .theme-forest {
+    --primary: 145 50% 30%;
+    --ring: 145 50% 30%;
+    --sidebar-primary: 145 50% 42%;
+    --sidebar-ring: 145 50% 42%;
+    --chart-1: 145 50% 30%;
+  }
+  .theme-prairie {
+    --primary: 38 80% 36%;
+    --ring: 38 80% 36%;
+    --sidebar-primary: 38 80% 48%;
+    --sidebar-ring: 38 80% 48%;
+    --chart-1: 38 80% 36%;
+  }
+  .theme-ocean {
+    --primary: 215 65% 40%;
+    --ring: 215 65% 40%;
+    --sidebar-primary: 215 65% 50%;
+    --sidebar-ring: 215 65% 50%;
+    --chart-1: 215 65% 40%;
+  }
+  .theme-teal {
+    --primary: 174 60% 32%;
+    --ring: 174 60% 32%;
+    --sidebar-primary: 174 60% 42%;
+    --sidebar-ring: 174 60% 42%;
+    --chart-1: 174 60% 32%;
+  }
+  .theme-neutral {
+    --primary: 220 20% 35%;
+    --ring: 220 20% 35%;
+    --sidebar-primary: 220 20% 45%;
+    --sidebar-ring: 220 20% 45%;
+    --chart-1: 220 20% 35%;
+  }
+
+  /* CRBCL Accent Palettes — Dark Mode */
+  .dark.theme-crbcl, .dark .theme-crbcl {
+    --primary: 4 55% 50%;
+    --ring: 4 55% 50%;
+    --sidebar-primary: 4 55% 55%;
+    --sidebar-ring: 4 55% 55%;
+    --chart-1: 4 55% 50%;
+  }
+  .dark.theme-burgundy, .dark .theme-burgundy {
+    --primary: 348 55% 48%;
+    --ring: 348 55% 48%;
+    --sidebar-primary: 348 55% 52%;
+    --sidebar-ring: 348 55% 52%;
+    --chart-1: 348 55% 48%;
+  }
+  .dark.theme-earth, .dark .theme-earth {
+    --primary: 24 60% 50%;
+    --ring: 24 60% 50%;
+    --sidebar-primary: 24 60% 52%;
+    --sidebar-ring: 24 60% 52%;
+    --chart-1: 24 60% 50%;
+  }
+  .dark.theme-forest, .dark .theme-forest {
+    --primary: 145 45% 44%;
+    --ring: 145 45% 44%;
+    --sidebar-primary: 145 45% 48%;
+    --sidebar-ring: 145 45% 48%;
+    --chart-1: 145 45% 44%;
+  }
+  .dark.theme-prairie, .dark .theme-prairie {
+    --primary: 38 75% 48%;
+    --ring: 38 75% 48%;
+    --sidebar-primary: 38 75% 52%;
+    --sidebar-ring: 38 75% 52%;
+    --chart-1: 38 75% 48%;
+  }
+  .dark.theme-ocean, .dark .theme-ocean {
+    --primary: 215 60% 52%;
+    --ring: 215 60% 52%;
+    --sidebar-primary: 215 60% 55%;
+    --sidebar-ring: 215 60% 55%;
+    --chart-1: 215 60% 52%;
+  }
+  .dark.theme-teal, .dark .theme-teal {
+    --primary: 174 55% 44%;
+    --ring: 174 55% 44%;
+    --sidebar-primary: 174 55% 48%;
+    --sidebar-ring: 174 55% 48%;
+    --chart-1: 174 55% 44%;
+  }
+  .dark.theme-neutral, .dark .theme-neutral {
+    --primary: 220 18% 52%;
+    --ring: 220 18% 52%;
+    --sidebar-primary: 220 18% 55%;
+    --sidebar-ring: 220 18% 55%;
+    --chart-1: 220 18% 52%;
+  }
+
+  /* Card Radius Variants */
+  .radius-rounded {
+    --radius: 0.625rem;
+  }
+  .radius-subtle {
+    --radius: 0.25rem;
+  }
+
+  /* High Contrast Accessibility Overrides */
+  .high-contrast {
+    --border: 30 15% 60%;
+    --foreground: 0 0% 5%;
+    --muted-foreground: 20 10% 20%;
+  }
+  .dark.high-contrast, .dark .high-contrast {
+    --border: 30 15% 45%;
+    --foreground: 0 0% 100%;
+    --muted-foreground: 30 10% 85%;
+  }
 }
 
 @layer base {
@@ -116,5 +252,47 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
     border-radius: 3px;
+  }
+
+  /* Density Modes */
+  .density-compact {
+    --density-scale: 0.92;
+  }
+  .density-compact table th,
+  .density-compact table td {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  .density-compact .p-6 {
+    padding: 1rem !important;
+  }
+  .density-compact .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse))) !important;
+    margin-bottom: calc(1rem * var(--tw-space-y-reverse)) !important;
+  }
+  .density-compact .gap-6 {
+    gap: 1rem !important;
+  }
+
+  /* Reduced Motion Mode */
+  .reduced-motion *,
+  .reduced-motion *::before,
+  .reduced-motion *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

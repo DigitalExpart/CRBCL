@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/theme_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -113,6 +115,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeService = Provider.of<MobileThemeService>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile & Settings'),
@@ -133,13 +137,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 44,
-                          backgroundColor: Theme.of(context).primaryColor.withOpacity(0.15),
+                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
                           child: Text(
                             'CB',
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         ),
@@ -148,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           right: 0,
                           child: CircleAvatar(
                             radius: 16,
-                            backgroundColor: Theme.of(context).primaryColor,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
                             child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
                           ),
                         ),
@@ -160,9 +164,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
-                    Chip(
-                      avatar: const Icon(Icons.verified_user, size: 14),
-                      label: const Text('Field Caseworker / Staff', style: TextStyle(fontSize: 12)),
+                    const Chip(
+                      avatar: Icon(Icons.verified_user, size: 14),
+                      label: Text('Field Caseworker / Staff', style: TextStyle(fontSize: 12)),
                       padding: EdgeInsets.zero,
                     ),
                   ],
@@ -185,18 +189,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             TextField(
               controller: _phoneController,
-              keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
                 labelText: 'Phone Number',
                 prefixIcon: Icon(Icons.phone_outlined),
                 border: OutlineInputBorder(),
               ),
+              keyboardType: TextInputType.phone,
             ),
-            const SizedBox(height: 20),
-
+            const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _isSaving ? null : _saveProfile,
               icon: _isSaving
@@ -207,6 +210,95 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Section: Appearance & Personalization
+            const Divider(),
+            const SizedBox(height: 12),
+            const Text(
+              'Appearance & Personalization',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Customize your mobile display while preserving CRBCL accessibility.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+
+            // Theme Mode Segmented Button
+            SegmentedButton<ThemeMode>(
+              segments: const [
+                ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode), label: Text('Light')),
+                ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode), label: Text('Dark')),
+                ButtonSegment(value: ThemeMode.system, icon: Icon(Icons.settings_system_daydream), label: Text('System')),
+              ],
+              selected: {themeService.themeMode},
+              onSelectionChanged: (Set<ThemeMode> newSelection) {
+                themeService.updatePreferences(mode: newSelection.first);
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Accent Palette Swatches
+            const Text('Lodge Accent Palette', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: MobileThemeService.palettes.map((palette) {
+                final isSelected = themeService.accentKey == palette.key;
+                return ChoiceChip(
+                  label: Text(palette.label, style: const TextStyle(fontSize: 11)),
+                  avatar: CircleAvatar(backgroundColor: palette.primary, radius: 8),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) {
+                      themeService.updatePreferences(accent: palette.key);
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            // Density & Contrast Switches
+            SwitchListTile(
+              title: const Text('Compact Layout Density', style: TextStyle(fontSize: 14)),
+              subtitle: const Text('Tighter cards and list spacing', style: TextStyle(fontSize: 11)),
+              value: themeService.density == 'compact',
+              onChanged: (val) {
+                themeService.updatePreferences(density: val ? 'compact' : 'comfortable');
+              },
+            ),
+            SwitchListTile(
+              title: const Text('High-Contrast Accessibility', style: TextStyle(fontSize: 14)),
+              subtitle: const Text('Stronger card outlines and borders', style: TextStyle(fontSize: 11)),
+              value: themeService.highContrast,
+              onChanged: (val) {
+                themeService.updatePreferences(highContrast: val);
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // Reset to Default button
+            OutlinedButton.icon(
+              onPressed: () {
+                themeService.updatePreferences(
+                  mode: ThemeMode.system,
+                  accent: 'crbcl',
+                  density: 'comfortable',
+                  highContrast: false,
+                  reducedMotion: false,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Appearance restored to CRBCL Default')),
+                );
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reset Appearance to CRBCL Default'),
+            ),
+            const SizedBox(height: 24),
+
+            // Security & Storage
             const Divider(),
             const SizedBox(height: 12),
             const Text(
@@ -228,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: const Text('Offline Storage Encryption'),
               subtitle: const Text('AES-256 SQLCipher Active'),
               trailing: const Icon(Icons.check_circle, color: Colors.green),
-              tileColor: Colors.grey.shade100,
+              tileColor: Theme.of(context).colorScheme.surfaceVariant,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ],

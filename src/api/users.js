@@ -7,4 +7,6 @@ export const usersApi = {
   update: (id, data) => api.entities.User.update(id, data),
   exportUserExcel: (params = {}) =>
     api.get('/api/v1/users/export', { params, responseType: 'blob' }),
+  getPreferences: () => api.get('/api/v1/users/me/preferences'),
+  updatePreferences: (payload) => api.put('/api/v1/users/me/preferences', payload),
 };

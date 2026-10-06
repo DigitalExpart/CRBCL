@@ -99,6 +99,7 @@ class UserInfo(BaseModel):
     roles: list[str] = []
     permissions: list[str] = []
     team_access: list[str] = []
+    preferences: dict[str, object] = Field(default_factory=dict)
     created_at: datetime | None = None
 
     model_config = {"from_attributes": True}

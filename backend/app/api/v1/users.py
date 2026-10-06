@@ -12,13 +12,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
 from app.auth.security import hash_password
+from app.auth.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.user import User, UserPreference
 from app.permissions.constants import Permissions
 from app.permissions.dependencies import require_permission
 from app.repositories.user_repo import UserRepository
 from app.schemas.common import PaginatedResponse, PaginationMeta
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.schemas.user import (
+    AppearancePreferences,
+    UserCreate,
+    UserPreferencesPayload,
+    UserPreferencesResponse,
+    UserResponse,
+    UserUpdate,
+)
 from app.services.user_export_service import generate_user_excel_export
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -137,6 +145,99 @@ async def export_users_excel(
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
         },
+    )
+
+
+@router.get("/me/preferences", response_model=UserPreferencesResponse)
+async def get_my_preferences(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve appearance and dashboard layout preferences for the authenticated user."""
+    stmt = select(UserPreference).where(UserPreference.user_id == current_user.id)
+    result = await db.execute(stmt)
+    prefs = result.scalars().all()
+
+    appearance = AppearancePreferences()
+    dashboard_widgets = []
+
+    for p in prefs:
+        if p.key == "appearance" and p.value:
+            try:
+                parsed = json.loads(p.value)
+                appearance = AppearancePreferences(**parsed)
+            except Exception:
+                pass
+        elif p.key == "dashboard_widgets" and p.value:
+            try:
+                parsed = json.loads(p.value)
+                if isinstance(parsed, list):
+                    dashboard_widgets = parsed
+            except Exception:
+                pass
+
+    return UserPreferencesResponse(
+        appearance=appearance,
+        dashboard_widgets=dashboard_widgets,
+    )
+
+
+@router.put("/me/preferences", response_model=UserPreferencesResponse)
+async def update_my_preferences(
+    payload: UserPreferencesPayload,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update appearance and dashboard presentation preferences for the authenticated user.
+
+    Security boundary: Personalization only controls styling and authorized widget positioning.
+    It does not grant permissions, alter roles, or bypass RBAC boundaries.
+    """
+    appearance_json = payload.appearance.model_dump_json()
+
+    # Save appearance preference
+    stmt = select(UserPreference).where(
+        UserPreference.user_id == current_user.id,
+        UserPreference.key == "appearance",
+    )
+    res = await db.execute(stmt)
+    pref = res.scalars().first()
+    if pref:
+        pref.value = appearance_json
+    else:
+        pref = UserPreference(
+            user_id=current_user.id,
+            key="appearance",
+            value=appearance_json,
+        )
+        db.add(pref)
+
+    # If widgets provided, save widgets preference
+    widgets_list = []
+    if payload.dashboard_widgets is not None:
+        widgets_json = json.dumps(payload.dashboard_widgets)
+        w_stmt = select(UserPreference).where(
+            UserPreference.user_id == current_user.id,
+            UserPreference.key == "dashboard_widgets",
+        )
+        w_res = await db.execute(w_stmt)
+        w_pref = w_res.scalars().first()
+        if w_pref:
+            w_pref.value = widgets_json
+        else:
+            w_pref = UserPreference(
+                user_id=current_user.id,
+                key="dashboard_widgets",
+                value=widgets_json,
+            )
+            db.add(w_pref)
+        widgets_list = payload.dashboard_widgets
+
+    await db.commit()
+
+    return UserPreferencesResponse(
+        appearance=payload.appearance,
+        dashboard_widgets=widgets_list,
     )
 
 

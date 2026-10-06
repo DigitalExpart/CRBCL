@@ -14,6 +14,7 @@ import {
   User,
   LogOut,
   ChevronDown,
+  Palette,
 } from "lucide-react";
 
 export default function UserNav() {
@@ -166,6 +167,14 @@ export default function UserNav() {
         >
           <User className="mr-2 h-4 w-4 text-muted-foreground" />
           <span>My Profile & Settings</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onClick={() => navigate("/profile?tab=appearance")}
+          className="cursor-pointer"
+        >
+          <Palette className="mr-2 h-4 w-4 text-muted-foreground" />
+          <span>Appearance & Theme</span>
         </DropdownMenuItem>
 
 

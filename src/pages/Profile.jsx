@@ -21,7 +21,9 @@ import {
   Loader2,
   Users,
   Trash2,
+  Palette,
 } from "lucide-react";
+import AppearanceSettings from "@/components/settings/AppearanceSettings";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -303,8 +305,8 @@ export default function Profile() {
       </Card>
 
       {/* Profile Management Tabs */}
-      <Tabs defaultValue="details" className="space-y-6">
-        <TabsList className="grid grid-cols-3 w-full sm:w-[420px] p-1 bg-muted/60">
+      <Tabs defaultValue={new URLSearchParams(window.location.search).get("tab") || "details"} className="space-y-6">
+        <TabsList className="grid grid-cols-4 w-full sm:w-[560px] p-1 bg-muted/60">
           <TabsTrigger value="details" className="text-xs sm:text-sm">
             <User className="w-4 h-4 mr-1.5 hidden sm:inline" />
             Information
@@ -312,6 +314,10 @@ export default function Profile() {
           <TabsTrigger value="avatar" className="text-xs sm:text-sm">
             <Camera className="w-4 h-4 mr-1.5 hidden sm:inline" />
             Photo
+          </TabsTrigger>
+          <TabsTrigger value="appearance" className="text-xs sm:text-sm">
+            <Palette className="w-4 h-4 mr-1.5 hidden sm:inline" />
+            Appearance
           </TabsTrigger>
           <TabsTrigger value="security" className="text-xs sm:text-sm">
             <Lock className="w-4 h-4 mr-1.5 hidden sm:inline" />
@@ -611,6 +617,11 @@ export default function Profile() {
               </form>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Tab 3: Appearance & Personalization */}
+        <TabsContent value="appearance">
+          <AppearanceSettings />
         </TabsContent>
       </Tabs>
     </div>

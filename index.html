@@ -6,7 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="CRBCL - Chief Red Bear Children's Lodge Digital Platform. Unified case management, program tracking, and organizational oversight." />
     <meta name="theme-color" content="#8B2B2B" />
-    <title>CRBCL Platform — Chief Red Bear Children's Lodge</title>
+    <script>
+      (function() {
+        try {
+          var raw = localStorage.getItem('crbcl_theme_preferences');
+          var prefs = raw ? JSON.parse(raw) : null;
+          var root = document.documentElement;
+          var themeMode = (prefs && prefs.theme_mode) ? prefs.theme_mode : 'system';
+          var isDark = themeMode === 'dark' || (themeMode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            root.classList.add('dark');
+          } else {
+            root.classList.remove('dark');
+          }
+
+          var accent = (prefs && prefs.accent_theme) ? prefs.accent_theme : 'crbcl';
+          var validAccents = ['crbcl', 'burgundy', 'earth', 'forest', 'prairie', 'ocean', 'teal', 'neutral'];
+          validAccents.forEach(function(a) { root.classList.remove('theme-' + a); });
+          if (validAccents.indexOf(accent) !== -1) {
+            root.classList.add('theme-' + accent);
+          } else {
+            root.classList.add('theme-crbcl');
+          }
+
+          var density = (prefs && prefs.density) ? prefs.density : 'comfortable';
+          if (density === 'compact') {
+            root.classList.add('density-compact');
+          } else {
+            root.classList.remove('density-compact');
+          }
+
+          var radius = (prefs && prefs.card_radius) ? prefs.card_radius : 'rounded';
+          root.classList.remove('radius-rounded', 'radius-subtle');
+          root.classList.add('radius-' + (radius === 'subtle' ? 'subtle' : 'rounded'));
+
+          if (prefs && prefs.high_contrast) {
+            root.classList.add('high-contrast');
+          } else {
+            root.classList.remove('high-contrast');
+          }
+
+          if (prefs && prefs.reduced_motion) {
+            root.classList.add('reduced-motion');
+          } else {
+            root.classList.remove('reduced-motion');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

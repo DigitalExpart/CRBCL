@@ -82,7 +82,7 @@ def _clear_auth_cookies(response: Response) -> None:
     response.delete_cookie(key="crbcl_csrf_token", **csrf_cookie)
 
 
-def _build_user_info(user: User) -> UserInfo:
+def _build_user_info(user: User, prefs: list[UserPreference] | None = None) -> UserInfo:
     roles = [ur.role.key for ur in user.roles if ur.role and ur.role.is_active]
     permissions = set()
     for ur in user.roles:
@@ -91,10 +91,13 @@ def _build_user_info(user: User) -> UserInfo:
                 if rp.permission and rp.permission.is_active:
                     permissions.add(rp.permission.key)
 
+    # Use explicit prefs if provided, otherwise fallback to user.preferences
+    prefs_list = prefs if prefs is not None else (user.preferences if hasattr(user, "preferences") else [])
+
     # Check preferences for persisted team_access
     team_access = []
-    if hasattr(user, "preferences") and user.preferences:
-        pref = next((p for p in user.preferences if p.key == "team_access"), None)
+    if prefs_list:
+        pref = next((p for p in prefs_list if p.key == "team_access"), None)
         if pref and pref.value:
             try:
                 loaded = json.loads(pref.value)
@@ -105,8 +108,8 @@ def _build_user_info(user: User) -> UserInfo:
 
     # Check preferences for avatar_url
     avatar_url = None
-    if hasattr(user, "preferences") and user.preferences:
-        avatar_pref = next((p for p in user.preferences if p.key == "avatar_url"), None)
+    if prefs_list:
+        avatar_pref = next((p for p in prefs_list if p.key == "avatar_url"), None)
         if avatar_pref and avatar_pref.value:
             avatar_url = avatar_pref.value
 
@@ -136,6 +139,16 @@ def _build_user_info(user: User) -> UserInfo:
 
         permissions.update(p.value for p in Permissions)
 
+    # Check preferences for appearance and widgets
+    preferences = {}
+    if prefs_list:
+        for p in prefs_list:
+            if p.key in ("appearance", "dashboard_widgets"):
+                try:
+                    preferences[p.key] = json.loads(p.value)
+                except Exception:
+                    preferences[p.key] = p.value
+
     return UserInfo(
         id=user.id,
         email=user.email,
@@ -147,6 +160,7 @@ def _build_user_info(user: User) -> UserInfo:
         roles=roles,
         permissions=sorted(permissions),
         team_access=team_access,
+        preferences=preferences,
         created_at=user.created_at,
     )
 
@@ -243,8 +257,10 @@ async def logout(
 
 
 @router.get("/me", response_model=UserInfo)
-async def me(user: User = Depends(get_current_user)):
-    return _build_user_info(user)
+async def me(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    pref_res = await db.execute(select(UserPreference).where(UserPreference.user_id == user.id))
+    prefs = pref_res.scalars().all()
+    return _build_user_info(user, prefs=prefs)
 
 
 @router.patch("/me", response_model=UserInfo)
@@ -277,7 +293,9 @@ async def update_profile(
     await db.commit()
     auth = AuthService(db)
     fresh_user = await auth.get_user_by_id(user.id)
-    return _build_user_info(fresh_user or user)
+    pref_res = await db.execute(select(UserPreference).where(UserPreference.user_id == user.id))
+    prefs = pref_res.scalars().all()
+    return _build_user_info(fresh_user or user, prefs=prefs)
 
 
 @router.post("/change-password", response_model=MessageResponse)
