@@ -1,8 +1,9 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import UserNav from "./UserNav";
+import crbclEmblem from "@/assets/crbcl-emblem.png";
 
 export default function AppLayout() {
   return (
@@ -10,10 +11,20 @@ export default function AppLayout() {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b border-border pl-16 pr-4 lg:px-8 flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-30">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">
-              Chief Red Bear Children's Lodge • Family Wellness Platform
-            </span>
+          <div className="flex items-center gap-2.5">
+            <Link to="/" className="flex items-center gap-2.5 group focus:outline-none">
+              <img
+                src={crbclEmblem}
+                alt="Chief Red Bear Children's Lodge"
+                className="w-6 h-6 object-contain transition-transform group-hover:scale-105"
+              />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline group-hover:text-foreground transition-colors">
+                Chief Red Bear Children's Lodge • Family Wellness Platform
+              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider sm:hidden group-hover:text-foreground transition-colors">
+                CRBCL
+              </span>
+            </Link>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell />

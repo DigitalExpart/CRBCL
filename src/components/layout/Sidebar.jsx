@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 
 import { api } from "@/api";
+import crbclEmblem from "@/assets/crbcl-emblem.png";
+import crbclLogoDark from "@/assets/crbcl-logo-dark.png";
+
 
 
 const getStoredUser = () => {
@@ -193,20 +196,26 @@ export default function Sidebar() {
   const navContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-4 flex items-center gap-3 border-b border-sidebar-border">
-        <div className="w-10 h-10 rounded-lg bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-          <Shield className="w-5 h-5 text-sidebar-primary-foreground" />
-        </div>
-        {!collapsed && (
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold text-sidebar-primary-foreground font-heading truncate">
-              CRBCL
-            </h1>
-            <p className="text-[10px] text-sidebar-foreground/60 truncate">
-              Chief Red Bear Children's Lodge
-            </p>
-          </div>
-        )}
+      <div className="p-3 border-b border-sidebar-border flex items-center justify-center min-h-[72px]">
+        <Link
+          to="/"
+          className="group focus:outline-none flex items-center justify-center w-full transition-transform hover:scale-[1.02] duration-200"
+          title="Chief Red Bear Children's Lodge"
+        >
+          {collapsed ? (
+            <img
+              src={crbclEmblem}
+              alt="Chief Red Bear Children's Lodge"
+              className="w-10 h-10 object-contain mx-auto transition-transform group-hover:scale-110"
+            />
+          ) : (
+            <img
+              src={crbclLogoDark}
+              alt="Chief Red Bear Children's Lodge"
+              className="h-16 w-auto max-w-[200px] object-contain mx-auto py-0.5"
+            />
+          )}
+        </Link>
       </div>
 
       {/* Navigation */}
