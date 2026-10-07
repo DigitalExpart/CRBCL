@@ -197,3 +197,28 @@ async def test_preferences_never_alter_rbac(client: AsyncClient, caseworker_user
     res = await client.get("/api/v1/admin/dashboards", headers=caseworker_user["headers"])
     # Must be forbidden (403)
     assert res.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_new_color_palettes_accepted(client: AsyncClient, caseworker_user):
+    """Ensure Pink, Light Pink, Purple, Light Purple, Sky Blue, and Yellow palettes are accepted and normalized."""
+    test_cases = [
+        ("pink", "pink"),
+        ("light-pink", "light-pink"),
+        ("light_pink", "light-pink"),
+        ("purple", "purple"),
+        ("light-purple", "light-purple"),
+        ("light_purple", "light-purple"),
+        ("sky-blue", "sky-blue"),
+        ("sky_blue", "sky-blue"),
+        ("yellow", "yellow"),
+    ]
+    for input_val, expected_val in test_cases:
+        res = await client.put(
+            "/api/v1/users/me/preferences",
+            headers=caseworker_user["headers"],
+            json={"appearance": {"accent_theme": input_val}},
+        )
+        assert res.status_code == 200, f"Failed for palette {input_val}: {res.text}"
+        data = res.json()
+        assert data["appearance"]["accent_theme"] == expected_val

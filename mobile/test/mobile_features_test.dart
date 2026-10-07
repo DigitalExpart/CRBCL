@@ -31,6 +31,30 @@ void main() {
       await service.updatePreferences(accent: 'ocean');
       expect(service.accentKey, equals('ocean'));
       expect(service.activePalette.primary, equals(const Color(0xFF245C99)));
+
+      await service.updatePreferences(accent: 'pink');
+      expect(service.accentKey, equals('pink'));
+      expect(service.activePalette.primary, equals(const Color(0xFFD81B60)));
+
+      await service.updatePreferences(accent: 'light-pink');
+      expect(service.accentKey, equals('light-pink'));
+      expect(service.activePalette.primary, equals(const Color(0xFFD45D82)));
+
+      await service.updatePreferences(accent: 'purple');
+      expect(service.accentKey, equals('purple'));
+      expect(service.activePalette.primary, equals(const Color(0xFF7B1FA2)));
+
+      await service.updatePreferences(accent: 'light-purple');
+      expect(service.accentKey, equals('light-purple'));
+      expect(service.activePalette.primary, equals(const Color(0xFF8B5CF6)));
+
+      await service.updatePreferences(accent: 'sky-blue');
+      expect(service.accentKey, equals('sky-blue'));
+      expect(service.activePalette.primary, equals(const Color(0xFF0284C7)));
+
+      await service.updatePreferences(accent: 'yellow');
+      expect(service.accentKey, equals('yellow'));
+      expect(service.activePalette.primary, equals(const Color(0xFFC27803)));
     });
 
     test('ThemeData generation reflects light and dark modes', () {

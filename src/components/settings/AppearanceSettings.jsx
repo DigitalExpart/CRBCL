@@ -172,13 +172,14 @@ export default function AppearanceSettings() {
             Accent Palette
           </CardTitle>
           <CardDescription>
-            Select from the 8 accessible, culturally inspired lodge color palettes.
+            Select from the accessible, culturally inspired lodge color palettes.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {VALID_ACCENTS.map(({ key, label, color }) => {
-              const active = preferences.accent_theme === key;
+              const currentKey = preferences.accent_theme ? preferences.accent_theme.replace('_', '-') : 'crbcl';
+              const active = currentKey === key;
               return (
                 <button
                   key={key}

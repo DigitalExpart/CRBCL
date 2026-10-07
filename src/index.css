@@ -145,6 +145,48 @@
     --sidebar-ring: 220 20% 45%;
     --chart-1: 220 20% 35%;
   }
+  .theme-pink {
+    --primary: 335 78% 46%;
+    --ring: 335 78% 46%;
+    --sidebar-primary: 335 75% 52%;
+    --sidebar-ring: 335 75% 52%;
+    --chart-1: 335 78% 46%;
+  }
+  .theme-light-pink, .theme-light_pink {
+    --primary: 340 68% 54%;
+    --ring: 340 68% 54%;
+    --sidebar-primary: 340 68% 60%;
+    --sidebar-ring: 340 68% 60%;
+    --chart-1: 340 68% 54%;
+  }
+  .theme-purple {
+    --primary: 280 65% 38%;
+    --ring: 280 65% 38%;
+    --sidebar-primary: 280 65% 48%;
+    --sidebar-ring: 280 65% 48%;
+    --chart-1: 280 65% 38%;
+  }
+  .theme-light-purple, .theme-light_purple {
+    --primary: 265 55% 48%;
+    --ring: 265 55% 48%;
+    --sidebar-primary: 265 55% 56%;
+    --sidebar-ring: 265 55% 56%;
+    --chart-1: 265 55% 48%;
+  }
+  .theme-sky-blue, .theme-sky_blue {
+    --primary: 199 88% 38%;
+    --ring: 199 88% 38%;
+    --sidebar-primary: 199 88% 46%;
+    --sidebar-ring: 199 88% 46%;
+    --chart-1: 199 88% 38%;
+  }
+  .theme-yellow {
+    --primary: 43 90% 38%;
+    --ring: 43 90% 38%;
+    --sidebar-primary: 43 90% 46%;
+    --sidebar-ring: 43 90% 46%;
+    --chart-1: 43 90% 38%;
+  }
 
   /* CRBCL Accent Palettes — Dark Mode */
   .dark.theme-crbcl, .dark .theme-crbcl {
@@ -202,6 +244,48 @@
     --sidebar-primary: 220 18% 55%;
     --sidebar-ring: 220 18% 55%;
     --chart-1: 220 18% 52%;
+  }
+  .dark.theme-pink, .dark .theme-pink {
+    --primary: 335 75% 58%;
+    --ring: 335 75% 58%;
+    --sidebar-primary: 335 75% 62%;
+    --sidebar-ring: 335 75% 62%;
+    --chart-1: 335 75% 58%;
+  }
+  .dark.theme-light-pink, .dark .theme-light-pink, .dark.theme-light_pink, .dark .theme-light_pink {
+    --primary: 340 75% 68%;
+    --ring: 340 75% 68%;
+    --sidebar-primary: 340 75% 72%;
+    --sidebar-ring: 340 75% 72%;
+    --chart-1: 340 75% 68%;
+  }
+  .dark.theme-purple, .dark .theme-purple {
+    --primary: 280 60% 56%;
+    --ring: 280 60% 56%;
+    --sidebar-primary: 280 60% 60%;
+    --sidebar-ring: 280 60% 60%;
+    --chart-1: 280 60% 56%;
+  }
+  .dark.theme-light-purple, .dark .theme-light-purple, .dark.theme-light_purple, .dark .theme-light_purple {
+    --primary: 265 65% 66%;
+    --ring: 265 65% 66%;
+    --sidebar-primary: 265 65% 70%;
+    --sidebar-ring: 265 65% 70%;
+    --chart-1: 265 65% 66%;
+  }
+  .dark.theme-sky-blue, .dark .theme-sky-blue, .dark.theme-sky_blue, .dark .theme-sky_blue {
+    --primary: 199 80% 52%;
+    --ring: 199 80% 52%;
+    --sidebar-primary: 199 80% 56%;
+    --sidebar-ring: 199 80% 56%;
+    --chart-1: 199 80% 52%;
+  }
+  .dark.theme-yellow, .dark .theme-yellow {
+    --primary: 45 90% 48%;
+    --ring: 45 90% 48%;
+    --sidebar-primary: 45 90% 52%;
+    --sidebar-ring: 45 90% 52%;
+    --chart-1: 45 90% 48%;
   }
 
   /* Card Radius Variants */

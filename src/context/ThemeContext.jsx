@@ -12,6 +12,12 @@ export const VALID_ACCENTS = [
   { key: 'ocean', label: 'Deep River Blue', color: '#245C99', bgHsl: '215 65% 40%' },
   { key: 'teal', label: 'Boreal Spruce Teal', color: '#217A6C', bgHsl: '174 60% 32%' },
   { key: 'neutral', label: 'Refined Slate', color: '#485669', bgHsl: '220 20% 35%' },
+  { key: 'pink', label: 'Pink', color: '#D81B60', bgHsl: '335 78% 46%' },
+  { key: 'light-pink', label: 'Light Pink', color: '#E57399', bgHsl: '340 68% 54%' },
+  { key: 'purple', label: 'Purple', color: '#7B1FA2', bgHsl: '280 65% 38%' },
+  { key: 'light-purple', label: 'Light Purple', color: '#9575CD', bgHsl: '265 55% 48%' },
+  { key: 'sky-blue', label: 'Sky Blue', color: '#0284C7', bgHsl: '199 88% 38%' },
+  { key: 'yellow', label: 'Yellow', color: '#D97706', bgHsl: '43 90% 38%' },
 ];
 
 export const DEFAULT_PREFERENCES = {
@@ -71,9 +77,15 @@ export function ThemeProvider({ children }) {
     }
 
     // Accent theme
-    VALID_ACCENTS.forEach(({ key }) => root.classList.remove(`theme-${key}`));
-    const validKey = VALID_ACCENTS.some((a) => a.key === preferences.accent_theme)
-      ? preferences.accent_theme
+    VALID_ACCENTS.forEach(({ key }) => {
+      root.classList.remove(`theme-${key}`);
+      if (key.includes('-')) {
+        root.classList.remove(`theme-${key.replace('-', '_')}`);
+      }
+    });
+    const currentAccent = preferences.accent_theme ? preferences.accent_theme.replace('_', '-') : 'crbcl';
+    const validKey = VALID_ACCENTS.some((a) => a.key === currentAccent)
+      ? currentAccent
       : 'crbcl';
     root.classList.add(`theme-${validKey}`);
 

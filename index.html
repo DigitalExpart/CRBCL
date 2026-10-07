@@ -20,9 +20,16 @@
             root.classList.remove('dark');
           }
 
-          var accent = (prefs && prefs.accent_theme) ? prefs.accent_theme : 'crbcl';
-          var validAccents = ['crbcl', 'burgundy', 'earth', 'forest', 'prairie', 'ocean', 'teal', 'neutral'];
-          validAccents.forEach(function(a) { root.classList.remove('theme-' + a); });
+          var rawAccent = (prefs && prefs.accent_theme) ? prefs.accent_theme : 'crbcl';
+          var accent = rawAccent.replace ? rawAccent.replace('_', '-') : rawAccent;
+          var validAccents = [
+            'crbcl', 'burgundy', 'earth', 'forest', 'prairie', 'ocean', 'teal', 'neutral',
+            'pink', 'light-pink', 'purple', 'light-purple', 'sky-blue', 'yellow'
+          ];
+          validAccents.forEach(function(a) {
+            root.classList.remove('theme-' + a);
+            root.classList.remove('theme-' + a.replace('-', '_'));
+          });
           if (validAccents.indexOf(accent) !== -1) {
             root.classList.add('theme-' + accent);
           } else {

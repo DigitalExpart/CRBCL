@@ -70,6 +70,42 @@ class MobileThemeService extends ChangeNotifier {
       primary: Color(0xFF485669),
       darkPrimary: Color(0xFF7A8B9E),
     ),
+    CrbclPalette(
+      key: 'pink',
+      label: 'Pink',
+      primary: Color(0xFFD81B60),
+      darkPrimary: Color(0xFFEC407A),
+    ),
+    CrbclPalette(
+      key: 'light-pink',
+      label: 'Light Pink',
+      primary: Color(0xFFD45D82),
+      darkPrimary: Color(0xFFF48FB1),
+    ),
+    CrbclPalette(
+      key: 'purple',
+      label: 'Purple',
+      primary: Color(0xFF7B1FA2),
+      darkPrimary: Color(0xFFA855F7),
+    ),
+    CrbclPalette(
+      key: 'light-purple',
+      label: 'Light Purple',
+      primary: Color(0xFF8B5CF6),
+      darkPrimary: Color(0xFFC4B5FD),
+    ),
+    CrbclPalette(
+      key: 'sky-blue',
+      label: 'Sky Blue',
+      primary: Color(0xFF0284C7),
+      darkPrimary: Color(0xFF38BDF8),
+    ),
+    CrbclPalette(
+      key: 'yellow',
+      label: 'Yellow',
+      primary: Color(0xFFC27803),
+      darkPrimary: Color(0xFFF59E0B),
+    ),
   ];
 
   ThemeMode _themeMode = ThemeMode.system;
@@ -122,9 +158,10 @@ class MobileThemeService extends ChangeNotifier {
       }
     }
     if (data.containsKey('accent_theme')) {
-      final accent = data['accent_theme'] as String?;
-      if (palettes.any((p) => p.key == accent)) {
-        _accentKey = accent!;
+      final raw = data['accent_theme'] as String?;
+      final accent = raw?.replaceAll('_', '-');
+      if (accent != null && palettes.any((p) => p.key == accent)) {
+        _accentKey = accent;
       }
     }
     if (data.containsKey('density')) {
@@ -152,7 +189,12 @@ class MobileThemeService extends ChangeNotifier {
     String? backendUrl,
   }) async {
     if (mode != null) _themeMode = mode;
-    if (accent != null && palettes.any((p) => p.key == accent)) _accentKey = accent;
+    if (accent != null) {
+      final normalizedAccent = accent.replaceAll('_', '-');
+      if (palettes.any((p) => p.key == normalizedAccent)) {
+        _accentKey = normalizedAccent;
+      }
+    }
     if (density != null) _density = density;
     if (highContrast != null) _highContrast = highContrast;
     if (reducedMotion != null) _reducedMotion = reducedMotion;

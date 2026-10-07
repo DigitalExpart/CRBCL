@@ -57,7 +57,10 @@ class UserResponse(BaseModel):
 
 class AppearancePreferences(BaseModel):
     theme_mode: str = Field(default="system", description="light | dark | system")
-    accent_theme: str = Field(default="crbcl", description="crbcl | burgundy | earth | forest | prairie | ocean | teal | neutral")
+    accent_theme: str = Field(
+        default="crbcl",
+        description="crbcl | burgundy | earth | forest | prairie | ocean | teal | neutral | pink | light-pink | purple | light-purple | sky-blue | yellow",
+    )
     density: str = Field(default="comfortable", description="comfortable | compact")
     sidebar_collapsed: bool = Field(default=False)
     card_radius: str = Field(default="rounded", description="rounded | subtle")
@@ -74,7 +77,24 @@ class AppearancePreferences(BaseModel):
 
     @validator("accent_theme")
     def validate_accent_theme(cls, v):
-        allowed = {"crbcl", "burgundy", "earth", "forest", "prairie", "ocean", "teal", "neutral"}
+        if isinstance(v, str):
+            v = v.lower().strip().replace("_", "-")
+        allowed = {
+            "crbcl",
+            "burgundy",
+            "earth",
+            "forest",
+            "prairie",
+            "ocean",
+            "teal",
+            "neutral",
+            "pink",
+            "light-pink",
+            "purple",
+            "light-purple",
+            "sky-blue",
+            "yellow",
+        }
         if v not in allowed:
             raise ValueError(f"Invalid accent_theme: {v}. Must be one of {allowed}")
         return v
