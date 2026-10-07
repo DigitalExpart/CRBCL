@@ -67,9 +67,9 @@ export default function AdminLogin() {
         )}
 
         <div className="space-y-1.5">
-          <Label htmlFor="admin-email">Administrator Work Email</Label>
+          <Label htmlFor="admin-email" className="text-[#1F1A17]">Administrator Work Email</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#786F6B]" />
             <Input
               id="admin-email"
               type="email"
@@ -77,7 +77,7 @@ export default function AdminLogin() {
               placeholder="admin@crbcl.ca"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-9 h-11"
+              className="pl-9 h-11 bg-white border-[#E8E3DF] text-[#1F1A17] placeholder:text-[#9E9590]"
               disabled={loading}
               autoComplete="username"
             />
@@ -86,13 +86,13 @@ export default function AdminLogin() {
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="admin-password">Administrator Password</Label>
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+            <Label htmlFor="admin-password" className="text-[#1F1A17]">Administrator Password</Label>
+            <Link to="/forgot-password" className="text-xs text-[#8B2626] hover:underline">
               Forgot password?
             </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#786F6B]" />
             <Input
               id="admin-password"
               type={showPassword ? "text" : "password"}
@@ -100,14 +100,14 @@ export default function AdminLogin() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-9 pr-10 h-11"
+              className="pl-9 pr-10 h-11 bg-white border-[#E8E3DF] text-[#1F1A17] placeholder:text-[#9E9590]"
               disabled={loading}
               autoComplete="current-password"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#786F6B] hover:text-[#1F1A17]"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>

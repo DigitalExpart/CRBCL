@@ -90,13 +90,13 @@ export default function Login() {
         <div className="space-y-3 text-center text-xs">
           <div>
             Don't have an account?{" "}
-            <Link to="/register" className="text-primary font-medium hover:underline">
+            <Link to="/register" className="text-[#8B2626] font-medium hover:underline">
               Create one
             </Link>
           </div>
-          <div className="pt-2 border-t border-border/60">
-            <span className="text-muted-foreground">IT Administrator or System Admin? </span>
-            <Link to="/admin/login" className="text-primary font-medium hover:underline inline-flex items-center">
+          <div className="pt-2 border-t border-[#E8E3DF]">
+            <span className="text-[#786F6B]">IT Administrator or System Admin? </span>
+            <Link to="/admin/login" className="text-[#8B2626] font-medium hover:underline inline-flex items-center">
               Go to IT Admin Portal &rarr;
             </Link>
           </div>
@@ -105,7 +105,7 @@ export default function Login() {
     >
       <Button
         variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
+        className="w-full h-12 text-sm font-medium mb-6 bg-white border-[#E8E3DF] text-[#1F1A17] hover:bg-[#F5F2EF] hover:text-[#1F1A17]"
         onClick={handleGoogle}
       >
         <GoogleIcon className="w-5 h-5 mr-2" />
@@ -114,15 +114,15 @@ export default function Login() {
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
+          <div className="w-full border-t border-[#E8E3DF]" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
+          <span className="bg-white px-3 text-[#786F6B]">or</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex flex-col gap-1.5">
+        <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm flex flex-col gap-1.5">
           <div className="flex items-start gap-2">
             <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span>{error}</span>
@@ -130,7 +130,7 @@ export default function Login() {
           {error.includes("Administrator") && (
             <Link
               to="/admin/login"
-              className="text-xs font-semibold text-primary underline hover:text-primary/80 ml-6"
+              className="text-xs font-semibold text-[#8B2626] underline hover:text-[#731E1E] ml-6"
             >
               Click here to go directly to the IT Admin Portal &rarr;
             </Link>
@@ -140,9 +140,9 @@ export default function Login() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-[#1F1A17]">Email</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#786F6B]" aria-hidden="true" />
             <Input
               id="email"
               type="email"
@@ -151,20 +151,20 @@ export default function Login() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-12 bg-white border-[#E8E3DF] text-[#1F1A17] placeholder:text-[#9E9590] focus-visible:ring-[#8B2626]"
               required
             />
           </div>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+            <Label htmlFor="password" className="text-[#1F1A17]">Password</Label>
+            <Link to="/forgot-password" className="text-xs text-[#8B2626] hover:underline">
               Forgot password?
             </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#786F6B]" aria-hidden="true" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -172,13 +172,13 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 h-12"
+              className="pl-10 pr-10 h-12 bg-white border-[#E8E3DF] text-[#1F1A17] placeholder:text-[#9E9590] focus-visible:ring-[#8B2626]"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:text-foreground p-1 rounded-md transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#786F6B] hover:text-[#1F1A17] focus:outline-none focus:text-[#1F1A17] p-1 rounded-md transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
@@ -189,7 +189,7 @@ export default function Login() {
             </button>
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button type="submit" className="w-full h-12 font-medium bg-[#8B2626] hover:bg-[#731E1E] text-white shadow-sm" disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

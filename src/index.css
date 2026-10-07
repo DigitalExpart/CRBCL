@@ -370,6 +370,46 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* Authentication Pages Invariant: Retain original clean white lodge branding */
+  .auth-layout,
+  .dark .auth-layout,
+  .dark.auth-layout {
+    --background: 30 20% 98% !important;
+    --foreground: 20 20% 10% !important;
+    --card: 0 0% 100% !important;
+    --card-foreground: 20 20% 10% !important;
+    --popover: 0 0% 100% !important;
+    --popover-foreground: 20 20% 10% !important;
+    --primary: 4 60% 38% !important;
+    --primary-foreground: 0 0% 100% !important;
+    --secondary: 30 30% 94% !important;
+    --secondary-foreground: 20 20% 15% !important;
+    --muted: 30 15% 94% !important;
+    --muted-foreground: 20 10% 45% !important;
+    --accent: 36 70% 52% !important;
+    --accent-foreground: 0 0% 100% !important;
+    --destructive: 0 72% 51% !important;
+    --destructive-foreground: 0 0% 100% !important;
+    --border: 30 15% 89% !important;
+    --input: 30 15% 89% !important;
+    --ring: 4 60% 38% !important;
+    color-scheme: light !important;
+    background-color: hsl(30 20% 98%) !important;
+    color: hsl(20 20% 10%) !important;
+  }
+
+  .auth-layout input,
+  .dark .auth-layout input {
+    background-color: #ffffff !important;
+    border-color: hsl(30 15% 89%) !important;
+    color: hsl(20 20% 10%) !important;
+  }
+
+  .auth-layout input::placeholder,
+  .dark .auth-layout input::placeholder {
+    color: hsl(20 10% 55%) !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

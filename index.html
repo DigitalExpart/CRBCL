@@ -9,9 +9,17 @@
     <script>
       (function() {
         try {
+          var root = document.documentElement;
+          var path = window.location.pathname || '';
+          var isAuthPage = path === '/login' || path === '/admin/login' || path === '/register' || path === '/forgot-password' || path === '/reset-password';
+          if (isAuthPage) {
+            root.classList.remove('dark');
+            root.classList.add('theme-crbcl');
+            return;
+          }
+
           var raw = localStorage.getItem('crbcl_theme_preferences');
           var prefs = raw ? JSON.parse(raw) : null;
-          var root = document.documentElement;
           var themeMode = (prefs && prefs.theme_mode) ? prefs.theme_mode : 'system';
           var isDark = themeMode === 'dark' || (themeMode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
           if (isDark) {

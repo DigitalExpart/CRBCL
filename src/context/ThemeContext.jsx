@@ -69,6 +69,24 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     const root = document.documentElement;
 
+    // Preserve original white branding on login and authentication pages
+    const pathname = typeof window !== 'undefined' ? (window.location.pathname || '') : '';
+    const isAuthRoute = ['/login', '/admin/login', '/register', '/forgot-password', '/reset-password'].some(
+      (p) => pathname === p || pathname.startsWith(p + '/')
+    );
+
+    if (isAuthRoute) {
+      root.classList.remove('dark');
+      VALID_ACCENTS.forEach(({ key }) => {
+        root.classList.remove(`theme-${key}`);
+        if (key.includes('-')) {
+          root.classList.remove(`theme-${key.replace('-', '_')}`);
+        }
+      });
+      root.classList.add('theme-crbcl');
+      return;
+    }
+
     // Dark mode
     if (isDark) {
       root.classList.add('dark');
