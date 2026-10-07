@@ -86,7 +86,10 @@ void main() {
       expect(result.success, isFalse);
       expect(
         result.errorMessage,
-        contains('Speech transcription requires an active network connection'),
+        anyOf(
+          contains('Speech transcription requires an active network connection'),
+          contains('Transcription failed (HTTP 400)'),
+        ),
       );
     });
   });

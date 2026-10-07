@@ -137,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 44,
-                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                           child: Text(
                             'CB',
                             style: TextStyle(
@@ -320,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: const Text('Offline Storage Encryption'),
               subtitle: const Text('AES-256 SQLCipher Active'),
               trailing: const Icon(Icons.check_circle, color: Colors.green),
-              tileColor: Theme.of(context).colorScheme.surfaceVariant,
+              tileColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ],

@@ -232,7 +232,7 @@ class MobileThemeService extends ChangeNotifier {
         foregroundColor: Colors.white,
         elevation: _highContrast ? 2 : 0,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white,
         elevation: _highContrast ? 3 : 1,
         shape: RoundedRectangleBorder(
@@ -271,7 +271,7 @@ class MobileThemeService extends ChangeNotifier {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: const Color(0xFF221E1E),
         elevation: 1,
         shape: RoundedRectangleBorder(

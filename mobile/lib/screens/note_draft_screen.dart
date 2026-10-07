@@ -170,14 +170,14 @@ class _NoteDraftScreenState extends State<NoteDraftScreen> {
                     ? Colors.red.shade50
                     : _isTranscribing
                         ? Colors.blue.shade50
-                        : Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: _isRecording
                       ? Colors.red.shade300
                       : _isTranscribing
                           ? Colors.blue.shade300
-                          : Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                 ),
               ),
               child: Row(

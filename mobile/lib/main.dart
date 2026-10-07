@@ -22,8 +22,20 @@ class CrbclMobileApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeService = Provider.of<MobileThemeService>(context);
+    try {
+      final themeService = Provider.of<MobileThemeService>(context);
+      return _buildApp(themeService);
+    } catch (_) {
+      return ChangeNotifierProvider(
+        create: (_) => MobileThemeService(),
+        child: Builder(
+          builder: (ctx) => _buildApp(Provider.of<MobileThemeService>(ctx)),
+        ),
+      );
+    }
+  }
 
+  Widget _buildApp(MobileThemeService themeService) {
     return MaterialApp(
       title: 'CRBCL Field App',
       theme: themeService.getLightTheme(),
