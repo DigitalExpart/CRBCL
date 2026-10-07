@@ -122,12 +122,12 @@ export default function AskRedBear() {
       />
 
       {/* Security Scope Banner */}
-      <div className="mb-4 p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 flex items-center justify-between">
+      <div className="mb-4 p-3 rounded-xl bg-card border border-border text-xs text-foreground flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span><strong>ADR-036 Governance:</strong> Auth-First Context Manager active. Restricted cases, medical profiles, and reporter identities are automatically redacted.</span>
         </div>
-        <span className="px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 font-mono text-[10px] border border-indigo-800 hidden sm:inline">Allowlisted Tools Only</span>
+        <span className="px-2 py-0.5 rounded bg-secondary text-secondary-foreground font-mono text-[10px] border border-border hidden sm:inline">Allowlisted Tools Only</span>
       </div>
 
       {/* Chat Area */}

@@ -11,17 +11,18 @@ import {
   User,
   RefreshCw,
   FileText,
-  Activity
+  Activity,
+  Clock
 } from 'lucide-react';
 
 const EVENT_TYPE_COLORS = {
-  APPOINTMENT: { bg: 'bg-emerald-500/15', text: 'text-emerald-300', border: 'border-emerald-500/30', label: 'Appointment' },
-  COURT: { bg: 'bg-rose-500/15', text: 'text-rose-300', border: 'border-rose-500/30', label: 'Court Hearing' },
-  STAFFING: { bg: 'bg-indigo-500/15', text: 'text-indigo-300', border: 'border-indigo-500/30', label: 'Staffing Session' },
-  VISITATION: { bg: 'bg-purple-500/15', text: 'text-purple-300', border: 'border-purple-500/30', label: 'Kinship Visitation' },
-  CASE_NOTE_FOLLOWUP: { bg: 'bg-amber-500/15', text: 'text-amber-300', border: 'border-amber-500/30', label: 'Follow-Up' },
-  HOME_VISIT: { bg: 'bg-sky-500/15', text: 'text-sky-300', border: 'border-sky-500/30', label: 'Home Visit' },
-  OTHER: { bg: 'bg-slate-500/15', text: 'text-slate-300', border: 'border-slate-500/30', label: 'Other' },
+  APPOINTMENT: { bg: 'bg-emerald-500/15', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-500/30', label: 'Appointment' },
+  COURT: { bg: 'bg-rose-500/15', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-500/30', label: 'Court Hearing' },
+  STAFFING: { bg: 'bg-indigo-500/15', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-500/30', label: 'Staffing Session' },
+  VISITATION: { bg: 'bg-purple-500/15', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-500/30', label: 'Kinship Visitation' },
+  CASE_NOTE_FOLLOWUP: { bg: 'bg-amber-500/15', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-500/30', label: 'Follow-Up' },
+  HOME_VISIT: { bg: 'bg-sky-500/15', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-500/30', label: 'Home Visit' },
+  OTHER: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border', label: 'Other' },
 };
 
 export default function TeamSchedule() {
@@ -137,15 +138,18 @@ export default function TeamSchedule() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-slate-900/60 p-6 rounded-3xl border border-slate-800 backdrop-blur-xl shadow-xl">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Team Calendar & Workload</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Team Calendar &amp; Workload</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
               <Users className="w-3 h-3" /> Multi-Worker Overview
             </span>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+              <Clock className="w-3 h-3" /> Canada/Regina (CST)
+            </span>
           </div>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Supervisor visibility into casework assignments, hearing schedules, and team commitments
           </p>
         </div>
@@ -155,9 +159,9 @@ export default function TeamSchedule() {
           <select
             value={selectedTeamId}
             onChange={(e) => setSelectedTeamId(e.target.value)}
-            className="px-3.5 py-2 rounded-2xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+            className="px-3.5 py-2 rounded-xl bg-background border border-input text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">All Teams & Units</option>
+            <option value="">All Teams &amp; Units</option>
             {teams.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -170,12 +174,12 @@ export default function TeamSchedule() {
       {/* Week Navigator & Workload Strip */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Date Controls */}
-        <div className="lg:col-span-3 bg-slate-900/40 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+        <div className="lg:col-span-3 bg-card p-4 rounded-xl border border-border flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleThisWeek}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-secondary text-xs font-medium text-secondary-foreground hover:bg-secondary/80 transition-colors"
             >
               Current Week
             </button>
@@ -183,37 +187,37 @@ export default function TeamSchedule() {
               <button
                 type="button"
                 onClick={handlePrevWeek}
-                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                className="p-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={handleNextWeek}
-                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                className="p-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <span className="text-sm font-semibold text-white">
+            <span className="text-sm font-semibold text-foreground">
               {weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               {' — '}
               {weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
 
-          <div className="text-xs text-slate-400 font-medium">
-            Total Events: <span className="text-amber-400 font-bold">{events.length}</span>
+          <div className="text-xs text-muted-foreground font-medium">
+            Total Events: <span className="text-primary font-bold">{events.length}</span>
           </div>
         </div>
 
         {/* Workload Pill summary */}
-        <div className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+        <div className="bg-card p-4 rounded-xl border border-border flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-semibold text-white">Active Staff</span>
+            <Activity className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold text-foreground">Active Staff</span>
           </div>
-          <span className="text-xs font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg">
+          <span className="text-xs font-bold text-foreground bg-muted px-2.5 py-1 rounded-lg">
             {Object.keys(workerWorkload).length} Workers Scheduled
           </span>
         </div>
@@ -221,8 +225,8 @@ export default function TeamSchedule() {
 
       {/* 7-Day Week Grid */}
       {loading ? (
-        <div className="py-24 text-center text-slate-500 text-sm flex flex-col items-center gap-3">
-          <RefreshCw className="w-8 h-8 animate-spin text-indigo-500/80" />
+        <div className="py-24 text-center text-muted-foreground text-sm flex flex-col items-center gap-3">
+          <RefreshCw className="w-8 h-8 animate-spin text-primary" />
           <span>Synchronizing team schedules...</span>
         </div>
       ) : (
@@ -235,23 +239,23 @@ export default function TeamSchedule() {
             return (
               <div
                 key={dayKey}
-                className={`rounded-2xl border flex flex-col min-h-[420px] overflow-hidden ${
+                className={`rounded-xl border flex flex-col min-h-[420px] overflow-hidden shadow-sm ${
                   isToday
-                    ? 'bg-slate-900/90 border-amber-500/40 ring-1 ring-amber-500/20'
-                    : 'bg-slate-900/40 border-slate-800/80'
+                    ? 'bg-card border-primary/40 ring-1 ring-primary/20'
+                    : 'bg-card border-border'
                 }`}
               >
                 {/* Day Header */}
                 <div className={`p-3 text-center border-b ${
-                  isToday ? 'bg-amber-500/10 border-amber-500/20' : 'bg-slate-800/30 border-slate-800'
+                  isToday ? 'bg-primary/10 border-primary/20' : 'bg-muted/40 border-border'
                 }`}>
                   <span className={`text-[11px] font-bold block uppercase tracking-wider ${
-                    isToday ? 'text-amber-400' : 'text-slate-400'
+                    isToday ? 'text-primary' : 'text-muted-foreground'
                   }`}>
                     {day.toLocaleDateString('en-US', { weekday: 'short' })}
                   </span>
                   <span className={`text-base font-bold ${
-                    isToday ? 'text-white' : 'text-slate-200'
+                    isToday ? 'text-primary' : 'text-foreground'
                   }`}>
                     {day.getDate()}
                   </span>
@@ -260,7 +264,7 @@ export default function TeamSchedule() {
                 {/* Day Event List */}
                 <div className="p-2 space-y-2 flex-1 overflow-y-auto max-h-[500px]">
                   {dayEvents.length === 0 ? (
-                    <div className="py-8 text-center text-[11px] text-slate-600">
+                    <div className="py-8 text-center text-[11px] text-muted-foreground/60">
                       No events
                     </div>
                   ) : (
@@ -278,10 +282,10 @@ export default function TeamSchedule() {
                           }}
                           className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all hover:scale-[1.02] ${
                             style.bg
-                          } ${style.border} ${evt.is_redacted ? 'opacity-70 bg-slate-950/60' : ''}`}
+                          } ${style.border} ${evt.is_redacted ? 'opacity-70 bg-muted/60' : ''}`}
                         >
                           <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-[10px] font-bold font-mono text-slate-400">
+                            <span className="text-[10px] font-bold font-mono text-muted-foreground">
                               {timeStr}
                             </span>
                             <span className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded ${style.text}`}>
@@ -289,26 +293,26 @@ export default function TeamSchedule() {
                             </span>
                           </div>
 
-                          <p className="font-semibold text-white line-clamp-2 leading-tight">
+                          <p className="font-semibold text-foreground line-clamp-2 leading-tight">
                             {evt.title}
                           </p>
 
                           {evt.is_redacted ? (
-                            <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-400">
+                            <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-500">
                               <FolderLock className="w-3 h-3" />
                               <span>Restricted</span>
                             </div>
                           ) : (
-                            <div className="mt-1.5 pt-1 border-t border-slate-700/40 text-[10px] text-slate-300 space-y-0.5">
+                            <div className="mt-1.5 pt-1 border-t border-border text-[10px] text-muted-foreground space-y-0.5">
                               {evt.assigned_user_name && (
                                 <div className="flex items-center gap-1 truncate">
-                                  <User className="w-3 h-3 text-slate-400 shrink-0" />
+                                  <User className="w-3 h-3 text-muted-foreground shrink-0" />
                                   <span className="truncate">{evt.assigned_user_name}</span>
                                 </div>
                               )}
                               {evt.case_number && (
-                                <div className="flex items-center gap-1 font-mono text-amber-300/80">
-                                  <FileText className="w-3 h-3 text-slate-400 shrink-0" />
+                                <div className="flex items-center gap-1 font-mono text-primary">
+                                  <FileText className="w-3 h-3 text-muted-foreground shrink-0" />
                                   <span>{evt.case_number}</span>
                                 </div>
                               )}

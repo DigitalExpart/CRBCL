@@ -114,15 +114,15 @@ export default function Notifications() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-slate-900/60 p-6 rounded-3xl border border-slate-800 backdrop-blur-xl shadow-xl">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Notification Center</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Notification Center</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1">
               <Bell className="w-3 h-3" /> Multi-Channel Alerts
             </span>
           </div>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             In-app notices, court reminders, case assignments, and compliance dispatch audits
           </p>
         </div>
@@ -131,16 +131,16 @@ export default function Notifications() {
           <button
             type="button"
             onClick={handleMarkAllAsRead}
-            className="px-3.5 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-semibold transition-colors flex items-center gap-1.5"
           >
-            <CheckCheck className="w-4 h-4 text-emerald-400" />
+            <CheckCheck className="w-4 h-4 text-emerald-500" />
             <span>Mark All as Read</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsPreferencesOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
+            className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-sm flex items-center gap-2"
           >
             <Settings className="w-4 h-4" />
             <span>Delivery Preferences</span>
@@ -149,14 +149,14 @@ export default function Notifications() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-border pb-2">
         <button
           type="button"
           onClick={() => setActiveTab('all')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'all'
-              ? 'bg-slate-800 text-amber-400 shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-secondary text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           All Notifications
@@ -166,8 +166,8 @@ export default function Notifications() {
           onClick={() => setActiveTab('unread')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'unread'
-              ? 'bg-slate-800 text-amber-400 shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-secondary text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Unread Only
@@ -177,8 +177,8 @@ export default function Notifications() {
           onClick={() => setActiveTab('high_priority')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'high_priority'
-              ? 'bg-slate-800 text-rose-400 shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-secondary text-rose-500 shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           High Priority &amp; Compliance
@@ -188,8 +188,8 @@ export default function Notifications() {
           onClick={() => setActiveTab('deliveries')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'deliveries'
-              ? 'bg-slate-800 text-indigo-400 shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-secondary text-indigo-500 shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Delivery Audit Logs
@@ -199,34 +199,34 @@ export default function Notifications() {
       {/* Main Container */}
       {activeTab === 'deliveries' ? (
         /* Deliveries Audit Table */
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-          <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/20">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Mail className="w-4 h-4 text-indigo-400" />
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/40">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+              <Mail className="w-4 h-4 text-indigo-500" />
               <span>Multi-Channel Outbox Deliveries ({deliveries.length})</span>
             </h3>
             <button
               type="button"
               onClick={loadDeliveries}
-              className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+              className="p-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
 
           {deliveriesLoading ? (
-            <div className="py-20 text-center text-slate-500 text-xs flex flex-col items-center gap-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-indigo-500" />
+            <div className="py-20 text-center text-muted-foreground text-xs flex flex-col items-center gap-2">
+              <RefreshCw className="w-6 h-6 animate-spin text-primary" />
               <span>Loading delivery logs...</span>
             </div>
           ) : deliveries.length === 0 ? (
-            <div className="py-16 text-center text-slate-500 text-xs">
+            <div className="py-16 text-center text-muted-foreground text-xs">
               No delivery records found.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-800/40 text-slate-400 border-b border-slate-800">
+                <thead className="bg-muted/40 text-muted-foreground border-b border-border">
                   <tr>
                     <th className="py-3 px-4 font-semibold">Channel</th>
                     <th className="py-3 px-4 font-semibold">Recipient</th>
@@ -236,31 +236,31 @@ export default function Notifications() {
                     <th className="py-3 px-4 font-semibold text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-border text-foreground">
                   {deliveries.map((deliv) => (
-                    <tr key={deliv.id} className="hover:bg-slate-800/30 transition-colors">
+                    <tr key={deliv.id} className="hover:bg-muted/50 transition-colors">
                       <td className="py-3.5 px-4 font-bold flex items-center gap-1.5">
-                        {deliv.channel === 'EMAIL' ? <Mail className="w-3.5 h-3.5 text-emerald-400" /> :
-                         deliv.channel === 'SMS' ? <MessageSquare className="w-3.5 h-3.5 text-sky-400" /> :
-                         <Bell className="w-3.5 h-3.5 text-amber-400" />}
+                        {deliv.channel === 'EMAIL' ? <Mail className="w-3.5 h-3.5 text-emerald-500" /> :
+                         deliv.channel === 'SMS' ? <MessageSquare className="w-3.5 h-3.5 text-sky-500" /> :
+                         <Bell className="w-3.5 h-3.5 text-amber-500" />}
                         <span>{deliv.channel}</span>
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-slate-300">
+                      <td className="py-3.5 px-4 font-mono text-muted-foreground">
                         {deliv.recipient_address}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          deliv.status === 'SENT' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
-                          deliv.status === 'FAILED' ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30' :
-                          'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                          deliv.status === 'SENT' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' :
+                          deliv.status === 'FAILED' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' :
+                          'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
                         }`}>
                           {deliv.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-400">
+                      <td className="py-3.5 px-4 text-muted-foreground">
                         {deliv.attempt_count} / {deliv.max_attempts}
                       </td>
-                      <td className="py-3.5 px-4 text-slate-400">
+                      <td className="py-3.5 px-4 text-muted-foreground">
                         {new Date(deliv.created_at).toLocaleString()}
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -269,7 +269,7 @@ export default function Notifications() {
                             type="button"
                             disabled={retryingId === deliv.id}
                             onClick={() => handleRetryDelivery(deliv.id)}
-                            className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 text-[11px] font-semibold flex items-center gap-1 ml-auto"
+                            className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 text-[11px] font-semibold flex items-center gap-1 ml-auto"
                           >
                             <RotateCw className={`w-3 h-3 ${retryingId === deliv.id ? 'animate-spin' : ''}`} />
                             <span>Retry</span>
@@ -285,63 +285,63 @@ export default function Notifications() {
         </div>
       ) : (
         /* Notifications List */
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
           {loading ? (
-            <div className="py-24 text-center text-slate-500 text-sm flex flex-col items-center gap-3">
-              <RefreshCw className="w-8 h-8 animate-spin text-amber-500/80" />
+            <div className="py-24 text-center text-muted-foreground text-sm flex flex-col items-center gap-3">
+              <RefreshCw className="w-8 h-8 animate-spin text-primary" />
               <span>Loading notifications...</span>
             </div>
           ) : notifications.length === 0 ? (
             <div className="py-20 text-center p-8 flex flex-col items-center gap-3">
-              <Bell className="w-12 h-12 text-slate-700" />
-              <h3 className="text-base font-semibold text-slate-300">No notifications in this view</h3>
-              <p className="text-xs text-slate-500 max-w-sm">
+              <Bell className="w-12 h-12 text-muted-foreground/40" />
+              <h3 className="text-base font-semibold text-foreground">No notifications in this view</h3>
+              <p className="text-xs text-muted-foreground max-w-sm">
                 You're all caught up with your case updates, reminders, and team activity.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-800/60">
+            <div className="divide-y divide-border">
               {notifications.map((notif) => {
                 const isUrgent = notif.priority === 'URGENT' || notif.priority === 'HIGH';
                 return (
                   <div
                     key={notif.id}
                     onClick={() => handleNavigateRelated(notif)}
-                    className={`p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 cursor-pointer hover:bg-slate-800/30 transition-colors ${
-                      !notif.is_read ? 'bg-amber-500/5' : ''
+                    className={`p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 cursor-pointer hover:bg-muted/50 transition-colors ${
+                      !notif.is_read ? 'bg-primary/5' : ''
                     }`}
                   >
                     <div className="flex items-start gap-4">
                       <div className={`p-2.5 rounded-2xl shrink-0 border ${
                         isUrgent
-                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
                       }`}>
                         <ShieldAlert className="w-5 h-5" />
                       </div>
 
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-sm font-bold ${!notif.is_read ? 'text-white' : 'text-slate-300'}`}>
+                          <span className={`text-sm font-bold ${!notif.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
                             {notif.title}
                           </span>
                           {!notif.is_read && (
-                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                            <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
                           )}
                           <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                             isUrgent
-                              ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                              : 'bg-slate-800 text-slate-400'
+                              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                              : 'bg-secondary text-secondary-foreground'
                           }`}>
                             {notif.priority}
                           </span>
                         </div>
 
-                        <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                        <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
                           {notif.message}
                         </p>
 
-                        <div className="text-[11px] text-slate-500 pt-1">
+                        <div className="text-[11px] text-muted-foreground pt-1">
                           {new Date(notif.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                         </div>
                       </div>
@@ -353,7 +353,7 @@ export default function Notifications() {
                           type="button"
                           onClick={(e) => handleMarkAsRead(notif.id, e)}
                           title="Mark as read"
-                          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors flex items-center gap-1"
+                          className="px-3 py-1.5 rounded-xl bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium transition-colors flex items-center gap-1"
                         >
                           <Check className="w-3.5 h-3.5" />
                           <span>Mark Read</span>
@@ -365,7 +365,7 @@ export default function Notifications() {
                           e.stopPropagation();
                           handleNavigateRelated(notif);
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-semibold transition-colors flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-colors flex items-center gap-1"
                       >
                         <span>Open</span>
                         <ExternalLink className="w-3.5 h-3.5" />
