@@ -36,6 +36,14 @@ CSRF_EXEMPT_PATHS = {
 async def lifespan(app: FastAPI):
     settings = get_settings()
     logger.info("Starting %s in %s mode...", settings.app_name, settings.app_env)
+
+    # Idempotently ensure database permissions, roles, and mappings exist
+    try:
+        from app.core.permission_sync import sync_system_permissions
+        await sync_system_permissions()
+    except Exception as perm_sync_err:
+        logger.warning("Startup permission sync non-fatal error: %s", perm_sync_err)
+
     if settings.speech_to_text_enabled and settings.speech_provider in ("local", "local_whisper"):
         try:
             from app.services.speech.provider import get_speech_provider

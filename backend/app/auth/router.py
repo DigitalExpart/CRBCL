@@ -138,6 +138,15 @@ def _build_user_info(user: User, prefs: list[UserPreference] | None = None) -> U
         from app.permissions.constants import Permissions
 
         permissions.update(p.value for p in Permissions)
+    else:
+        from app.core.seed import PERMISSIONS_DATA, ROLE_PERMISSIONS_MAP
+
+        if any(r in roles for r in ["ceo", "executive_director", "chief_executive_officer"]):
+            permissions.update(p["key"].value if hasattr(p["key"], "value") else str(p["key"]) for p in PERMISSIONS_DATA)
+        else:
+            for r in roles:
+                for p in ROLE_PERMISSIONS_MAP.get(r, []):
+                    permissions.add(p.value if hasattr(p, "value") else str(p))
 
     # Check preferences for appearance and widgets
     preferences = {}

@@ -231,4 +231,15 @@ class AuthService:
             for rp in role.permissions:
                 if rp.permission and rp.permission.is_active:
                     permissions.add(rp.permission.key)
+
+        from app.core.seed import PERMISSIONS_DATA, ROLE_PERMISSIONS_MAP
+
+        roles = [ur.role.key for ur in user.roles if ur.role and ur.role.is_active]
+        if any(r in roles for r in ["ceo", "executive_director", "chief_executive_officer"]):
+            permissions.update(p["key"].value if hasattr(p["key"], "value") else str(p["key"]) for p in PERMISSIONS_DATA)
+        else:
+            for r in roles:
+                for p in ROLE_PERMISSIONS_MAP.get(r, []):
+                    permissions.add(p.value if hasattr(p, "value") else str(p))
+
         return sorted(permissions)
