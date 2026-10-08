@@ -851,6 +851,19 @@ export class ApiClient {
     return res;
   }
 
+  _createApiError(res, errData) {
+    const message =
+      errData?.error?.message ||
+      errData?.detail?.error?.message ||
+      (typeof errData?.detail === 'string' ? errData.detail : null) ||
+      `HTTP ${res.status}`;
+    const error = new Error(message);
+    error.status = res.status;
+    error.code = errData?.error?.code || errData?.code || null;
+    error.data = errData;
+    return error;
+  }
+
   async get(endpoint, options = {}) {
     let url = endpoint;
     if (options.params && typeof options.params === 'object') {
@@ -868,7 +881,7 @@ export class ApiClient {
     const res = await this.fetch(url, { method: 'GET', ...options });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+      throw this._createApiError(res, err);
     }
     if (options.responseType === 'blob') {
       return await res.blob();
@@ -889,7 +902,7 @@ export class ApiClient {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+      throw this._createApiError(res, err);
     }
     return await res.json();
   }
@@ -904,7 +917,7 @@ export class ApiClient {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+      throw this._createApiError(res, err);
     }
     return await res.json();
   }
@@ -919,7 +932,7 @@ export class ApiClient {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+      throw this._createApiError(res, err);
     }
     return await res.json();
   }
@@ -928,7 +941,7 @@ export class ApiClient {
     const res = await this.fetch(endpoint, { method: 'DELETE', ...options });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || err?.detail?.error?.message || `HTTP ${res.status}`);
+      throw this._createApiError(res, err);
     }
     return await res.json();
   }

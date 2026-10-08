@@ -11,12 +11,33 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import AuditMixin, Base, SoftDeleteMixin
 
+
+class OrgOpsSoftDeleteMixin:
+    """Soft-delete support mapping to the database column 'archived_at' used in Sprint A tables."""
+
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        "archived_at", DateTime(timezone=True), nullable=True, default=None
+    )
+
+    @property
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
+
+    @property
+    def archived_at(self) -> datetime | None:
+        return self.deleted_at
+
+    @archived_at.setter
+    def archived_at(self, value: datetime | None) -> None:
+        self.deleted_at = value
+
+
 # ==========================================
 # 1. HUMAN RESOURCES (HR & CERTIFICATIONS)
 # ==========================================
 
 
-class Employee(Base, AuditMixin, SoftDeleteMixin):
+class Employee(Base, AuditMixin, OrgOpsSoftDeleteMixin):
     """Native Employee record linked optionally to User login."""
 
     __tablename__ = "employees"
@@ -75,7 +96,7 @@ class EmployeeCertification(Base, AuditMixin):
 # ==========================================
 
 
-class HousingUnit(Base, AuditMixin, SoftDeleteMixin):
+class HousingUnit(Base, AuditMixin, OrgOpsSoftDeleteMixin):
     """Organizational housing unit or shelter facility."""
 
     __tablename__ = "housing_units"
@@ -126,7 +147,7 @@ class HousingOccupancy(Base, AuditMixin):
 # ==========================================
 
 
-class Facility(Base, AuditMixin, SoftDeleteMixin):
+class Facility(Base, AuditMixin, OrgOpsSoftDeleteMixin):
     """CRBCL building, office, or program site."""
 
     __tablename__ = "facilities"
@@ -201,7 +222,7 @@ class FacilityInspection(Base, AuditMixin):
 # ==========================================
 
 
-class ITAsset(Base, AuditMixin, SoftDeleteMixin):
+class ITAsset(Base, AuditMixin, OrgOpsSoftDeleteMixin):
     """Hardware inventory item (laptop, desktop, phone, etc.)."""
 
     __tablename__ = "it_assets"
@@ -259,7 +280,7 @@ class AssetAssignment(Base, AuditMixin):
 # ==========================================
 
 
-class Donor(Base, AuditMixin, SoftDeleteMixin):
+class Donor(Base, AuditMixin, OrgOpsSoftDeleteMixin):
     """Donor profile (Individual, Corporate, Foundation)."""
 
     __tablename__ = "donors"
@@ -323,7 +344,7 @@ class FundraisingCampaign(Base, AuditMixin):
 # ==========================================
 
 
-class Volunteer(Base, AuditMixin, SoftDeleteMixin):
+class Volunteer(Base, AuditMixin, OrgOpsSoftDeleteMixin):
     """Volunteer profile."""
 
     __tablename__ = "volunteers"

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { api } from "@/api";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,6 @@ import {
   Home,
   ShieldAlert,
   Calendar,
-  DollarSign,
   HeartHandshake,
   CheckCircle2,
   Clock,
@@ -32,11 +30,8 @@ import {
   Building2,
   Filter,
   Plus,
-  ArrowUpRight,
-  TrendingUp,
-  Sparkles,
-  Info,
   Scale,
+  RefreshCw,
 } from "lucide-react";
 import { DEPARTMENTS } from "@/constants/departments";
 
@@ -101,7 +96,21 @@ export default function CEODashboard() {
       setData(res);
     } catch (err) {
       console.error("Failed to load CEO dashboard:", err);
-      setError(err.message || "Failed to load executive dashboard");
+      let msg = "Failed to load executive dashboard.";
+      if (err.status === 401) {
+        msg = "Session expired or authentication required. Please sign in again.";
+      } else if (err.status === 403) {
+        msg = "You do not have permission to access the Executive Command Centre. Executive leadership privileges required.";
+      } else if (err.status === 404) {
+        msg = "Requested executive resource unavailable.";
+      } else if (err.status === 500) {
+        msg = "Server encountered an error while aggregating executive data. Please retry.";
+      } else if (err.message && err.message.toLowerCase().includes("failed to fetch")) {
+        msg = "Unable to connect to the server. Please check your network connection and retry.";
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -221,7 +230,7 @@ export default function CEODashboard() {
           <p className="text-sm">{error}</p>
           <div className="mt-4">
             <Button onClick={() => loadDashboard()} variant="outline" size="sm">
-              Retry Connection
+              <RefreshCw className="h-4 w-4 mr-1.5" /> Retry Connection
             </Button>
           </div>
         </div>

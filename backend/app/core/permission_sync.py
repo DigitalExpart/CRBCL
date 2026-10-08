@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from sqlalchemy import select
-from app.core.database import AsyncSessionLocal
+from app.core.database import async_session_factory as AsyncSessionLocal
 from app.models.role import Permission, Role, RolePermission, UserRole
 from app.models.user import User
 

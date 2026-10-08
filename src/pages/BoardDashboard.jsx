@@ -4,7 +4,6 @@ import { api } from "@/api";
 import {
   Landmark,
   Shield,
-  Clock,
   TrendingUp,
   AlertTriangle,
   CheckCircle2,
@@ -16,15 +15,8 @@ import {
   ChevronRight,
   Filter,
   RefreshCw,
-  Eye,
   CheckSquare,
-  Lock,
-  ArrowUpRight,
-  Sparkles,
-  HelpCircle,
   History,
-  Send,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -106,9 +98,35 @@ export default function BoardDashboard() {
       const hasLeadership = roles.includes("ceo") || roles.includes("executive_director");
       setIsLeadership(hasLeadership);
 
-      // Fetch all board-safe endpoints in parallel
+      // Fetch primary summary first with explicit error classification
+      let sumRes;
+      try {
+        sumRes = await api.boardDashboard.getSummary(reportingPeriodFilter || undefined);
+        setSummary(sumRes);
+      } catch (sumErr) {
+        let msg = "Failed to load governance dashboard.";
+        if (sumErr.status === 401) {
+          msg = "Session expired or authentication required. Please sign in again.";
+        } else if (sumErr.status === 403) {
+          msg = "You do not have permission to access the Board Portal. Board of Governors authorization required.";
+        } else if (sumErr.status === 404) {
+          msg = "Requested board governance resource unavailable.";
+        } else if (sumErr.status === 500) {
+          msg = "Server encountered an error while retrieving board governance metrics. Please retry.";
+        } else if (sumErr.message && sumErr.message.toLowerCase().includes("failed to fetch")) {
+          msg = "Unable to connect to the server. Please check your network connection and retry.";
+        } else if (sumErr.message) {
+          msg = sumErr.message;
+        }
+        setError({
+          message: msg,
+          status: sumErr.status || 500,
+        });
+        return;
+      }
+
+      // Fetch supplementary widgets safely so single widget failure does not crash entire dashboard
       const [
-        sumRes,
         actRes,
         initRes,
         updatesRes,
@@ -117,8 +135,7 @@ export default function BoardDashboard() {
         perfRes,
         riskRes,
         datesRes,
-      ] = await Promise.all([
-        api.boardDashboard.getSummary(reportingPeriodFilter || undefined),
+      ] = await Promise.allSettled([
         api.boardDashboard.getActions(),
         api.boardDashboard.getInitiatives(),
         api.boardDashboard.getDepartmentUpdates(reportingPeriodFilter || undefined),
@@ -129,18 +146,34 @@ export default function BoardDashboard() {
         api.boardDashboard.getCriticalDates(),
       ]);
 
-      setSummary(sumRes);
-      setActions(actRes || []);
-      setInitiatives(initRes || []);
-      setDepartmentUpdates(updatesRes || []);
-      setWorkforce(wfRes);
-      setFinance(finRes);
-      setPerformance(perfRes);
-      setRisk(riskRes);
-      setCriticalDates(datesRes || []);
+      setActions(actRes.status === "fulfilled" ? actRes.value || [] : []);
+      setInitiatives(initRes.status === "fulfilled" ? initRes.value || [] : []);
+      setDepartmentUpdates(updatesRes.status === "fulfilled" ? updatesRes.value || [] : []);
+      setWorkforce(wfRes.status === "fulfilled" ? wfRes.value : null);
+      setFinance(finRes.status === "fulfilled" ? finRes.value : null);
+      setPerformance(perfRes.status === "fulfilled" ? perfRes.value : null);
+      setRisk(riskRes.status === "fulfilled" ? riskRes.value : null);
+      setCriticalDates(datesRes.status === "fulfilled" ? datesRes.value || [] : []);
     } catch (err) {
       console.error("Failed to load Board Dashboard:", err);
-      setError(err.message || "Failed to load governance dashboard.");
+      let msg = "Failed to load governance dashboard.";
+      if (err.status === 401) {
+        msg = "Session expired or authentication required. Please sign in again.";
+      } else if (err.status === 403) {
+        msg = "You do not have permission to access the Board Portal. Board of Governors authorization required.";
+      } else if (err.status === 404) {
+        msg = "Requested board governance resource unavailable.";
+      } else if (err.status === 500) {
+        msg = "Server encountered an error while retrieving board governance metrics. Please retry.";
+      } else if (err.message && err.message.toLowerCase().includes("failed to fetch")) {
+        msg = "Unable to connect to the server. Please check your network connection and retry.";
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setError({
+        message: msg,
+        status: err.status || 500,
+      });
     } finally {
       setLoading(false);
     }
@@ -215,13 +248,22 @@ export default function BoardDashboard() {
   }
 
   if (error && !summary) {
+    const isPermission = error?.status === 403;
+    const isAuth = error?.status === 401;
+    const title = isPermission
+      ? "Access Restricted"
+      : isAuth
+      ? "Authentication Required"
+      : "Governance Command Centre Unavailable";
+    const errorMessage = typeof error === "string" ? error : error?.message || "An unexpected error occurred.";
+
     return (
       <div className="p-8 max-w-4xl mx-auto text-center space-y-4">
         <div className="p-4 bg-destructive/10 text-destructive rounded-xl inline-block">
           <AlertTriangle className="h-8 w-8 mx-auto" />
         </div>
-        <h2 className="text-xl font-bold text-foreground">Access Restricted or Error</h2>
-        <p className="text-muted-foreground">{error}</p>
+        <h2 className="text-xl font-bold text-foreground">{title}</h2>
+        <p className="text-muted-foreground">{errorMessage}</p>
         <Button onClick={loadData} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" /> Try Again
         </Button>
