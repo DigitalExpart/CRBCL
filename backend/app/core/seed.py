@@ -2726,10 +2726,11 @@ async def seed_database(db: AsyncSession) -> None:
             db.add(admin_user)
             await db.flush()
 
-            # Assign IT Admin role
-            admin_role = role_models.get("it_admin")
-            if admin_role:
-                db.add(UserRole(user_id=admin_user.id, role_id=admin_role.id))
+            # Assign IT Admin, Executive Director, and CEO roles to enable system administration and operational leadership
+            for rkey in ["it_admin", "executive_director", "ceo"]:
+                r = role_models.get(rkey)
+                if r:
+                    db.add(UserRole(user_id=admin_user.id, role_id=r.id))
 
     await db.commit()
     logger.info("Database bootstrap & seed complete.")

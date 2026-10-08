@@ -22,9 +22,11 @@ import {
   Building,
   CheckCircle,
   Activity,
+  Pencil,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import ClientEpisodesTab from "@/components/placements/ClientEpisodesTab";
+import EditClientModal from "@/components/clients/EditClientModal";
 
 export default function ClientDetail() {
 
@@ -34,6 +36,7 @@ export default function ClientDetail() {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Form states for modals/sub-resources
   const [newAllergy, setNewAllergy] = useState({ allergen: '', reaction: '', severity: 'Moderate' });
@@ -167,6 +170,14 @@ export default function ClientDetail() {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-0 border-border/60">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setIsEditModalOpen(true)}
+              className="gap-1.5 shadow-sm"
+            >
+              <Pencil className="w-4 h-4" /> Edit Profile
+            </Button>
             <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
               <Link to={`/cases?client_id=${client.id}`}>
                 <FileText className="w-4 h-4 mr-1.5" /> View Cases
@@ -224,10 +235,19 @@ export default function ClientDetail() {
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="md:col-span-2">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-base flex items-center gap-2">
                   <User className="w-4 h-4 text-primary" /> Key Information Summary
                 </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="h-8 px-2.5 text-xs gap-1.5"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit Profile</span>
+                </Button>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -287,7 +307,18 @@ export default function ClientDetail() {
         {/* Tab 2: Basic Info */}
         <TabsContent value="basic">
           <Card>
-            <CardHeader><CardTitle className="text-base">Comprehensive Demographic Profile</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base">Comprehensive Demographic Profile</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditModalOpen(true)}
+                className="h-8 px-2.5 text-xs gap-1.5"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit Profile</span>
+              </Button>
+            </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
               <div><span className="text-xs text-muted-foreground block">First Name</span><p className="font-semibold">{client.first_name}</p></div>
               <div><span className="text-xs text-muted-foreground block">Last Name</span><p className="font-semibold">{client.last_name}</p></div>
@@ -600,6 +631,17 @@ export default function ClientDetail() {
           <ClientEpisodesTab clientId={id} clientData={client} />
         </TabsContent>
       </Tabs>
+
+      {/* Edit Client Profile Modal */}
+      <EditClientModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        client={client}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['client', id] });
+          queryClient.invalidateQueries({ queryKey: ['clients'] });
+        }}
+      />
 
     </div>
   );

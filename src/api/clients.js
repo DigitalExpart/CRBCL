@@ -4,7 +4,7 @@ export const clientsApi = {
   list: (params = {}) => api.entities.Client.list(params.sort, params.limit),
   get: (id) => api.entities.Client.get(id),
   create: (data) => api.entities.Client.create(data),
-  update: (id, data) => api.entities.Client.update(id, data),
+  update: (id, data) => api.patch(`/api/v1/clients/${id}`, data),
   delete: (id) => api.entities.Client.delete(id),
 
   // Phase 2 Sub-Resources

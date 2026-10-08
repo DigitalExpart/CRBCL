@@ -17,15 +17,87 @@ import {
 } from 'lucide-react';
 
 const EVENT_TYPE_COLORS = {
-  APPOINTMENT: { bg: 'bg-emerald-500/15', text: 'text-emerald-300', border: 'border-emerald-500/30', label: 'Appointment' },
-  COURT: { bg: 'bg-rose-500/15', text: 'text-rose-300', border: 'border-rose-500/30', label: 'Court Hearing' },
-  STAFFING: { bg: 'bg-indigo-500/15', text: 'text-indigo-300', border: 'border-indigo-500/30', label: 'Staffing Session' },
-  VISITATION: { bg: 'bg-purple-500/15', text: 'text-purple-300', border: 'border-purple-500/30', label: 'Kinship Visitation' },
-  CASE_NOTE_FOLLOWUP: { bg: 'bg-amber-500/15', text: 'text-amber-300', border: 'border-amber-500/30', label: 'Case Follow-Up' },
-  HOME_VISIT: { bg: 'bg-sky-500/15', text: 'text-sky-300', border: 'border-sky-500/30', label: 'Home Visit' },
-  ASSESSMENT: { bg: 'bg-cyan-500/15', text: 'text-cyan-300', border: 'border-cyan-500/30', label: 'Assessment' },
-  PLAN_MEETING: { bg: 'bg-teal-500/15', text: 'text-teal-300', border: 'border-teal-500/30', label: 'Plan Meeting' },
-  OTHER: { bg: 'bg-slate-500/15', text: 'text-slate-300', border: 'border-slate-500/30', label: 'General Event' },
+  APPOINTMENT: {
+    bg: 'bg-emerald-600 dark:bg-emerald-600',
+    text: 'text-white',
+    border: 'border-emerald-600 dark:border-emerald-600',
+    softBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
+    softText: 'text-emerald-700 dark:text-emerald-300',
+    softBorder: 'border-emerald-500/20 dark:border-emerald-500/30',
+    label: 'Appointment'
+  },
+  COURT: {
+    bg: 'bg-rose-600 dark:bg-rose-600',
+    text: 'text-white',
+    border: 'border-rose-600 dark:border-rose-600',
+    softBg: 'bg-rose-500/10 dark:bg-rose-500/20',
+    softText: 'text-rose-700 dark:text-rose-300',
+    softBorder: 'border-rose-500/20 dark:border-rose-500/30',
+    label: 'Court Hearing'
+  },
+  STAFFING: {
+    bg: 'bg-indigo-600 dark:bg-indigo-600',
+    text: 'text-white',
+    border: 'border-indigo-600 dark:border-indigo-600',
+    softBg: 'bg-indigo-500/10 dark:bg-indigo-500/20',
+    softText: 'text-indigo-700 dark:text-indigo-300',
+    softBorder: 'border-indigo-500/20 dark:border-indigo-500/30',
+    label: 'Staffing Session'
+  },
+  VISITATION: {
+    bg: 'bg-purple-600 dark:bg-purple-600',
+    text: 'text-white',
+    border: 'border-purple-600 dark:border-purple-600',
+    softBg: 'bg-purple-500/10 dark:bg-purple-500/20',
+    softText: 'text-purple-700 dark:text-purple-300',
+    softBorder: 'border-purple-500/20 dark:border-purple-500/30',
+    label: 'Kinship Visitation'
+  },
+  CASE_NOTE_FOLLOWUP: {
+    bg: 'bg-amber-600 dark:bg-amber-600',
+    text: 'text-white',
+    border: 'border-amber-600 dark:border-amber-600',
+    softBg: 'bg-amber-500/10 dark:bg-amber-500/20',
+    softText: 'text-amber-700 dark:text-amber-300',
+    softBorder: 'border-amber-500/20 dark:border-amber-500/30',
+    label: 'Case Follow-Up'
+  },
+  HOME_VISIT: {
+    bg: 'bg-sky-600 dark:bg-sky-600',
+    text: 'text-white',
+    border: 'border-sky-600 dark:border-sky-600',
+    softBg: 'bg-sky-500/10 dark:bg-sky-500/20',
+    softText: 'text-sky-700 dark:text-sky-300',
+    softBorder: 'border-sky-500/20 dark:border-sky-500/30',
+    label: 'Home Visit'
+  },
+  ASSESSMENT: {
+    bg: 'bg-cyan-600 dark:bg-cyan-600',
+    text: 'text-white',
+    border: 'border-cyan-600 dark:border-cyan-600',
+    softBg: 'bg-cyan-500/10 dark:bg-cyan-500/20',
+    softText: 'text-cyan-700 dark:text-cyan-300',
+    softBorder: 'border-cyan-500/20 dark:border-cyan-500/30',
+    label: 'Assessment'
+  },
+  PLAN_MEETING: {
+    bg: 'bg-teal-600 dark:bg-teal-600',
+    text: 'text-white',
+    border: 'border-teal-600 dark:border-teal-600',
+    softBg: 'bg-teal-500/10 dark:bg-teal-500/20',
+    softText: 'text-teal-700 dark:text-teal-300',
+    softBorder: 'border-teal-500/20 dark:border-teal-500/30',
+    label: 'Plan Meeting'
+  },
+  OTHER: {
+    bg: 'bg-slate-600 dark:bg-slate-600',
+    text: 'text-white',
+    border: 'border-slate-600 dark:border-slate-600',
+    softBg: 'bg-slate-500/10 dark:bg-slate-500/20',
+    softText: 'text-slate-700 dark:text-slate-300',
+    softBorder: 'border-slate-500/20 dark:border-slate-500/30',
+    label: 'General Event'
+  },
 };
 
 export default function MySchedule() {
@@ -223,10 +295,10 @@ export default function MySchedule() {
                 key={type}
                 type="button"
                 onClick={() => toggleTypeFilter(type)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all border shadow-sm ${
                   active
-                    ? `${cfg.bg} ${cfg.text} ${cfg.border}`
-                    : 'bg-muted/40 text-muted-foreground border-border hover:border-border'
+                    ? `${cfg.bg} ${cfg.text} ${cfg.border} hover:opacity-90`
+                    : 'bg-muted/40 text-muted-foreground border-border hover:border-foreground/30 opacity-60 shadow-none'
                 }`}
               >
                 {cfg.label}
@@ -287,14 +359,14 @@ export default function MySchedule() {
                       }`}
                     >
                       <div className="flex items-start gap-3.5">
-                        <div className={`px-2.5 py-1.5 rounded-xl border shrink-0 text-center ${style.bg} ${style.border}`}>
-                          <div className={`text-xs font-bold ${style.text}`}>{startTime}</div>
+                        <div className={`px-2.5 py-1.5 rounded-xl border shrink-0 text-center ${style.softBg || style.bg} ${style.softBorder || style.border}`}>
+                          <div className={`text-xs font-bold ${style.softText || style.text}`}>{startTime}</div>
                           <div className="text-[10px] text-muted-foreground">{endTime}</div>
                         </div>
 
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${style.bg} ${style.text} ${style.border}`}>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${style.bg} ${style.text} ${style.border} shadow-sm`}>
                               {style.label}
                             </span>
                             {evt.is_redacted ? (

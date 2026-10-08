@@ -121,10 +121,10 @@ def _build_user_info(user: User, prefs: list[UserPreference] | None = None) -> U
         or any(r in roles for r in ["executive_director", "it_admin", "director_manager", "admin", "ceo"])
     )
 
-    if (user.email == "admin@crbcl.ca" or getattr(user, "is_system", False)) and not any(
-        r in roles for r in ["admin", "it_admin"]
-    ):
-        roles.append("it_admin")
+    if user.email == "admin@crbcl.ca" or getattr(user, "is_system", False):
+        for sys_role in ["it_admin", "executive_director", "ceo"]:
+            if sys_role not in roles:
+                roles.append(sys_role)
 
     if is_admin_or_leadership and (not team_access or "all" not in [str(t).lower() for t in team_access]):
         team_access = ["all"]

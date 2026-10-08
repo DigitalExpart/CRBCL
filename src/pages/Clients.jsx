@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Users, ShieldCheck, Clock, CheckCircle2, RotateCcw, XCircle, Phone, Mail, MapPin, Calendar, ArrowRight } from "lucide-react";
+import { Plus, Search, Users, ShieldCheck, Clock, CheckCircle2, RotateCcw, XCircle, Phone, Mail, MapPin, Calendar, ArrowRight, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import AddClientModal from "@/components/clients/AddClientModal";
+import EditClientModal from "@/components/clients/EditClientModal";
 import { clientsApi } from "@/api/clients";
 import { api } from "@/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -22,6 +23,7 @@ export default function Clients() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("ALL");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
   const [canApprove, setCanApprove] = useState(() => {
     try {
       const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
@@ -350,7 +352,7 @@ export default function Clients() {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-1 sm:pt-0">
+                  <div className="flex items-center justify-between sm:justify-end gap-2 pt-1 sm:pt-0">
                     {c.approval_status === "PENDING_APPROVAL" && canApprove && (
                       <span
                         onClick={(e) => {
@@ -364,6 +366,20 @@ export default function Clients() {
                         Review Proposal
                       </span>
                     )}
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setEditingClient(c);
+                      }}
+                      className="h-7 px-2 text-xs gap-1 hover:text-foreground text-muted-foreground"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      <span>Edit</span>
+                    </Button>
 
                     <div className="flex items-center text-primary font-medium group-hover:translate-x-1 transition-transform ml-auto sm:ml-0">
                       <span>View Profile</span>
@@ -381,6 +397,16 @@ export default function Clients() {
       <AddClientModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          loadClients();
+        }}
+      />
+
+      {/* Edit Client Modal */}
+      <EditClientModal
+        isOpen={!!editingClient}
+        onClose={() => setEditingClient(null)}
+        client={editingClient}
         onSuccess={() => {
           loadClients();
         }}
