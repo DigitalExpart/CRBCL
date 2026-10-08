@@ -21,7 +21,7 @@ def upgrade() -> None:
     conn = op.get_bind()
 
     # 1. Backfill all permissions
-    from app.core.seed import PERMISSIONS_DATA, ROLES_DATA, ROLE_PERMISSIONS_MAP
+    from app.core.seed import PERMISSIONS_DATA, ROLE_PERMISSIONS_MAP, ROLES_DATA
 
     for p in PERMISSIONS_DATA:
         key_val = p["key"].value if hasattr(p["key"], "value") else str(p["key"])

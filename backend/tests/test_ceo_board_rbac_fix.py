@@ -1,10 +1,11 @@
 """Test verification for CEO and Board Portal permission resolution without relying on unseeded DB join rows."""
 
 import uuid
+
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.security import create_access_token, hash_password
 from app.models.role import Role, UserRole

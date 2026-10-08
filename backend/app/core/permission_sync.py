@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+
 from sqlalchemy import select
+
 from app.core.database import async_session_factory as AsyncSessionLocal
 from app.models.role import Permission, Role, RolePermission, UserRole
 from app.models.user import User
@@ -14,7 +16,7 @@ logger = logging.getLogger("crbcl.permissions.sync")
 async def sync_system_permissions() -> None:
     """Ensure that all critical roles, permissions, and role mappings exist in the database."""
     try:
-        from app.core.seed import PERMISSIONS_DATA, ROLES_DATA, ROLE_PERMISSIONS_MAP
+        from app.core.seed import PERMISSIONS_DATA, ROLE_PERMISSIONS_MAP, ROLES_DATA
 
         async with AsyncSessionLocal() as db:
             # 1. Sync permissions

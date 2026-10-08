@@ -11,8 +11,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.service import AuditService
-from app.auth.security import hash_password
 from app.auth.dependencies import get_current_user
+from app.auth.security import hash_password
 from app.core.database import get_db
 from app.models.user import User, UserPreference
 from app.permissions.constants import Permissions

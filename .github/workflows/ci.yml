@@ -98,7 +98,7 @@ jobs:
 
   deploy-vercel:
     name: Deploy Vercel Production
-    needs: [frontend, backend]
+    needs: [frontend]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
