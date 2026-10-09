@@ -7,6 +7,20 @@ export const clientsApi = {
   update: (id, data) => api.patch(`/api/v1/clients/${id}`, data),
   delete: (id) => api.entities.Client.delete(id),
 
+  uploadPhoto: async (clientId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.fetch(`/api/v1/clients/${clientId}/photo`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData?.detail?.message || errData?.detail || 'Photo upload failed.');
+    }
+    return res.json();
+  },
+
   // Phase 2 Sub-Resources
   checkDuplicates: (criteria) =>
     api.fetch('/api/v1/clients/duplicate-check', {

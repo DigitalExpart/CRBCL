@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,7 +37,7 @@ from app.schemas.client import (
     ClientUpdate,
 )
 from app.schemas.common import PaginatedResponse, PaginationMeta
-from app.schemas.person import PersonSearchResultResponse
+from app.schemas.person import PersonCreate, PersonSearchResultResponse
 from app.services.duplicate_service import DuplicateService
 from app.services.file_security import generate_signed_file_url
 from app.services.merge_service import MergeService
@@ -60,6 +60,8 @@ def _populate_client_response(
         res.person_id_number = p.person_id_number
         if p.photo_document_id:
             res.photo_url = generate_signed_file_url(p.photo_document_id, expiry_seconds=3600)
+        elif p.photo_url:
+            res.photo_url = p.photo_url
 
     sub = submitter or client.submitter
     if sub:
@@ -1319,7 +1321,65 @@ async def update_client(
     )
 
     await db.commit()
-    return ClientResponse.model_validate(updated_client)
+    return _populate_client_response(updated_client)
+
+
+@router.post("/{client_id}/photo")
+async def upload_client_photo(
+    client_id: uuid.UUID,
+    file: UploadFile = File(...),
+    user: User = Depends(require_permission(Permissions.CLIENT_UPDATE)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload and attach a profile photo to a client and their canonical Person."""
+    repo = ClientRepository(db)
+    client = await repo.get(client_id)
+    if not client or client.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": {"code": "CLIENT_NOT_FOUND", "message": "Client not found"}},
+        )
+
+    perm_service = PermissionService(db)
+    if not await perm_service.user_can_access_team(user.id, client.assigned_team_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": {"code": "TEAM_ACCESS_DENIED", "message": "Unauthorized to update this client"}},
+        )
+
+    content = await file.read()
+    person_service = PersonService(db)
+
+    # Ensure linked canonical person exists
+    if not client.person_id:
+        person = await person_service.create_person(
+            PersonCreate(
+                first_name=client.first_name,
+                last_name=client.last_name,
+                date_of_birth=client.date_of_birth,
+                gender=client.gender,
+                phone=client.phone,
+                email=client.email,
+                address=client.address,
+                city=client.city,
+                province=client.province,
+                indigenous_identity=client.indigenous_identity,
+                band_nation=client.band_nation,
+            ),
+            current_user=user,
+        )
+        client.person_id = person.id
+        await repo.update(client, person_id=person.id)
+
+    url = await person_service.upload_photo(
+        person_id=client.person_id,
+        filename=file.filename or "profile_photo.jpg",
+        content=content,
+        content_type=file.content_type or "image/jpeg",
+        current_user=user,
+    )
+    await db.commit()
+    return {"photo_url": url}
 
 
 # ── Sub-Resource Routes (Medical, Medications, Providers, Schools, etc.) ──

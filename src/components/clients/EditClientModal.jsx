@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,15 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
-import { clientsApi, teamsApi } from "@/api";
-import { Loader2, Save, User, MapPin, ShieldAlert, Phone } from "lucide-react";
+import { clientsApi, teamsApi, personsApi } from "@/api";
+import { Loader2, Save, User, MapPin, ShieldAlert, Phone, Camera, Upload, X } from "lucide-react";
 
 export default function EditClientModal({ isOpen, onClose, client, onSuccess }) {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState([]);
+  const fileInputRef = useRef(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -56,6 +61,11 @@ export default function EditClientModal({ isOpen, onClose, client, onSuccess }) 
         band_nation: client.band_nation || "",
         notes: client.notes || "",
       });
+      setPhotoPreview(client.photo_url || client.person?.photo_url || null);
+      setPhotoFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   }, [client]);
 
@@ -69,6 +79,40 @@ export default function EditClientModal({ isOpen, onClose, client, onSuccess }) 
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPEG, PNG, WebP).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image size must be under 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -106,9 +150,24 @@ export default function EditClientModal({ isOpen, onClose, client, onSuccess }) 
 
       const updated = await clientsApi.update(client.id, payload);
 
+      if (photoFile) {
+        try {
+          await clientsApi.uploadPhoto(client.id, photoFile);
+        } catch (photoErr) {
+          console.warn("Client photo upload fallback to person:", photoErr);
+          if (client.person_id) {
+            await personsApi.uploadPhoto(client.person_id, photoFile);
+          } else {
+            throw photoErr;
+          }
+        }
+      }
+
       toast({
         title: "Client Profile Updated",
-        description: `Successfully saved changes for ${formData.first_name} ${formData.last_name}.`,
+        description: photoFile
+          ? `Successfully saved changes and new photo for ${formData.first_name} ${formData.last_name}.`
+          : `Successfully saved changes for ${formData.first_name} ${formData.last_name}.`,
       });
 
       if (onSuccess) {
@@ -140,6 +199,72 @@ export default function EditClientModal({ isOpen, onClose, client, onSuccess }) 
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+          {/* Profile Photo Section */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 p-3.5 bg-muted/30 border border-border/80 rounded-xl">
+            <div className="relative group shrink-0">
+              <Avatar className="h-18 w-18 sm:h-20 sm:w-20 rounded-2xl border-2 border-primary/20 shadow-xs overflow-hidden">
+                <AvatarImage src={photoPreview} alt={`${formData.first_name} ${formData.last_name}`} className="object-cover" />
+                <AvatarFallback className="rounded-2xl text-lg font-bold bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary">
+                  {formData.first_name?.[0] || ""}{formData.last_name?.[0] || ""}
+                </AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-primary text-primary-foreground shadow hover:bg-primary/90 transition-transform active:scale-95"
+                title="Change Photo"
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-1.5 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <Label className="text-xs font-semibold text-foreground">Client Profile Photo</Label>
+                {photoFile && (
+                  <Badge variant="outline" className="text-[10px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10">
+                    New photo selected
+                  </Badge>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Upload a clear portrait photo (JPEG, PNG, or WebP). Displayed on client profile cards, directories, and service files.
+              </p>
+              <div className="flex items-center justify-center sm:justify-start gap-2 pt-0.5">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handlePhotoChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-8 px-2.5 text-xs gap-1.5"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{photoPreview ? "Change Photo" : "Upload Photo"}</span>
+                </Button>
+
+                {photoPreview && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemovePhoto}
+                    className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive gap-1"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Remove</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Identity & Demographics */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 border-b border-border/60 pb-1">

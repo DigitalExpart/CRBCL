@@ -23,7 +23,9 @@ import {
   CheckCircle,
   Activity,
   Pencil,
+  Camera,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
 import ClientEpisodesTab from "@/components/placements/ClientEpisodesTab";
 import EditClientModal from "@/components/clients/EditClientModal";
@@ -135,8 +137,25 @@ export default function ClientDetail() {
             <Button variant="ghost" size="icon" onClick={() => navigate('/clients')} className="shrink-0 mt-1 sm:mt-0">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-primary font-bold text-lg sm:text-xl shrink-0">
-              {client.first_name?.[0]}{client.last_name?.[0]}
+            <div className="relative group shrink-0">
+              <Avatar className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-primary/30 shadow-xs overflow-hidden">
+                <AvatarImage
+                  src={client.photo_url || person.photo_url}
+                  alt={`${client.first_name} ${client.last_name}`}
+                  className="object-cover"
+                />
+                <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 text-primary font-bold text-lg sm:text-xl">
+                  {client.first_name?.[0]}{client.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(true)}
+                title="Change client photo"
+                className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-primary text-primary-foreground shadow hover:bg-primary/90 transition-transform active:scale-95 group-hover:scale-110"
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
