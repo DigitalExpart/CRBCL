@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/db_helper.dart';
+import '../services/theme_service.dart';
 
 class IntakeDraftScreen extends StatefulWidget {
   const IntakeDraftScreen({super.key});
@@ -26,6 +27,14 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
 
   final List<String> _methodOptions = ['phone', 'in_person', 'email', 'fax', 'walk_in'];
   final List<String> _priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
+
+  @override
+  void dispose() {
+    _summaryController.dispose();
+    _communityController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
 
   String _generateTempUuid() {
     final rand = Random.secure();
@@ -82,9 +91,9 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Saved offline intake draft. Referral number (INT-YYYY-NNNNNN) will be assigned on sync.'),
-          backgroundColor: Colors.green.shade800,
+        const SnackBar(
+          content: Text('Saved offline intake draft. Referral number (INT-YYYY-NNNNNN) will be assigned on sync.'),
+          backgroundColor: CrbclTokens.statusSuccess,
         ),
       );
       Navigator.pop(context, true);
@@ -93,11 +102,13 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Intake Draft (Offline)'),
-        backgroundColor: const Color(0xFF8B2626),
-        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -106,26 +117,29 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Card(
-                color: Colors.amber.shade50,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.amber.shade400),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: colorScheme.primary.withValues(alpha: 0.25),
+                  ),
                 ),
-                child: const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.orange),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Canonical Referral Number (INT-YYYY-NNNNNN) will be allocated by the server sequence upon online synchronization.',
-                          style: TextStyle(fontSize: 12, color: Colors.black87),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: colorScheme.primary, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Canonical Referral Number (INT-YYYY-NNNNNN) will be allocated by the server sequence upon online synchronization.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurface.withValues(alpha: 0.8),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -150,7 +164,10 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.calendar_today),
                   ),
-                  child: Text(DateFormat('MMMM d, yyyy').format(_receivedDate)),
+                  child: Text(
+                    DateFormat('MMMM d, yyyy').format(_receivedDate),
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -162,7 +179,16 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.contact_phone),
                 ),
-                items: _methodOptions.map((m) => DropdownMenuItem(value: m, child: Text(m.replaceAll('_', ' ').toUpperCase()))).toList(),
+                dropdownColor: isDark ? CrbclTokens.darkCard : Colors.white,
+                items: _methodOptions
+                    .map((m) => DropdownMenuItem(
+                          value: m,
+                          child: Text(
+                            m.replaceAll('_', ' ').toUpperCase(),
+                            style: TextStyle(color: colorScheme.onSurface),
+                          ),
+                        ))
+                    .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _receivedMethod = val);
                 },
@@ -176,7 +202,13 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.flag),
                 ),
-                items: _priorityOptions.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                dropdownColor: isDark ? CrbclTokens.darkCard : Colors.white,
+                items: _priorityOptions
+                    .map((p) => DropdownMenuItem(
+                          value: p,
+                          child: Text(p, style: TextStyle(color: colorScheme.onSurface)),
+                        ))
+                    .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _priority = val);
                 },
@@ -197,14 +229,14 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
                 title: const Text('Immediate Safety Concerns'),
                 subtitle: const Text('Check if child or family requires emergency intervention'),
                 value: _immediateSafetyConcerns,
-                activeTrackColor: const Color(0xFF8B2626),
+                activeTrackColor: colorScheme.primary,
                 onChanged: (val) => setState(() => _immediateSafetyConcerns = val),
               ),
               SwitchListTile(
                 title: const Text('Law Enforcement Involved'),
                 subtitle: const Text('Check if RCMP / police file is linked'),
                 value: _lawEnforcementInvolved,
-                activeTrackColor: const Color(0xFF8B2626),
+                activeTrackColor: colorScheme.primary,
                 onChanged: (val) => setState(() => _lawEnforcementInvolved = val),
               ),
               const SizedBox(height: 12),
@@ -225,8 +257,8 @@ class _IntakeDraftScreenState extends State<IntakeDraftScreen> {
                 icon: const Icon(Icons.save),
                 label: Text(_isSaving ? 'Saving Draft...' : 'Save Encrypted Intake Draft'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B2626),
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),

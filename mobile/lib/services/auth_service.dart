@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
@@ -117,6 +118,39 @@ class MobileAuthService {
     await _secureStorage.write(key: _keyServerUrl, value: url.trim());
   }
 
+  /// Maps a failed login response to an accurate, non-sensitive user message.
+  ///
+  /// The backend (backend/app/main.py) answers errors as
+  /// `{"error": {"code", "message", "details"}}`. Wrong password, unknown email
+  /// and temporary lockout all return 401 INVALID_CREDENTIALS by design, so the
+  /// message must not claim to know which one occurred.
+  static String describeLoginFailure(int statusCode, String body) {
+    String? code;
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map && decoded['error'] is Map) {
+        code = (decoded['error']['code'] as String?)?.toUpperCase();
+      }
+    } catch (_) {}
+
+    if (statusCode == 401) {
+      return 'Incorrect email or password. Repeated failed attempts temporarily lock the account.';
+    }
+    if (statusCode == 403) {
+      if (code == 'USER_INACTIVE') {
+        return 'This account is disabled. Contact your CRBCL administrator.';
+      }
+      return 'Access to this account is not permitted. Contact your CRBCL administrator.';
+    }
+    if (statusCode == 429) {
+      return 'Too many sign-in attempts. Please wait a few minutes and try again.';
+    }
+    if (statusCode >= 500) {
+      return 'The CRBCL server is temporarily unavailable. Please try again shortly.';
+    }
+    return 'Sign-in failed (code $statusCode). Please try again or contact support.';
+  }
+
   /// Perform first-time or refresh online authentication with backend
   Future<AuthResult> loginOnline({
     required String email,
@@ -128,28 +162,22 @@ class MobileAuthService {
 
     try {
       final loginUri = Uri.parse('$effectiveUrl/api/v1/auth/login');
-      final response = await http.post(
-        loginUri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email.trim(),
-          'password': password,
-        }),
-      );
+      final response = await http
+          .post(
+            loginUri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
 
       if (response.statusCode != 200) {
-        String errorMsg = 'Authentication failed (HTTP ${response.statusCode})';
-        try {
-          final body = jsonDecode(response.body);
-          if (body['detail'] != null) {
-            if (body['detail'] is Map && body['detail']['error'] != null) {
-              errorMsg = body['detail']['error']['message'] ?? errorMsg;
-            } else if (body['detail'] is String) {
-              errorMsg = body['detail'];
-            }
-          }
-        } catch (_) {}
-        return AuthResult(success: false, errorMessage: errorMsg);
+        return AuthResult(
+          success: false,
+          errorMessage: describeLoginFailure(response.statusCode, response.body),
+        );
       }
 
       final data = jsonDecode(response.body);
@@ -161,24 +189,28 @@ class MobileAuthService {
 
       // Register device through existing device API
       final regUri = Uri.parse('$effectiveUrl/api/v1/sync/devices/register');
-      final regResponse = await http.post(
-        regUri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode({
-          'device_id': deviceId,
-          'device_name': 'Caseworker Mobile Unit',
-          'os_type': 'Android',
-          'app_version': '1.0.0',
-        }),
-      );
+      final regResponse = await http
+          .post(
+            regUri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+            },
+            body: jsonEncode({
+              'device_id': deviceId,
+              'device_name': 'Caseworker Mobile Unit',
+              'os_type': 'Android',
+              'app_version': '1.0.0',
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
 
       if (regResponse.statusCode != 200) {
         return AuthResult(
           success: false,
-          errorMessage: 'Device registration failed (HTTP ${regResponse.statusCode}). Device might be revoked.',
+          errorMessage: 'Your credentials were accepted, but this device could not be registered '
+              '(code ${regResponse.statusCode}). It may not be authorized for offline field use. '
+              'Contact your CRBCL administrator.',
         );
       }
 
@@ -204,10 +236,15 @@ class MobileAuthService {
         requiresPinSetup: existingPin == null,
         user: user,
       );
+    } on TimeoutException {
+      return AuthResult(
+        success: false,
+        errorMessage: 'The server did not respond in time. Check your connection and try again.',
+      );
     } catch (e) {
       return AuthResult(
         success: false,
-        errorMessage: 'Network error: Initial login requires an active internet connection.',
+        errorMessage: 'Unable to reach the CRBCL server. Online sign-in requires an internet connection.',
       );
     }
   }

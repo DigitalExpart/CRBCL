@@ -22,6 +22,56 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/branding/
+
+  # Website typography (src/index.css: --font-body Inter, --font-heading Playfair Display).
+  # Bundled locally so the app renders identically when fully offline. Both are SIL OFL 1.1.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter_400Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter_500Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter_600SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter_700Bold.ttf
+          weight: 700
+    - family: PlayfairDisplay
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay_600SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlayfairDisplay_700Bold.ttf
+          weight: 700
+
+# Android launcher icon — generated from the approved CRBCL emblem (src/assets/crbcl-emblem.png).
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/branding/icon_full.png
+  adaptive_icon_background: "#FBFAF9"
+  adaptive_icon_foreground: assets/branding/icon_foreground.png
+  min_sdk_android: 21
+
+# Native (pre-Flutter) splash — light/dark follow the device theme.
+flutter_native_splash:
+  color: "#FBFAF9"
+  image: assets/branding/splash_icon.png
+  color_dark: "#15110E"
+  image_dark: assets/branding/splash_icon.png
+  android: true
+  ios: false
+  web: false
+  fullscreen: false
+  android_12:
+    color: "#FBFAF9"
+    image: assets/branding/splash_icon.png
+    color_dark: "#15110E"
+    image_dark: assets/branding/splash_icon.png

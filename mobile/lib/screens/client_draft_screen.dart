@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/db_helper.dart';
+import '../services/theme_service.dart';
 
 class ClientDraftScreen extends StatefulWidget {
   const ClientDraftScreen({super.key});
@@ -35,6 +36,20 @@ class _ClientDraftScreenState extends State<ClientDraftScreen> {
     'Prefer not to say',
     'Other',
   ];
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _addressController.dispose();
+    _cityController.dispose();
+    _treatyController.dispose();
+    _bandNationController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
 
   String _generateTempUuid() {
     final rand = Random.secure();
@@ -98,7 +113,7 @@ class _ClientDraftScreenState extends State<ClientDraftScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Saved offline draft for $firstName $lastName. Permanent ID will be assigned on sync.'),
-          backgroundColor: Colors.green.shade800,
+          backgroundColor: CrbclTokens.statusSuccess,
         ),
       );
       Navigator.pop(context, true);
@@ -107,11 +122,13 @@ class _ClientDraftScreenState extends State<ClientDraftScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Client Draft (Offline)'),
-        backgroundColor: const Color(0xFF8B2626),
-        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -121,26 +138,29 @@ class _ClientDraftScreenState extends State<ClientDraftScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Notice banner
-              Card(
-                color: Colors.amber.shade50,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.amber.shade400),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: colorScheme.primary.withValues(alpha: 0.25),
+                  ),
                 ),
-                child: const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.orange),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Temporary UUID identifier will be assigned locally. Authoritative 10-digit CRBCL Person ID will be assigned when synchronized with the backend.',
-                          style: TextStyle(fontSize: 12, color: Colors.black87),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: colorScheme.primary, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Temporary identifier assigned locally. Authoritative 10-digit CRBCL Person ID will be assigned upon synchronization.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurface.withValues(alpha: 0.8),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -178,7 +198,11 @@ class _ClientDraftScreenState extends State<ClientDraftScreen> {
                   ),
                   child: Text(
                     _selectedDob != null ? DateFormat('MMMM d, yyyy').format(_selectedDob!) : 'Select Date of Birth',
-                    style: TextStyle(color: _selectedDob != null ? Colors.black87 : Colors.black54),
+                    style: TextStyle(
+                      color: _selectedDob != null
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
               ),
@@ -191,7 +215,13 @@ class _ClientDraftScreenState extends State<ClientDraftScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.wc),
                 ),
-                items: _genderOptions.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+                dropdownColor: isDark ? CrbclTokens.darkCard : Colors.white,
+                items: _genderOptions
+                    .map((g) => DropdownMenuItem(
+                          value: g,
+                          child: Text(g, style: TextStyle(color: colorScheme.onSurface)),
+                        ))
+                    .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedGender = val);
                 },
@@ -276,8 +306,8 @@ class _ClientDraftScreenState extends State<ClientDraftScreen> {
                 icon: const Icon(Icons.save),
                 label: Text(_isSaving ? 'Saving Draft...' : 'Save Encrypted Local Draft'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B2626),
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),

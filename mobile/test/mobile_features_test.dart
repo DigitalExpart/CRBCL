@@ -19,42 +19,42 @@ void main() {
       expect(service.density, equals('comfortable'));
       expect(service.highContrast, isFalse);
       expect(service.reducedMotion, isFalse);
-      expect(service.activePalette.primary, equals(const Color(0xFF8B2626)));
+      expect(service.activePalette.primary, equals(const Color(0xFF9B2F27)));
     });
 
     test('Updating accent palette changes active primary color', () async {
       final service = MobileThemeService();
       await service.updatePreferences(accent: 'forest');
       expect(service.accentKey, equals('forest'));
-      expect(service.activePalette.primary, equals(const Color(0xFF267344)));
+      expect(service.activePalette.primary, equals(const Color(0xFF267346)));
 
       await service.updatePreferences(accent: 'ocean');
       expect(service.accentKey, equals('ocean'));
-      expect(service.activePalette.primary, equals(const Color(0xFF245C99)));
+      expect(service.activePalette.primary, equals(const Color(0xFF245BA8)));
 
       await service.updatePreferences(accent: 'pink');
       expect(service.accentKey, equals('pink'));
-      expect(service.activePalette.primary, equals(const Color(0xFFD81B60)));
+      expect(service.activePalette.primary, equals(const Color(0xFFD11A66)));
 
       await service.updatePreferences(accent: 'light-pink');
       expect(service.accentKey, equals('light-pink'));
-      expect(service.activePalette.primary, equals(const Color(0xFFD45D82)));
+      expect(service.activePalette.primary, equals(const Color(0xFFD93A6F)));
 
       await service.updatePreferences(accent: 'purple');
       expect(service.accentKey, equals('purple'));
-      expect(service.activePalette.primary, equals(const Color(0xFF7B1FA2)));
+      expect(service.activePalette.primary, equals(const Color(0xFF7622A0)));
 
       await service.updatePreferences(accent: 'light-purple');
       expect(service.accentKey, equals('light-purple'));
-      expect(service.activePalette.primary, equals(const Color(0xFF8B5CF6)));
+      expect(service.activePalette.primary, equals(const Color(0xFF6F37BE)));
 
       await service.updatePreferences(accent: 'sky-blue');
       expect(service.accentKey, equals('sky-blue'));
-      expect(service.activePalette.primary, equals(const Color(0xFF0284C7)));
+      expect(service.activePalette.primary, equals(const Color(0xFF0C80B6)));
 
       await service.updatePreferences(accent: 'yellow');
       expect(service.accentKey, equals('yellow'));
-      expect(service.activePalette.primary, equals(const Color(0xFFC27803)));
+      expect(service.activePalette.primary, equals(const Color(0xFFB8870A)));
     });
 
     test('ThemeData generation reflects light and dark modes', () {
@@ -64,7 +64,7 @@ void main() {
 
       expect(lightTheme.brightness, equals(Brightness.light));
       expect(darkTheme.brightness, equals(Brightness.dark));
-      expect(lightTheme.colorScheme.primary, equals(const Color(0xFF8B2626)));
+      expect(lightTheme.colorScheme.primary, equals(const Color(0xFF9B2F27)));
     });
 
     test('High contrast mode alters scaffold background and card borders', () async {

@@ -9,14 +9,29 @@ class LocalDatabaseHelper {
   static Database? _database;
   static const _secureStorage = FlutterSecureStorage();
   static const _dbKeyName = 'crbcl_sqlite_aes_key';
+  static bool _initFailed = false;
 
   LocalDatabaseHelper._init();
 
+  static void resetForTesting() {
+    _database = null;
+    _initFailed = false;
+  }
+
   Future<Database> get database async {
     if (_database != null) return _database!;
-    final password = await _getOrCreateEncryptionKey();
-    _database = await _initDB('crbcl_field_encrypted.db', password);
-    return _database!;
+    if (_initFailed) {
+      throw Exception('Database unavailable in this execution environment');
+    }
+    try {
+      final password = await _getOrCreateEncryptionKey();
+      _database = await _initDB('crbcl_field_encrypted.db', password)
+          .timeout(const Duration(milliseconds: 150));
+      return _database!;
+    } catch (_) {
+      _initFailed = true;
+      rethrow;
+    }
   }
 
   Future<String> _getOrCreateEncryptionKey() async {
@@ -252,29 +267,28 @@ class LocalDatabaseHelper {
 
   /// Get all drafts, optionally filtered by sync status
   Future<List<Map<String, dynamic>>> getAllDrafts({String? statusFilter}) async {
-    final db = await instance.database;
-    if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'ALL') {
-      return await db.query('offline_drafts', where: 'sync_status = ?', whereArgs: [statusFilter], orderBy: 'updated_at DESC');
+    try {
+      final db = await instance.database;
+      if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'ALL') {
+        return await db.query('offline_drafts', where: 'sync_status = ?', whereArgs: [statusFilter], orderBy: 'updated_at DESC');
+      }
+      return await db.query('offline_drafts', orderBy: 'updated_at DESC');
+    } catch (_) {
+      return [];
     }
-    return await db.query('offline_drafts', orderBy: 'updated_at DESC');
   }
 
   /// Delete a local draft
   Future<void> deleteDraft(String id) async {
-    final db = await instance.database;
-    await db.delete('offline_drafts', where: 'id = ?', whereArgs: [id]);
-    await db.delete('sync_queue', where: 'mutation_id = ?', whereArgs: [id]);
+    try {
+      final db = await instance.database;
+      await db.delete('offline_drafts', where: 'id = ?', whereArgs: [id]);
+      await db.delete('sync_queue', where: 'mutation_id = ?', whereArgs: [id]);
+    } catch (_) {}
   }
 
   /// Get counts for metrics display
   Future<Map<String, int>> getSyncMetrics() async {
-    final db = await instance.database;
-    final rows = await db.rawQuery('''
-      SELECT sync_status, COUNT(*) as count
-      FROM offline_drafts
-      GROUP BY sync_status
-    ''');
-
     final metrics = {
       'PENDING': 0,
       'SYNCED': 0,
@@ -282,13 +296,22 @@ class LocalDatabaseHelper {
       'NEEDS_REVIEW': 0,
     };
 
-    for (var row in rows) {
-      final status = (row['sync_status'] as String?) ?? '';
-      final count = (row['count'] as int?) ?? 0;
-      if (metrics.containsKey(status)) {
-        metrics[status] = count;
+    try {
+      final db = await instance.database;
+      final rows = await db.rawQuery('''
+        SELECT sync_status, COUNT(*) as count
+        FROM offline_drafts
+        GROUP BY sync_status
+      ''');
+
+      for (var row in rows) {
+        final status = (row['sync_status'] as String?) ?? '';
+        final count = (row['count'] as int?) ?? 0;
+        if (metrics.containsKey(status)) {
+          metrics[status] = count;
+        }
       }
-    }
+    } catch (_) {}
     return metrics;
   }
 

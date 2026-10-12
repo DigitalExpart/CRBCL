@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/theme_service.dart';
+import '../widgets/crbcl_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,6 +25,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isOnlineLoginMode = false;
   bool _isSettingUpPin = false;
   bool _showAdvancedServerUrl = false;
+
+  // Visibility toggles (hidden by default)
+  bool _obscurePassword = true;
+  bool _obscurePin = true;
+  bool _obscureNewPin = true;
+  bool _obscureConfirmPin = true;
+
   String? _statusMessage;
   String? _errorMessage;
 
@@ -30,6 +39,17 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkInitialState();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _pinController.dispose();
+    _newPinController.dispose();
+    _confirmPinController.dispose();
+    _serverUrlController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkInitialState() async {
@@ -147,88 +167,196 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: Colors.indigo.shade900,
-        body: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CrbclLogo(height: 56, variant: CrbclLogoVariant.emblem),
+              const SizedBox(height: 24),
+              CircularProgressIndicator(color: colorScheme.primary),
+              const SizedBox(height: 12),
+              Text(
+                'Securing Connection...',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.indigo.shade900,
+      backgroundColor: isDark
+          ? colorScheme.surface
+          : const Color(0xFFF7F5F2),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 8,
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header Brand
-                    const Icon(Icons.shield, size: 56, color: Color(0xFF8B2626)),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'CRBCL Field Operations',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Official CRBCL Brand Header
+                  Center(
+                    child: Column(
+                      children: [
+                        const CrbclLogo(
+                          height: 72,
+                          variant: CrbclLogoVariant.emblem,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'CRBCL Field Operations',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: CrbclTokens.fontHeading,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Cote First Nation Family Wellness',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colorScheme.onSurface.withValues(alpha: 0.65),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Cote First Nation Family Wellness',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Login / Unlock Card
+                  Card(
+                    elevation: isDark ? 0 : 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: isDark ? colorScheme.outlineVariant : Colors.black12,
+                        width: 1,
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    color: colorScheme.surfaceContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Error Banner
+                          if (_errorMessage != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: colorScheme.error.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border(
+                                  left: BorderSide(color: colorScheme.error, width: 4),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.error_outline, size: 18, color: colorScheme.error),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: TextStyle(
+                                        color: isDark ? CrbclTokens.statusErrorDark : CrbclTokens.statusError,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
 
-                    // Error & Status Banners
-                    if (_errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border(left: BorderSide(color: Colors.red.shade700, width: 4)),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(color: Colors.red.shade900, fontSize: 13),
-                        ),
+                          // Status Message Banner
+                          if (_statusMessage != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: CrbclTokens.statusSuccess.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: const Border(
+                                  left: BorderSide(color: CrbclTokens.statusSuccess, width: 4),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.check_circle_outline, size: 18, color: CrbclTokens.statusSuccess),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _statusMessage!,
+                                      style: TextStyle(
+                                        color: isDark ? CrbclTokens.statusSuccessDark : CrbclTokens.statusSuccess,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // View Modes
+                          if (_isSettingUpPin)
+                            _buildPinSetupView()
+                          else if (_isOnlineLoginMode)
+                            _buildOnlineLoginView()
+                          else
+                            _buildPinUnlockView(),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                    ],
+                    ),
+                  ),
 
-                    if (_statusMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border(left: BorderSide(color: Colors.green.shade700, width: 4)),
+                  // Footer security badge
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      children: [
+                        Icon(
+                          Icons.verified_user_outlined,
+                          size: 14,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
-                        child: Text(
-                          _statusMessage!,
-                          style: TextStyle(color: Colors.green.shade900, fontSize: 13),
+                        Text(
+                          'Encrypted Offline-First Field Platform',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // View Modes
-                    if (_isSettingUpPin)
-                      _buildPinSetupView()
-                    else if (_isOnlineLoginMode)
-                      _buildOnlineLoginView()
-                    else
-                      _buildPinUnlockView(),
-                  ],
-                ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -238,45 +366,80 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildPinUnlockView() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           'Quick Offline Access',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Enter your personal PIN (PBKDF2-HMAC-SHA256 • 100k rounds)',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
+          style: TextStyle(
+            fontSize: 12,
+            color: colorScheme.onSurface.withValues(alpha: 0.65),
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
+
         TextField(
           controller: _pinController,
           keyboardType: TextInputType.number,
-          obscureText: true,
+          obscureText: _obscurePin,
           maxLength: 6,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Enter 4 or 6-digit PIN',
-            prefixIcon: Icon(Icons.lock_outline),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.lock_outline),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePin ? Icons.visibility_off : Icons.visibility,
+                semanticLabel: _obscurePin ? 'Show PIN' : 'Hide PIN',
+              ),
+              onPressed: () {
+                setState(() => _obscurePin = !_obscurePin);
+              },
+            ),
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) => _handlePinUnlock(),
         ),
         const SizedBox(height: 12),
-        ElevatedButton.icon(
+
+        ElevatedButton(
           onPressed: _handlePinUnlock,
-          icon: const Icon(Icons.lock_open),
-          label: const Text('Unlock Vault'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF8B2626),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.lock_open),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Unlock Vault',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
+
         TextButton(
           onPressed: () {
             setState(() {
@@ -291,21 +454,32 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildOnlineLoginView() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           'CRBCL Staff Sign In',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Initial login requires active internet connection to authenticate and register device.',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
+          style: TextStyle(
+            fontSize: 12,
+            color: colorScheme.onSurface.withValues(alpha: 0.65),
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
+
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
@@ -315,30 +489,53 @@ class _LoginScreenState extends State<LoginScreen> {
             border: OutlineInputBorder(),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
+
         TextField(
           controller: _passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
             labelText: 'Password',
-            prefixIcon: Icon(Icons.key_outlined),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.key_outlined),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                semanticLabel: _obscurePassword ? 'Show password' : 'Hide password',
+              ),
+              onPressed: () {
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
+            ),
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) => _handleOnlineLogin(),
         ),
         const SizedBox(height: 12),
 
-        // Server URL toggle for dev/testing
+        // Advanced Server URL toggle
         InkWell(
           onTap: () => setState(() => _showAdvancedServerUrl = !_showAdvancedServerUrl),
-          child: Row(
-            children: [
-              Icon(
-                _showAdvancedServerUrl ? Icons.arrow_drop_down : Icons.arrow_right,
-                color: Colors.grey.shade700,
-              ),
-              const Text('Server Connection Settings', style: TextStyle(fontSize: 12, color: Colors.black54)),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                Icon(
+                  _showAdvancedServerUrl ? Icons.arrow_drop_down : Icons.arrow_right,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                Flexible(
+                  child: Text(
+                    'Server Connection Settings',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         if (_showAdvancedServerUrl) ...[
@@ -354,17 +551,31 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
 
         const SizedBox(height: 16),
-        ElevatedButton.icon(
+        ElevatedButton(
           onPressed: _handleOnlineLogin,
-          icon: const Icon(Icons.login),
-          label: const Text('Authenticate & Register Device'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF8B2626),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.login),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Authenticate & Register Device',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
+
         FutureBuilder<bool>(
           future: _authService.hasSavedCredentials(),
           builder: (context, snapshot) {
@@ -387,54 +598,98 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildPinSetupView() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           'Set Quick Access PIN',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Create a 4 or 6-digit personal PIN for offline unlocking in the field.',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
+          style: TextStyle(
+            fontSize: 12,
+            color: colorScheme.onSurface.withValues(alpha: 0.65),
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
+
         TextField(
           controller: _newPinController,
           keyboardType: TextInputType.number,
-          obscureText: true,
+          obscureText: _obscureNewPin,
           maxLength: 6,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'New PIN (4-6 digits)',
-            prefixIcon: Icon(Icons.pin),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.pin),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureNewPin ? Icons.visibility_off : Icons.visibility,
+                semanticLabel: _obscureNewPin ? 'Show PIN' : 'Hide PIN',
+              ),
+              onPressed: () {
+                setState(() => _obscureNewPin = !_obscureNewPin);
+              },
+            ),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
+
         TextField(
           controller: _confirmPinController,
           keyboardType: TextInputType.number,
-          obscureText: true,
+          obscureText: _obscureConfirmPin,
           maxLength: 6,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Confirm PIN',
-            prefixIcon: Icon(Icons.check_circle_outline),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.check_circle_outline),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPin ? Icons.visibility_off : Icons.visibility,
+                semanticLabel: _obscureConfirmPin ? 'Show PIN' : 'Hide PIN',
+              ),
+              onPressed: () {
+                setState(() => _obscureConfirmPin = !_obscureConfirmPin);
+              },
+            ),
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) => _handleSetPin(),
         ),
         const SizedBox(height: 16),
-        ElevatedButton.icon(
+
+        ElevatedButton(
           onPressed: _handleSetPin,
-          icon: const Icon(Icons.save),
-          label: const Text('Save PIN & Enter App'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF8B2626),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.save),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Save PIN & Enter App',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ],

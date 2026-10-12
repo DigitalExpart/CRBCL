@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/db_helper.dart';
+import '../services/theme_service.dart';
 
 class VisitDraftScreen extends StatefulWidget {
   const VisitDraftScreen({super.key});
@@ -21,6 +22,15 @@ class _VisitDraftScreenState extends State<VisitDraftScreen> {
 
   DateTime _scheduledTime = DateTime.now().add(const Duration(hours: 1));
   bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _locationController.dispose();
+    _notesController.dispose();
+    _caseIdController.dispose();
+    super.dispose();
+  }
 
   String _generateTempUuid() {
     final rand = Random.secure();
@@ -88,7 +98,7 @@ class _VisitDraftScreenState extends State<VisitDraftScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Saved offline ${_entityType == "HOME_VISIT" ? "Home Visit" : "Follow-up Task"} draft.'),
-          backgroundColor: Colors.green.shade800,
+          backgroundColor: CrbclTokens.statusSuccess,
         ),
       );
       Navigator.pop(context, true);
@@ -97,13 +107,13 @@ class _VisitDraftScreenState extends State<VisitDraftScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isHomeVisit = _entityType == 'HOME_VISIT';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(isHomeVisit ? 'Schedule Home Visit (Offline)' : 'Create Follow-up Task (Offline)'),
-        backgroundColor: const Color(0xFF8B2626),
-        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -159,7 +169,10 @@ class _VisitDraftScreenState extends State<VisitDraftScreen> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.access_time),
                   ),
-                  child: Text(DateFormat('EEEE, MMMM d, yyyy • h:mm a').format(_scheduledTime)),
+                  child: Text(
+                    DateFormat('EEEE, MMMM d, yyyy • h:mm a').format(_scheduledTime),
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -200,8 +213,8 @@ class _VisitDraftScreenState extends State<VisitDraftScreen> {
                 icon: const Icon(Icons.save),
                 label: Text(_isSaving ? 'Saving Draft...' : 'Save Encrypted Local Draft'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B2626),
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
