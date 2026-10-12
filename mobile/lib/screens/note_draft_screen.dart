@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/db_helper.dart';
 import '../services/speech_service.dart';
@@ -112,21 +111,25 @@ class _NoteDraftScreenState extends State<NoteDraftScreen> {
     final payload = {
       'case_id': widget.caseId ?? 'offline_case',
       'title': title,
+      'summary': narrative,
       'narrative': narrative,
+      'note_type': 'Progress Note',
       'created_at': DateTime.now().toIso8601String(),
     };
 
-    await LocalDatabaseHelper.instance.insertSyncItem(
-      mutationId,
-      'case_note',
-      json.encode(payload),
+    await LocalDatabaseHelper.instance.saveDraft(
+      id: mutationId,
+      entityType: 'CASE_NOTE',
+      title: title,
+      subtitle: 'Case Note Draft • ${widget.caseId ?? "General"}',
+      payload: payload,
     );
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Note queued to encrypted SQLite Outbox for sync.')),
+        const SnackBar(content: Text('Note draft saved to encrypted storage.')),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     }
   }
 

@@ -5,6 +5,9 @@ import 'screens/field_dashboard.dart';
 import 'screens/case_list_screen.dart';
 import 'screens/note_draft_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/client_draft_screen.dart';
+import 'screens/intake_draft_screen.dart';
+import 'screens/visit_draft_screen.dart';
 import 'services/theme_service.dart';
 
 void main() {
@@ -48,6 +51,9 @@ class CrbclMobileApp extends StatelessWidget {
         '/cases': (context) => const CaseListScreen(),
         '/note-draft': (context) => const NoteDraftScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/client-draft': (context) => const ClientDraftScreen(),
+        '/intake-draft': (context) => const IntakeDraftScreen(),
+        '/visit-draft': (context) => const VisitDraftScreen(),
       },
     );
   }
