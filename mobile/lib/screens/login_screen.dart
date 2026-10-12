@@ -19,12 +19,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _pinController = TextEditingController();
   final _newPinController = TextEditingController();
   final _confirmPinController = TextEditingController();
-  final _serverUrlController = TextEditingController();
 
   bool _isLoading = true;
   bool _isOnlineLoginMode = false;
   bool _isSettingUpPin = false;
-  bool _showAdvancedServerUrl = false;
 
   // Visibility toggles (hidden by default)
   bool _obscurePassword = true;
@@ -48,15 +46,12 @@ class _LoginScreenState extends State<LoginScreen> {
     _pinController.dispose();
     _newPinController.dispose();
     _confirmPinController.dispose();
-    _serverUrlController.dispose();
     super.dispose();
   }
 
   Future<void> _checkInitialState() async {
     setState(() => _isLoading = true);
     final hasCreds = await _authService.hasSavedCredentials();
-    final serverUrl = await _authService.getServerUrl();
-    _serverUrlController.text = serverUrl;
 
     setState(() {
       _isOnlineLoginMode = !hasCreds;
@@ -82,7 +77,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final result = await _authService.loginOnline(
       email: email,
       password: password,
-      serverUrl: _serverUrlController.text.trim(),
     );
 
     setState(() => _isLoading = false);
@@ -512,44 +506,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Advanced Server URL toggle
-        InkWell(
-          onTap: () => setState(() => _showAdvancedServerUrl = !_showAdvancedServerUrl),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: Row(
-              children: [
-                Icon(
-                  _showAdvancedServerUrl ? Icons.arrow_drop_down : Icons.arrow_right,
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-                Flexible(
-                  child: Text(
-                    'Server Connection Settings',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (_showAdvancedServerUrl) ...[
-          const SizedBox(height: 8),
-          TextField(
-            controller: _serverUrlController,
-            decoration: const InputDecoration(
-              labelText: 'Backend URL',
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-          ),
-        ],
-
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: _handleOnlineLogin,
@@ -573,6 +529,33 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 14),
+
+        // New Sign Up link
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              "Don't have an account? ",
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/signup'),
+              child: Text(
+                'Sign Up',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
 

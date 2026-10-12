@@ -17,7 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Map<String, dynamic> _user = {};
   String _deviceId = '';
-  String _serverUrl = '';
   bool _isLoading = true;
 
   @override
@@ -30,13 +29,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isLoading = true);
     final user = await _authService.getCurrentUser();
     final deviceId = await _authService.getOrCreateDeviceId();
-    final serverUrl = await _authService.getServerUrl();
 
     if (mounted) {
       setState(() {
         _user = user;
         _deviceId = deviceId;
-        _serverUrl = serverUrl;
         _isLoading = false;
       });
     }
@@ -359,31 +356,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'monospace',
                                   color: colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Central Server',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.65),
-                                ),
-                              ),
-                              Flexible(
-                                child: Text(
-                                  _serverUrl,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontFamily: 'monospace',
-                                    color: colorScheme.onSurface,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],

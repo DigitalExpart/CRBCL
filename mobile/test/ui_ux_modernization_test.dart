@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:crbcl_mobile/screens/login_screen.dart';
+import 'package:crbcl_mobile/screens/signup_screen.dart';
 import 'package:crbcl_mobile/screens/app_shell.dart';
 import 'package:crbcl_mobile/screens/home_dashboard_screen.dart';
 import 'package:crbcl_mobile/services/theme_service.dart';
@@ -278,6 +279,68 @@ void main() {
       expect(find.text('Needs Review'), findsOneWidget);
       expect(find.text('Sync Failed'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Login screen displays Sign Up link and removes Server Connection Settings', (WidgetTester tester) async {
+      FlutterSecureStorage.setMockInitialValues({});
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => MobileThemeService(),
+          child: const MaterialApp(home: LoginScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Sign Up link must be present
+      expect(find.text('Sign Up'), findsOneWidget);
+      // Server Connection Settings must be removed
+      expect(find.text('Server Connection Settings'), findsNothing);
+      expect(find.text('Backend URL'), findsNothing);
+    });
+
+    testWidgets('SignUpScreen renders all required registration inputs', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => MobileThemeService(),
+          child: const MaterialApp(home: SignUpScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Join CRBCL Staff'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'Full Name *'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'Work Email *'), findsOneWidget);
+      expect(find.text('Platform Role *'), findsOneWidget);
+      expect(find.text('Create Account'), findsOneWidget);
+      expect(find.text('Sign In'), findsOneWidget);
+    });
+
+    testWidgets('Admin user can authenticate and dashboard reflects Administrator role', (WidgetTester tester) async {
+      FlutterSecureStorage.setMockInitialValues({
+        'crbcl_user_name': 'Chief IT Admin',
+        'crbcl_user_roles': '["admin"]',
+      });
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => MobileThemeService(),
+          child: MaterialApp(
+            home: HomeDashboardScreen(
+              onOpenDrawer: () {},
+              onNavigateTab: (_) {},
+            ),
+          ),
+        ),
+      );
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+        if (find.byType(CircularProgressIndicator).evaluate().isEmpty) break;
+      }
+
+      expect(find.textContaining('Welcome, Chief IT Admin'), findsOneWidget);
+      expect(find.text('admin'), findsOneWidget);
     });
   });
 }

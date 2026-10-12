@@ -249,6 +249,140 @@ class MobileAuthService {
     }
   }
 
+  /// Register new user account online with CRBCL backend
+  Future<Map<String, dynamic>> registerOnline({
+    required String email,
+    required String password,
+    required String fullName,
+    required String requestedRole,
+    String? department,
+  }) async {
+    final effectiveUrl = (await getServerUrl()).replaceAll(RegExp(r'/+$'), '');
+
+    try {
+      final registerUri = Uri.parse('$effectiveUrl/api/v1/auth/register');
+      final response = await http
+          .post(
+            registerUri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'password': password,
+              'full_name': fullName.trim(),
+              'requested_role': requestedRole.trim().toLowerCase(),
+              'department': department?.trim() ?? '',
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Registration submitted. Please check your email for verification code.',
+          'email': email.trim(),
+        };
+      }
+
+      String message = 'Registration failed (code ${response.statusCode}).';
+      if (data is Map && data['detail'] is Map && data['detail']['error'] is Map) {
+        message = data['detail']['error']['message'] ?? message;
+      } else if (data is Map && data['detail'] is String) {
+        message = data['detail'];
+      }
+
+      return {
+        'success': false,
+        'errorMessage': message,
+      };
+    } on TimeoutException {
+      return {
+        'success': false,
+        'errorMessage': 'The server did not respond in time. Check your connection and try again.',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'errorMessage': 'Unable to connect to CRBCL server: $e',
+      };
+    }
+  }
+
+  /// Verify email OTP code and authenticate device
+  Future<AuthResult> verifyOtpOnline({
+    required String email,
+    required String otpCode,
+  }) async {
+    final effectiveUrl = (await getServerUrl()).replaceAll(RegExp(r'/+$'), '');
+
+    try {
+      final verifyUri = Uri.parse('$effectiveUrl/api/v1/auth/verify-otp');
+      final response = await http
+          .post(
+            verifyUri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email.trim(),
+              'otp_code': otpCode.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      if (response.statusCode != 200) {
+        final data = jsonDecode(response.body);
+        String msg = 'Invalid or expired verification code.';
+        if (data is Map && data['detail'] is Map && data['detail']['error'] is Map) {
+          msg = data['detail']['error']['message'] ?? msg;
+        }
+        return AuthResult(success: false, errorMessage: msg);
+      }
+
+      final data = jsonDecode(response.body);
+      final accessToken = data['access_token'] as String;
+      final refreshToken = data['refresh_token'] as String?;
+      final user = data['user'] as Map<String, dynamic>;
+
+      final deviceId = await getOrCreateDeviceId();
+
+      // Register device through existing device API
+      final regUri = Uri.parse('$effectiveUrl/api/v1/sync/devices/register');
+      await http.post(
+        regUri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({
+          'device_id': deviceId,
+          'device_name': 'Caseworker Mobile Unit',
+          'os_type': 'Android',
+          'app_version': '1.0.0',
+        }),
+      ).timeout(const Duration(seconds: 20));
+
+      // Persist authentication credentials
+      await _secureStorage.write(key: _keyAccessToken, value: accessToken);
+      if (refreshToken != null) {
+        await _secureStorage.write(key: _keyRefreshToken, value: refreshToken);
+      }
+      await _secureStorage.write(key: _keyUserId, value: user['id']?.toString() ?? '');
+      await _secureStorage.write(key: _keyUserEmail, value: user['email']?.toString() ?? '');
+      await _secureStorage.write(key: _keyUserName, value: user['display_name']?.toString() ?? '');
+      await _secureStorage.write(key: _keyUserRoles, value: jsonEncode(user['roles'] ?? []));
+      await _secureStorage.write(key: _keyUserPermissions, value: jsonEncode(user['permissions'] ?? []));
+      await _secureStorage.write(key: _keyLastAuthTime, value: DateTime.now().toIso8601String());
+
+      return AuthResult(
+        success: true,
+        requiresPinSetup: true,
+        user: user,
+      );
+    } catch (e) {
+      return AuthResult(success: false, errorMessage: 'Verification failed: $e');
+    }
+  }
+
   /// Set or update the user's personal 4 to 6-digit PIN
   Future<bool> setPin(String pin) async {
     if (pin.length < 4 || pin.length > 6) return false;

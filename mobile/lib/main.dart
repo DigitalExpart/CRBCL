@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/login_screen.dart';
+import 'screens/signup_screen.dart';
 import 'screens/app_shell.dart';
 import 'screens/field_dashboard.dart';
 import 'screens/note_draft_screen.dart';
@@ -48,6 +49,7 @@ class CrbclMobileApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignUpScreen(),
         '/dashboard': (context) => const AppShell(initialTab: 0),
         '/clients': (context) => const AppShell(initialTab: 1),
         '/cases': (context) => const AppShell(initialTab: 2),

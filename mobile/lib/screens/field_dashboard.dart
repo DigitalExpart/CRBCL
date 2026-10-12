@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
+import '../services/connectivity_service.dart';
 import '../services/db_helper.dart';
 import '../services/sync_engine.dart';
 import '../services/theme_service.dart';
@@ -23,10 +23,11 @@ class FieldDashboardScreen extends StatefulWidget {
 class _FieldDashboardScreenState extends State<FieldDashboardScreen> {
   final _dbHelper = LocalDatabaseHelper.instance;
   final _authService = MobileAuthService.instance;
+  final _connectivityService = ConnectivityService.instance;
 
   bool _isLoading = true;
   bool _isSyncing = false;
-  bool _isOnline = false;
+  late bool _isOnline;
   DateTime? _lastSyncTime;
   Map<String, int> _metrics = {'PENDING': 0, 'SYNCED': 0, 'FAILED': 0, 'NEEDS_REVIEW': 0};
   List<Map<String, dynamic>> _drafts = [];
@@ -36,7 +37,23 @@ class _FieldDashboardScreenState extends State<FieldDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _isOnline = _connectivityService.isOnline;
+    _connectivityService.addListener(_onConnectivityChanged);
     _loadDashboardData();
+  }
+
+  @override
+  void dispose() {
+    _connectivityService.removeListener(_onConnectivityChanged);
+    super.dispose();
+  }
+
+  void _onConnectivityChanged() {
+    if (mounted) {
+      setState(() {
+        _isOnline = _connectivityService.isOnline;
+      });
+    }
   }
 
   Future<void> _loadDashboardData() async {
@@ -58,20 +75,8 @@ class _FieldDashboardScreenState extends State<FieldDashboardScreen> {
   }
 
   Future<void> _checkConnectivityStatus() async {
-    if (WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
-      _isOnline = false;
-      if (mounted) setState(() {});
-      return;
-    }
-    try {
-      final serverUrl = await _authService.getServerUrl();
-      final uri = Uri.parse('$serverUrl/health');
-      final res = await http.get(uri).timeout(const Duration(seconds: 3));
-      _isOnline = res.statusCode == 200;
-    } catch (_) {
-      _isOnline = false;
-    }
-    if (mounted) setState(() {});
+    final status = await _connectivityService.checkConnectivity();
+    if (mounted) setState(() => _isOnline = status);
   }
 
   Future<void> _handleSyncNow() async {
