@@ -6,7 +6,7 @@ import {
   UserCog, MessageCircle, ChevronLeft, ChevronRight,
   Shield, LogOut, Menu, X, LayoutGrid, Inbox, Clock, Home,
   CalendarDays, Bell, UserCheck, Receipt, BarChart3, CheckSquare, Truck,
-  Crown, TrendingUp, Building, ConciergeBell, Landmark, Compass
+  Crown, TrendingUp, Building, ConciergeBell, Landmark, Compass, WifiOff
 } from "lucide-react";
 
 import { api } from "@/api";
@@ -128,6 +128,7 @@ const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
   }
 
   items.push(
+    { label: "Offline Workspace", icon: WifiOff, path: "/offline-workspace" },
     { label: "My Schedule", icon: Calendar, path: "/schedule" },
     { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
     { label: "Staffing Facilitator", icon: UserCheck, path: "/staffing" },

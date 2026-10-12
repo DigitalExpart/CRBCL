@@ -104,6 +104,13 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("speech_max_file_size_bytes", "crbcl_speech_max_file_size_bytes"),
     )
 
+    # ── Feature Flags ─────────────────────────────────────────
+    crbcl_offline_web_enabled: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("crbcl_offline_web_enabled", "CRBCL_OFFLINE_WEB_ENABLED"),
+        description="Master feature flag for web offline workspace and synchronization. Disabled by default.",
+    )
+
     # ── Derived helpers ──────────────────────────────────────
     @property
     def is_development(self) -> bool:

@@ -111,7 +111,22 @@ async def validate_device_status(db: Any, user_id: uuid.UUID, device_id: str | N
         return  # Allow standard web requests without device ID
 
     device = await db_query_first(db, MobileDevice, MobileDevice.device_id == device_id)
-    if not device or device.device_status in ["REVOKED", "WIPED"]:
+    if not device:
+        if device_id.startswith("WEB-"):
+            device = await register_mobile_device(
+                db=db,
+                user_id=user_id,
+                device_id=device_id,
+                device_name="Web Offline Workspace",
+                os_type="Web Browser",
+            )
+            return
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="DEVICE_REVOKED: This device has been revoked or wiped by an administrator.",
+        )
+
+    if device.device_status in ["REVOKED", "WIPED"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="DEVICE_REVOKED: This device has been revoked or wiped by an administrator.",

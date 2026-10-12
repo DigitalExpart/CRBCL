@@ -45,6 +45,27 @@ class SyncPushRequest(BaseModel):
     items: list[PushItem]
 
 
+def _extract_user_roles_and_perms(user: User) -> tuple[set[str], set[str]]:
+    roles: set[str] = set()
+    perms: set[str] = set()
+    for ur in getattr(user, "roles", []):
+        r = getattr(ur, "role", ur)
+        if hasattr(r, "key") and r.key:
+            roles.add(str(r.key).lower())
+        if hasattr(r, "name") and r.name:
+            roles.add(str(r.name).lower())
+        if hasattr(r, "permissions"):
+            for rp in r.permissions:
+                p = getattr(rp, "permission", rp)
+                if hasattr(p, "key") and p.key:
+                    perms.add(str(p.key))
+                elif hasattr(rp, "permission") and isinstance(rp.permission, str):
+                    perms.add(rp.permission)
+                elif isinstance(p, str):
+                    perms.add(p)
+    return roles, perms
+
+
 @router.post("/devices/register", response_model=dict[str, Any])
 async def register_device(
     req: DeviceRegisterRequest,
@@ -70,7 +91,7 @@ async def revoke_device(
     current_user: User = Depends(get_current_user),
 ):
     """Administrative revocation of a mobile device."""
-    user_perms = {p.permission for r in current_user.roles for p in r.permissions}
+    _, user_perms = _extract_user_roles_and_perms(current_user)
     if Permissions.ADMIN_USERS_MANAGE not in user_perms and Permissions.ADMIN_CONFIGURATION_MANAGE not in user_perms:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -83,16 +104,46 @@ async def revoke_device(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
+@router.get("/config", response_model=dict[str, Any])
+async def get_sync_config(
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve synchronization configuration, feature flag status, and user eligibility."""
+    from app.core import get_settings
+
+    settings = get_settings()
+    user_roles, _ = _extract_user_roles_and_perms(current_user)
+    is_admin_or_supervisor = bool({"admin", "it_admin", "supervisor", "executive_director", "ceo"} & user_roles)
+    is_eligible = settings.crbcl_offline_web_enabled or is_admin_or_supervisor
+    return {
+        "offline_web_enabled": settings.crbcl_offline_web_enabled,
+        "user_eligible": is_eligible,
+        "server_time": datetime.utcnow().isoformat(),
+    }
+
+
 @router.post("/pull", response_model=dict[str, Any])
 async def sync_pull(
     req: SyncPullRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     x_device_id: str | None = Header(None, alias="X-Device-ID"),
+    x_client_type: str | None = Header(None, alias="X-Client-Type"),
 ):
     """Pull updated delta for assigned cases, clients, and notes since last_synced_at."""
+    user_roles, user_perms = _extract_user_roles_and_perms(current_user)
+    if x_client_type == "web" or (x_device_id and x_device_id.startswith("WEB-")):
+        from app.core import get_settings
+
+        settings = get_settings()
+        is_admin_or_supervisor = bool({"admin", "it_admin", "supervisor", "executive_director", "ceo"} & user_roles)
+        if not (settings.crbcl_offline_web_enabled or is_admin_or_supervisor):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="OFFLINE_WEB_DISABLED: Web offline workspace synchronization is currently disabled by administrator policy.",
+            )
+
     await validate_device_status(db, current_user.id, x_device_id)
-    user_perms = {p.permission for r in current_user.roles for p in r.permissions}
     return await get_sync_pull_delta(
         db=db,
         user_id=current_user.id,
@@ -108,10 +159,22 @@ async def sync_push(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     x_device_id: str | None = Header(None, alias="X-Device-ID"),
+    x_client_type: str | None = Header(None, alias="X-Client-Type"),
 ):
-    """Process offline outbox queue items pushed from mobile field device."""
+    """Process offline outbox queue items pushed from mobile field device or web offline workspace."""
+    user_roles, user_perms = _extract_user_roles_and_perms(current_user)
+    if x_client_type == "web" or (x_device_id and x_device_id.startswith("WEB-")):
+        from app.core import get_settings
+
+        settings = get_settings()
+        is_admin_or_supervisor = bool({"admin", "it_admin", "supervisor", "executive_director", "ceo"} & user_roles)
+        if not (settings.crbcl_offline_web_enabled or is_admin_or_supervisor):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="OFFLINE_WEB_DISABLED: Web offline workspace synchronization is currently disabled by administrator policy.",
+            )
+
     await validate_device_status(db, current_user.id, x_device_id)
-    user_perms = {p.permission for r in current_user.roles for p in r.permissions}
     items_dicts = [item.model_dump() for item in req.items]
     return await process_sync_push(
         db=db,

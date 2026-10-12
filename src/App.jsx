@@ -99,6 +99,7 @@ const PlacementMatching = lazy(() => import('@/pages/PlacementMatching'));
 const FrontDeskDashboard = lazy(() => import('@/pages/FrontDeskDashboard'));
 const NavigatorDashboard = lazy(() => import('@/pages/NavigatorDashboard'));
 const OfficeCoordinator = lazy(() => import('@/pages/OfficeCoordinator'));
+const OfflineWorkspace = lazy(() => import('@/pages/OfflineWorkspace'));
 
 
 
@@ -266,6 +267,7 @@ const AuthenticatedApp = () => {
             <Route path="/ask-red-bear" element={<AskRedBear />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/teams/:id" element={<TeamDashboard />} />
+            <Route path="/offline-workspace" element={<OfflineWorkspace />} />
           </Route>
         </Route>
 

@@ -405,3 +405,84 @@ async def test_sync_push_partial_failure_savepoint_rollback(db_session):
     # Verify no partial Person record was left behind
     orphan_person = await db_query_first(db_session, Person, Person.last_name == unique_last)
     assert orphan_person is None
+
+
+@pytest.mark.asyncio
+async def test_sync_config_feature_flag_status(client, caseworker_user, supervisor_user):
+    """Verify /api/v1/sync/config returns feature flag and user eligibility correctly."""
+    # 1. Caseworker with feature flag OFF (default)
+    res_cw = await client.get("/api/v1/sync/config", headers=caseworker_user["headers"])
+    assert res_cw.status_code == 200
+    data_cw = res_cw.json()
+    assert data_cw["offline_web_enabled"] is False
+    assert data_cw["user_eligible"] is False
+    assert "server_time" in data_cw
+
+    # 2. Supervisor with feature flag OFF (eligible for controlled testing)
+    res_sup = await client.get("/api/v1/sync/config", headers=supervisor_user["headers"])
+    assert res_sup.status_code == 200
+    data_sup = res_sup.json()
+    assert data_sup["offline_web_enabled"] is False
+    assert data_sup["user_eligible"] is True
+
+    # 3. When feature flag is ON, all users become eligible
+    with patch("app.core.get_settings") as mock_settings:
+        mock_settings.return_value.crbcl_offline_web_enabled = True
+        res_enabled = await client.get("/api/v1/sync/config", headers=caseworker_user["headers"])
+        assert res_enabled.status_code == 200
+        data_enabled = res_enabled.json()
+        assert data_enabled["offline_web_enabled"] is True
+        assert data_enabled["user_eligible"] is True
+
+
+@pytest.mark.asyncio
+async def test_sync_push_web_client_feature_flag_enforcement(client, caseworker_user, supervisor_user):
+    """Verify web client push enforces feature flag and rejects non-admin users when flag is false."""
+    mutation_id = str(uuid.uuid4())
+    push_payload = {
+        "items": [
+            {
+                "client_mutation_id": mutation_id,
+                "entity_type": "CLIENT",
+                "payload": {
+                    "first_name": "Offline",
+                    "last_name": "WebUser",
+                    "date_of_birth": "1990-01-01",
+                },
+            }
+        ]
+    }
+
+    # 1. Caseworker pushing via web client when flag is OFF -> HTTP 403 OFFLINE_WEB_DISABLED
+    headers_web_cw = {**caseworker_user["headers"], "X-Client-Type": "web", "X-Device-ID": "WEB-BROWSER-TEST-01"}
+    res_blocked = await client.post("/api/v1/sync/push", json=push_payload, headers=headers_web_cw)
+    assert res_blocked.status_code == 403
+    err_body = res_blocked.json()
+    assert "OFFLINE_WEB_DISABLED" in (err_body.get("detail") or err_body.get("error", {}).get("message", ""))
+
+    # 2. Supervisor pushing via web client when flag is OFF -> Allowed (test account exemption)
+    headers_web_sup = {**supervisor_user["headers"], "X-Client-Type": "web", "X-Device-ID": "WEB-BROWSER-TEST-02"}
+    res_allowed = await client.post("/api/v1/sync/push", json=push_payload, headers=headers_web_sup)
+    assert res_allowed.status_code == 200
+    assert res_allowed.json()["status"] == "BATCH_PROCESSED"
+
+    # 3. Caseworker pushing via web client when flag is ON -> Allowed
+    with patch("app.core.get_settings") as mock_settings:
+        mock_settings.return_value.crbcl_offline_web_enabled = True
+        mutation_id_2 = str(uuid.uuid4())
+        push_payload_2 = {
+            "items": [
+                {
+                    "client_mutation_id": mutation_id_2,
+                    "entity_type": "CLIENT",
+                    "payload": {
+                        "first_name": "OfflineEnabled",
+                        "last_name": "WebUser2",
+                        "date_of_birth": "1992-02-02",
+                    },
+                }
+            ]
+        }
+        res_enabled = await client.post("/api/v1/sync/push", json=push_payload_2, headers=headers_web_cw)
+        assert res_enabled.status_code == 200
+        assert res_enabled.json()["status"] == "BATCH_PROCESSED"

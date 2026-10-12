@@ -52,6 +52,23 @@ export const AuthProvider = ({ children }) => {
       setAuthChecked(true);
     } catch (error) {
       console.error('User auth check failed:', error);
+
+      // Offline resilience: If network is offline, but user has saved session, preserve authenticated session
+      const cachedUserStr = localStorage.getItem('crbcl_current_user');
+      const token = api.auth.getToken();
+      const isNetworkOffline = !navigator.onLine || error.message?.includes('Network') || error.message?.includes('Failed to fetch') || !error.status;
+
+      if (token && cachedUserStr && isNetworkOffline) {
+        try {
+          const cachedUser = JSON.parse(cachedUserStr);
+          setUser(cachedUser);
+          setIsAuthenticated(true);
+          setIsLoadingAuth(false);
+          setAuthChecked(true);
+          return;
+        } catch (_) {}
+      }
+
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       setAuthChecked(true);
