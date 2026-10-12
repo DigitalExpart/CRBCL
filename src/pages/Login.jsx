@@ -32,14 +32,11 @@ export default function Login() {
         user?.email === "admin@crbcl.ca" ||
         email.trim().toLowerCase() === "admin@crbcl.ca";
 
-      // Direct IT administrators to the dedicated IT Admin Portal
+      // Administrator accounts are not permitted on the staff login portal
       if (isItAdmin) {
-        api.auth.logout(null);
-        setError("Administrator accounts must sign in via the IT Admin Portal. Redirecting to /admin/login...");
+        api.auth.logout(false);
+        setError("Administrator accounts cannot sign in through this portal.");
         setLoading(false);
-        setTimeout(() => {
-          window.location.href = "/admin/login";
-        }, 1200);
         return;
       }
 
@@ -87,19 +84,11 @@ export default function Login() {
       title="Welcome back"
       subtitle="Log in to your account"
       footer={
-        <div className="space-y-3 text-center text-xs">
-          <div>
-            Don't have an account?{" "}
-            <Link to="/register" className="text-[#8B2626] font-medium hover:underline">
-              Create one
-            </Link>
-          </div>
-          <div className="pt-2 border-t border-[#E8E3DF]">
-            <span className="text-[#786F6B]">IT Administrator or System Admin? </span>
-            <Link to="/admin/login" className="text-[#8B2626] font-medium hover:underline inline-flex items-center">
-              Go to IT Admin Portal &rarr;
-            </Link>
-          </div>
+        <div className="text-center text-xs">
+          Don't have an account?{" "}
+          <Link to="/register" className="text-[#8B2626] font-medium hover:underline">
+            Create one
+          </Link>
         </div>
       }
     >
@@ -122,19 +111,9 @@ export default function Login() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm flex flex-col gap-1.5">
-          <div className="flex items-start gap-2">
-            <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-          {error.includes("Administrator") && (
-            <Link
-              to="/admin/login"
-              className="text-xs font-semibold text-[#8B2626] underline hover:text-[#731E1E] ml-6"
-            >
-              Click here to go directly to the IT Admin Portal &rarr;
-            </Link>
-          )}
+        <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm flex items-start gap-2">
+          <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
