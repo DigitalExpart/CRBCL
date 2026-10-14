@@ -17,6 +17,7 @@ dependencies:
   provider: ^6.1.0
   intl: ^0.19.0
   path: ^1.9.0
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
@@ -54,7 +55,8 @@ flutter:
 # Android launcher icon — generated from the approved CRBCL emblem (src/assets/crbcl-emblem.png).
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
+  remove_alpha_ios: true
   image_path: assets/branding/icon_full.png
   adaptive_icon_background: "#FBFAF9"
   adaptive_icon_foreground: assets/branding/icon_foreground.png
@@ -67,7 +69,7 @@ flutter_native_splash:
   color_dark: "#15110E"
   image_dark: assets/branding/splash_icon.png
   android: true
-  ios: false
+  ios: true
   web: false
   fullscreen: false
   android_12:

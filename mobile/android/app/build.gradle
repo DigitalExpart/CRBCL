@@ -6,8 +6,8 @@ plugins {
 
 android {
     namespace "ca.crbcl.mobile"
-    compileSdkVersion 34
-    ndkVersion flutter.ndkVersion
+    compileSdk 36
+    ndkVersion "27.0.12077973"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -20,8 +20,8 @@ android {
 
     defaultConfig {
         applicationId "ca.crbcl.mobile"
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 34
+        minSdk flutter.minSdkVersion
+        targetSdk 36
         versionCode 1
         versionName "1.0.0"
     }

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRBCL Mobile App Preview & Download</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #15110E 0%, #2A1F1A 100%);
+      color: #ffffff;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 95vh;
+      text-align: center;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      padding: 32px 24px;
+      max-width: 480px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 6px;
+      color: #F4A261;
+      letter-spacing: -0.3px;
+    }
+    .subtitle {
+      color: #E8E3DF;
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+    .qr-container {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 14px;
+      display: inline-block;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    .qr-container img {
+      display: block;
+      width: 170px;
+      height: 170px;
+    }
+    .qr-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+    .btn {
+      display: block;
+      background: #9B2F27;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 14px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: transform 0.2s, background 0.2s;
+      box-shadow: 0 4px 12px rgba(155, 47, 39, 0.4);
+    }
+    .btn:hover {
+      background: #B33930;
+      transform: translateY(-2px);
+    }
+    .changelog {
+      text-align: left;
+      margin-top: 20px;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      font-size: 12px;
+      color: #DDD6D0;
+      border-left: 3px solid #F4A261;
+    }
+    .changelog strong {
+      color: #fff;
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .changelog ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .changelog li {
+      margin-bottom: 5px;
+    }
+    .instructions {
+      text-align: left;
+      margin-top: 16px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      font-size: 12px;
+      color: #bbb;
+    }
+    .instructions ol {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .instructions li {
+      margin-bottom: 6px;
+    }
+    .meta {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="font-size: 36px; margin-bottom: 8px;">🐾</div>
+    <h1>CRBCL Mobile App v2</h1>
+    <div class="subtitle">Field Operations & Offline Case Management</div>
+
+    <div class="qr-container">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=http://192.168.1.127:8088/" alt="Scan to Download on Phone" />
+      <div class="qr-label">Point phone camera to scan</div>
+    </div>
+
+    <a href="app-debug.apk" class="btn" download>⬇️ Download Latest APK (168.8 MB)</a>
+
+    <div class="changelog">
+      <strong>✨ Verified Implementation Updates:</strong>
+      <ul>
+        <li><b>Removed Raw Role Badges</b>: Removed <code>it_admin, executive_director, ceo</code> from the Profile and Navigation Drawer headers for a clean, professional profile display.</li>
+        <li><b>Admin PIN Isolated to IT Admin Portal</b>: Admin accounts can no longer use the standard login screen to enter or unlock with PIN. Admin Quick PIN unlock is strictly routed through the IT Admin Portal.</li>
+        <li><b>Full Interactive Departmental Hubs</b>: Clicking any department card now opens its full operational workspace with KPI cards, queue entries, filtering, and entry logger (no more inactive toast messages).</li>
+        <li><b>Comprehensive Mobile Admin Dashboard</b>: 3 dedicated tabs for 24 Department Hubs, Staff Access / User Management (approve/deactivate users, invite staff), and System Security Diagnostics.</li>
+        <li><b>Overflow Layout Resolved</b>: Fixed header layout overflow issues across all device form factors.</li>
+      </ul>
+    </div>
+
+    <div class="instructions">
+      <strong>Quick Install Steps:</strong>
+      <ol>
+        <li>Connect phone to the same Wi-Fi network or open <code>http://192.168.1.127:8088/</code> in your mobile browser.</li>
+        <li>Tap <b>Download Latest APK</b>.</li>
+        <li>Open the downloaded APK and tap <b>Install</b> (enable <i>Install unknown apps</i> if prompted).</li>
+        <li>Launch <b>CRBCL Field</b> to test all features!</li>
+      </ol>
+    </div>
+
+    <div class="meta">
+      Build: October 13, 2026 • SHA256: <code>39558a5f3ff1...</code>
+    </div>
+  </div>
+</body>
+</html>

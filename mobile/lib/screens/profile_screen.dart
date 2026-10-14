@@ -18,6 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic> _user = {};
   String _deviceId = '';
   bool _isLoading = true;
+  bool _hasPin = false;
 
   @override
   void initState() {
@@ -29,11 +30,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isLoading = true);
     final user = await _authService.getCurrentUser();
     final deviceId = await _authService.getOrCreateDeviceId();
+    final hasPin = await _authService.hasUserPin(user['email'] as String?);
 
     if (mounted) {
       setState(() {
         _user = user;
         _deviceId = deviceId;
+        _hasPin = hasPin;
         _isLoading = false;
       });
     }
@@ -46,6 +49,291 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
     return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  void _showCreatePinDialog() {
+    final pinCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+    String? errorText;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: const Text('Create Quick Access PIN'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Enter a personal 4 to 6-digit numeric PIN for unlocking in the field.',
+                style: TextStyle(fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              if (errorText != null) ...[
+                Text(errorText!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                const SizedBox(height: 10),
+              ],
+              TextField(
+                controller: pinCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'New PIN (4-6 digits)', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: confirmCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Confirm PIN', border: OutlineInputBorder()),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final p = pinCtrl.text.trim();
+                final c = confirmCtrl.text.trim();
+                if (p.length < 4 || p.length > 6) {
+                  setDlgState(() => errorText = 'PIN must be 4 to 6 numeric digits.');
+                  return;
+                }
+                if (p != c) {
+                  setDlgState(() => errorText = 'PINs do not match.');
+                  return;
+                }
+                final ok = await _authService.setPin(p, email: _user['email'] as String?);
+                if (ok) {
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  setState(() => _hasPin = true);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Quick Access PIN created successfully.')),
+                    );
+                  }
+                } else {
+                  setDlgState(() => errorText = 'Failed to derive PBKDF2 hash.');
+                }
+              },
+              child: const Text('Save PIN'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showChangePinDialog() {
+    final currentPinCtrl = TextEditingController();
+    final newPinCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+    String? errorText;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: const Text('Change Quick Access PIN'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (errorText != null) ...[
+                Text(errorText!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                const SizedBox(height: 10),
+              ],
+              TextField(
+                controller: currentPinCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Current PIN', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: newPinCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'New PIN (4-6 digits)', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: confirmCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Confirm New PIN', border: OutlineInputBorder()),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final cur = currentPinCtrl.text.trim();
+                final p = newPinCtrl.text.trim();
+                final c = confirmCtrl.text.trim();
+
+                final verifyRes = await _authService.unlockWithPin(cur, email: _user['email'] as String?);
+                if (!verifyRes.success) {
+                  setDlgState(() => errorText = verifyRes.errorMessage ?? 'Current PIN is incorrect.');
+                  return;
+                }
+
+                if (p.length < 4 || p.length > 6) {
+                  setDlgState(() => errorText = 'New PIN must be 4 to 6 numeric digits.');
+                  return;
+                }
+                if (p != c) {
+                  setDlgState(() => errorText = 'New PINs do not match.');
+                  return;
+                }
+
+                final ok = await _authService.setPin(p, email: _user['email'] as String?);
+                if (ok) {
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  setState(() => _hasPin = true);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Quick Access PIN updated successfully.')),
+                    );
+                  }
+                } else {
+                  setDlgState(() => errorText = 'Failed to update PIN.');
+                }
+              },
+              child: const Text('Update PIN'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showResetPinWithPasswordDialog() {
+    final passwordCtrl = TextEditingController();
+    final newPinCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+    bool obscurePassword = true;
+    bool isSubmitting = false;
+    String? errorText;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: const Text('Reset PIN with Password'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Verify your CRBCL account password to set a new Quick Access PIN.',
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                if (errorText != null) ...[
+                  Text(errorText!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                  const SizedBox(height: 10),
+                ],
+                TextField(
+                  controller: passwordCtrl,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'CRBCL Account Password',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setDlgState(() => obscurePassword = !obscurePassword),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: newPinCtrl,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'New PIN (4-6 digits)', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: confirmCtrl,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Confirm New PIN', border: OutlineInputBorder()),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      final pwd = passwordCtrl.text;
+                      final p = newPinCtrl.text.trim();
+                      final c = confirmCtrl.text.trim();
+
+                      if (pwd.isEmpty) {
+                        setDlgState(() => errorText = 'Please enter your account password.');
+                        return;
+                      }
+                      if (p.length < 4 || p.length > 6) {
+                        setDlgState(() => errorText = 'New PIN must be 4 to 6 numeric digits.');
+                        return;
+                      }
+                      if (p != c) {
+                        setDlgState(() => errorText = 'PINs do not match.');
+                        return;
+                      }
+
+                      setDlgState(() {
+                        isSubmitting = true;
+                        errorText = null;
+                      });
+
+                      final res = await _authService.verifyPasswordAndResetPin(
+                        password: pwd,
+                        newPin: p,
+                        email: _user['email'] as String?,
+                      );
+
+                      setDlgState(() => isSubmitting = false);
+
+                      if (res['success'] == true) {
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        setState(() => _hasPin = true);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] as String? ?? 'PIN reset successfully!')),
+                          );
+                        }
+                      } else {
+                        setDlgState(() => errorText = res['errorMessage'] as String? ?? 'Password verification failed.');
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Reset & Save PIN'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -61,8 +349,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final email = (_user['email'] as String?)?.isNotEmpty == true
         ? _user['email'] as String
         : 'Not provided';
-    final roles = (_user['roles'] as List?)?.cast<String>() ?? [];
-    final roleLabel = roles.isNotEmpty ? roles.join(', ') : 'Field Staff';
 
     return Scaffold(
       appBar: AppBar(
@@ -134,41 +420,142 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 6,
-                            runSpacing: 4,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: colorScheme.onSurface.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Cote First Nation',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Quick Access PIN Management Card
+                  Text(
+                    'Quick Access PIN Security',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Personalized offline biometric/PIN unlocking for your account on this device.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isDark ? colorScheme.outlineVariant : CrbclTokens.lightBorder,
+                      ),
+                    ),
+                    color: colorScheme.surfaceContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
                             children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: _hasPin
+                                    ? CrbclTokens.statusSuccess.withValues(alpha: 0.15)
+                                    : Colors.amber.withValues(alpha: 0.15),
+                                child: Icon(
+                                  _hasPin ? Icons.pin : Icons.pin_outlined,
+                                  size: 20,
+                                  color: _hasPin ? CrbclTokens.statusSuccess : Colors.amber.shade800,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _hasPin ? 'Quick Access PIN Active' : 'No PIN Configured',
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    ),
+                                    Text(
+                                      _hasPin
+                                          ? 'PBKDF2 HMAC-SHA256 • 100k rounds'
+                                          : 'Set a PIN for quick offline unlocking in the field',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: colorScheme.onSurface.withValues(alpha: 0.65),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: colorScheme.primary.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: _hasPin
+                                      ? CrbclTokens.statusSuccess.withValues(alpha: 0.12)
+                                      : Colors.amber.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
-                                  roleLabel,
+                                  _hasPin ? 'PROTECTED' : 'UNSET',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: colorScheme.primary,
+                                    color: _hasPin ? CrbclTokens.statusSuccess : Colors.amber.shade900,
                                   ),
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.onSurface.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Cote First Nation',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                            ],
+                          ),
+                          const Divider(height: 24),
+
+                          // PIN Action Buttons
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              if (!_hasPin)
+                                ElevatedButton.icon(
+                                  onPressed: _showCreatePinDialog,
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('Create Quick PIN'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: colorScheme.primary,
+                                    foregroundColor: colorScheme.onPrimary,
                                   ),
+                                )
+                              else ...[
+                                OutlinedButton.icon(
+                                  onPressed: _showChangePinDialog,
+                                  icon: const Icon(Icons.lock_reset, size: 16),
+                                  label: const Text('Change PIN'),
                                 ),
-                              ),
+                                TextButton.icon(
+                                  onPressed: _showResetPinWithPasswordDialog,
+                                  icon: const Icon(Icons.password, size: 16),
+                                  label: const Text('Forgot PIN? Reset with Password'),
+                                ),
+                              ],
                             ],
                           ),
                         ],
@@ -364,25 +751,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  // Notice regarding credentials
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Account credentials, RBAC permissions, and passwords are managed through the central CRBCL web platform.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                      textAlign: TextAlign.center,
+                  // Switch Account Button
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await _authService.switchUser();
+                      if (context.mounted) {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      }
+                    },
+                    icon: const Icon(Icons.swap_horiz),
+                    label: const Text('Switch Account / Sign In as Different User'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(46),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
 
                   // Lock Vault Button
                   ElevatedButton.icon(

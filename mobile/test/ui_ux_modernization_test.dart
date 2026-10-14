@@ -7,6 +7,10 @@ import 'package:crbcl_mobile/screens/signup_screen.dart';
 import 'package:crbcl_mobile/screens/app_shell.dart';
 import 'package:crbcl_mobile/screens/home_dashboard_screen.dart';
 import 'package:crbcl_mobile/services/theme_service.dart';
+import 'package:crbcl_mobile/screens/admin_login_screen.dart';
+import 'package:crbcl_mobile/screens/admin_dashboard_screen.dart';
+import 'package:crbcl_mobile/screens/forgot_password_screen.dart';
+import 'package:crbcl_mobile/services/auth_service.dart';
 import 'package:crbcl_mobile/widgets/status_badge.dart';
 
 void main() {
@@ -299,7 +303,7 @@ void main() {
       expect(find.text('Backend URL'), findsNothing);
     });
 
-    testWidgets('SignUpScreen renders all required registration inputs', (WidgetTester tester) async {
+    testWidgets('SignUpScreen renders all required registration inputs matching web version', (WidgetTester tester) async {
       await tester.pumpWidget(
         ChangeNotifierProvider(
           create: (_) => MobileThemeService(),
@@ -309,12 +313,70 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Join CRBCL Staff'), findsOneWidget);
-      expect(find.widgetWithText(TextField, 'Full Name *'), findsOneWidget);
-      expect(find.widgetWithText(TextField, 'Work Email *'), findsOneWidget);
-      expect(find.text('Platform Role *'), findsOneWidget);
-      expect(find.text('Create Account'), findsOneWidget);
-      expect(find.text('Sign In'), findsOneWidget);
+      expect(find.text('Create your account'), findsOneWidget);
+      expect(find.text('Sign up to get started'), findsOneWidget);
+      expect(find.text('Continue with Google'), findsOneWidget);
+      // Labels appear as full labelText strings
+      expect(find.textContaining('First Name'), findsWidgets);
+      expect(find.textContaining('Last Name'), findsWidgets);
+      expect(find.textContaining('Department / Work Unit'), findsOneWidget);
+      expect(find.textContaining('Requested Staff Role / Position'), findsOneWidget);
+      expect(find.textContaining('Work Email'), findsOneWidget);
+      expect(find.text('Create account'), findsOneWidget);
+      expect(find.text('Log in'), findsOneWidget);
+    });
+
+    testWidgets('AdminLoginScreen renders IT Admin portal and security controls', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => MobileThemeService(),
+          child: const MaterialApp(home: AdminLoginScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('IT Admin Portal'), findsOneWidget);
+      expect(find.textContaining('Restricted sign-in'), findsOneWidget);
+      expect(find.text('Forgot password?'), findsOneWidget);
+      expect(find.text('Go to Standard Portal'), findsOneWidget);
+    });
+
+    testWidgets('ForgotPasswordScreen renders password reset interface matching web version', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => MobileThemeService(),
+          child: const MaterialApp(home: ForgotPasswordScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Reset password'), findsOneWidget);
+      expect(find.text('Send Reset Link'), findsOneWidget);
+      expect(find.textContaining('Back to'), findsWidgets);
+    });
+
+    testWidgets('PIN security isolates PIN hashes between different user accounts', (WidgetTester tester) async {
+      final auth = MobileAuthService();
+      
+      // Store PIN for caseworker account
+      await auth.setPin('112233', email: 'caseworker@crbcl.org');
+      
+      // Verify caseworker PIN verifies successfully for caseworker
+      final cwResult = await auth.unlockWithPin('112233', email: 'caseworker@crbcl.org');
+      expect(cwResult.success, isTrue, reason: 'Caseworker PIN must verify for caseworker account');
+      
+      // Verify that caseworker PIN does NOT unlock admin account
+      final adminResult = await auth.unlockWithPin('112233', email: 'admin@crbcl.org');
+      expect(adminResult.success, isFalse, reason: 'Caseworker PIN must NOT unlock admin account');
+      
+      // Verify admin account has no PIN set initially
+      final adminHasPin = await auth.hasUserPin('admin@crbcl.org');
+      expect(adminHasPin, isFalse, reason: 'Admin account must not inherit caseworker PIN');
+      
+      final cwHasPin = await auth.hasUserPin('caseworker@crbcl.org');
+      expect(cwHasPin, isTrue, reason: 'Caseworker must retain their own PIN');
     });
 
     testWidgets('Admin user can authenticate and dashboard reflects Administrator role', (WidgetTester tester) async {
@@ -341,6 +403,98 @@ void main() {
 
       expect(find.textContaining('Welcome, Chief IT Admin'), findsOneWidget);
       expect(find.text('admin'), findsOneWidget);
+    });
+
+    testWidgets('AdminDashboardScreen allows tapping Invite Staff and opening Create Active Staff Account dialog', (WidgetTester tester) async {
+      FlutterSecureStorage.setMockInitialValues({
+        'crbcl_user_name': 'System Administrator',
+        'crbcl_user_email': 'admin@crbcl.ca',
+        'crbcl_user_roles': '["admin"]',
+      });
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => MobileThemeService(),
+          child: const MaterialApp(
+            home: AdminDashboardScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Switch to Staff Access tab
+      await tester.tap(find.text('Staff Access'));
+      await tester.pumpAndSettle();
+
+      // Find and tap Invite Staff button
+      expect(find.text('Invite Staff'), findsOneWidget);
+      await tester.tap(find.text('Invite Staff'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      // Verify full modal rendered with no dropdown assertion errors
+      expect(find.text('Create Active Staff Account'), findsOneWidget);
+      expect(find.text('Staff Full Name'), findsOneWidget);
+      expect(find.text('Work Email Address'), findsOneWidget);
+      expect(find.text('Generate Strong Password'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('AdminDashboardScreen allows tapping Team Access and picking from available 24 teams', (WidgetTester tester) async {
+      FlutterSecureStorage.setMockInitialValues({
+        'crbcl_user_name': 'System Administrator',
+        'crbcl_user_email': 'admin@crbcl.ca',
+        'crbcl_user_roles': '["admin"]',
+      });
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider(
+          create: (_) => MobileThemeService(),
+          child: const MaterialApp(
+            home: AdminDashboardScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Switch to Staff Access tab and open Invite Staff
+      await tester.tap(find.text('Staff Access'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Invite Staff'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      // Verify Team Access field is present
+      await tester.ensureVisible(find.text('Choose'));
+      await tester.pumpAndSettle();
+      expect(find.text('Team Access & Workspace Permissions'), findsOneWidget);
+      expect(find.text('Choose'), findsOneWidget);
+
+      // Tap on Team Access to open the Team Workspace Access selection sheet
+      await tester.tap(find.text('Choose'));
+      await tester.pumpAndSettle();
+
+      // Verify modal opened with 24 teams list
+      expect(find.text('Team Workspace Access'), findsOneWidget);
+      expect(find.text('All Teams (Full Workspace Access)'), findsOneWidget);
+      expect(find.text('Executive Leadership'), findsOneWidget);
+      expect(find.text('Child & Family Services'), findsOneWidget);
+
+      // Search for a specific team
+      final searchFinder = find.byType(TextField).last;
+      await tester.enterText(searchFinder, 'Sacred');
+      await tester.pumpAndSettle();
+      expect(find.text('Sacred Wolf Lodge'), findsOneWidget);
+
+      // Apply selection
+      await tester.ensureVisible(find.textContaining('Apply'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Apply'));
+      await tester.pumpAndSettle();
+
+      // Verify back in Create Active Staff Account dialog without error
+      expect(find.text('Create Active Staff Account'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

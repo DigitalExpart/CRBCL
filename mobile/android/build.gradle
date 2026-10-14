@@ -21,10 +21,11 @@ subprojects {
 subprojects {
     if (project.name != "app") {
         project.ext.set("flutter", [
-            compileSdkVersion: 34,
-            targetSdkVersion: 34,
+            compileSdkVersion: 36,
+            targetSdkVersion: 36,
             minSdkVersion: 21,
-            buildToolsVersion: "34.0.0"
+            buildToolsVersion: "34.0.0",
+            ndkVersion: "27.0.12077973"
         ])
     }
 }
@@ -37,7 +38,7 @@ subprojects {
                     if (namespace == null || namespace.isEmpty()) {
                         namespace = (project.group && !project.group.isEmpty()) ? project.group : "ca.crbcl.${project.name.replace('-', '_')}"
                     }
-                    compileSdkVersion 34
+                    compileSdkVersion 36
                     buildToolsVersion "34.0.0"
                 }
             }
@@ -48,7 +49,7 @@ subprojects {
                         if (namespace == null || namespace.isEmpty()) {
                             namespace = (p.group && !p.group.isEmpty()) ? p.group : "ca.crbcl.${p.name.replace('-', '_')}"
                         }
-                        compileSdkVersion 34
+                        compileSdkVersion 36
                         buildToolsVersion "34.0.0"
                     }
                 }

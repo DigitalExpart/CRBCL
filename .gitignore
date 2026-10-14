@@ -54,3 +54,9 @@ backend/uploads/
 *.sw?
 
 .vercel
+
+# Mobile build packages and deliverables
+*.apk
+*.ipa
+deliverables/*.apk
+deliverables/*.ipa

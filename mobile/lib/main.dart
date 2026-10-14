@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
+import 'screens/forgot_password_screen.dart';
+import 'screens/admin_login_screen.dart';
+import 'screens/admin_dashboard_screen.dart';
 import 'screens/app_shell.dart';
 import 'screens/field_dashboard.dart';
 import 'screens/note_draft_screen.dart';
@@ -50,6 +53,9 @@ class CrbclMobileApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignUpScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
+        '/admin-login': (context) => const AdminLoginScreen(),
+        '/admin-dashboard': (context) => const AdminDashboardScreen(),
         '/dashboard': (context) => const AppShell(initialTab: 0),
         '/clients': (context) => const AppShell(initialTab: 1),
         '/cases': (context) => const AppShell(initialTab: 2),

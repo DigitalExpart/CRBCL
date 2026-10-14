@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../widgets/crbcl_logo.dart';
+import '../widgets/google_icon.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isOnlineLoginMode = false;
   bool _isSettingUpPin = false;
 
-  // Visibility toggles (hidden by default)
+  // Visibility toggles
   bool _obscurePassword = true;
   bool _obscurePin = true;
   bool _obscureNewPin = true;
@@ -32,6 +34,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String? _statusMessage;
   String? _errorMessage;
+  String? _activeUserEmail;
+  String? _activeUserName;
 
   @override
   void initState() {
@@ -51,12 +55,41 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _checkInitialState() async {
     setState(() => _isLoading = true);
-    final hasCreds = await _authService.hasSavedCredentials();
+    final activeEmail = await _authService.getActiveUserEmail();
+    final activeName = await _authService.getActiveUserName();
+    final isAdmin = MobileAuthService.isEmailAdmin(activeEmail);
+
+    // If previous user was Admin, do not offer frontline staff PIN unlock!
+    final hasCreds = !isAdmin && await _authService.hasSavedCredentials(email: activeEmail);
 
     setState(() {
+      _activeUserEmail = isAdmin ? null : activeEmail;
+      _activeUserName = isAdmin ? null : activeName;
       _isOnlineLoginMode = !hasCreds;
       _isLoading = false;
     });
+  }
+
+  Future<void> _handleGoogleAuth() async {
+    try {
+      final serverUrl = await _authService.getServerUrl();
+      final uri = Uri.parse('$serverUrl/api/v1/auth/oauth/google?returnTo=/');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Opening Google Authentication in browser...')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open browser: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _handleOnlineLogin() async {
@@ -65,6 +98,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       setState(() => _errorMessage = 'Please enter both email and password.');
+      return;
+    }
+
+    if (MobileAuthService.isEmailAdmin(email)) {
+      setState(() => _errorMessage = 'Administrator accounts cannot sign in through this portal. Please use the IT Admin Portal.');
       return;
     }
 
@@ -77,18 +115,20 @@ class _LoginScreenState extends State<LoginScreen> {
     final result = await _authService.loginOnline(
       email: email,
       password: password,
+      isStaffPortalOnly: true,
     );
 
     setState(() => _isLoading = false);
 
     if (!result.success) {
-      setState(() => _errorMessage = result.errorMessage ?? 'Authentication failed');
+      setState(() => _errorMessage = result.errorMessage ?? 'Authentication failed.');
       return;
     }
 
     if (result.requiresPinSetup) {
       setState(() {
         _isSettingUpPin = true;
+        _activeUserEmail = email;
         _statusMessage = 'Authentication successful! Please set your Quick Access PIN.';
       });
     } else {
@@ -113,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
-    final success = await _authService.setPin(pin);
+    final success = await _authService.setPin(pin, email: _activeUserEmail);
     setState(() => _isLoading = false);
 
     if (success) {
@@ -135,12 +175,17 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    if (MobileAuthService.isEmailAdmin(_activeUserEmail)) {
+      setState(() => _errorMessage = 'Administrator accounts cannot unlock standard field operations. Please use the IT Admin Portal.');
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final result = await _authService.unlockWithPin(pin);
+    final result = await _authService.unlockWithPin(pin, email: _activeUserEmail);
     setState(() => _isLoading = false);
 
     if (result.success) {
@@ -157,6 +202,20 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _errorMessage = result.errorMessage);
       }
     }
+  }
+
+  Future<void> _handleSwitchUser() async {
+    await _authService.switchUser();
+    setState(() {
+      _isOnlineLoginMode = true;
+      _activeUserEmail = null;
+      _activeUserName = null;
+      _errorMessage = null;
+      _statusMessage = null;
+      _pinController.clear();
+      _emailController.clear();
+      _passwordController.clear();
+    });
   }
 
   @override
@@ -189,13 +248,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     return Scaffold(
-      backgroundColor: isDark
-          ? colorScheme.surface
-          : const Color(0xFFF7F5F2),
+      backgroundColor: isDark ? colorScheme.surface : const Color(0xFFF7F5F2),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
@@ -207,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       children: [
                         const CrbclLogo(
-                          height: 72,
+                          height: 70,
                           variant: CrbclLogoVariant.emblem,
                         ),
                         const SizedBox(height: 12),
@@ -234,7 +291,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Login / Unlock Card
                   Card(
@@ -242,13 +299,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                       side: BorderSide(
-                        color: isDark ? colorScheme.outlineVariant : Colors.black12,
+                        color: isDark ? colorScheme.outlineVariant : CrbclTokens.lightBorder,
                         width: 1,
                       ),
                     ),
                     color: colorScheme.surfaceContainer,
                     child: Padding(
-                      padding: const EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -322,6 +379,24 @@ class _LoginScreenState extends State<LoginScreen> {
                             _buildOnlineLoginView()
                           else
                             _buildPinUnlockView(),
+
+                          const Divider(height: 28),
+
+                          // Discrete IT Admin Portal Entry Point
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.pushNamed(context, '/admin-login'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF6B21A8),
+                              side: BorderSide(color: const Color(0xFF6B21A8).withValues(alpha: 0.4)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                            ),
+                            icon: const Icon(Icons.admin_panel_settings, size: 18),
+                            label: const Text(
+                              'IT Admin Portal',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -362,6 +437,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildPinUnlockView() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final displayName = _activeUserName?.isNotEmpty == true ? _activeUserName! : 'Staff Member';
+    final emailDisplay = _activeUserEmail?.isNotEmpty == true ? _activeUserEmail! : '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -375,16 +454,59 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
+
+        // User badge showing clearly which account is unlocking
+        if (emailDisplay.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white10 : colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
+                  child: Icon(Icons.person, size: 16, color: colorScheme.primary),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        emailDisplay,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 12),
+
         Text(
-          'Enter your personal PIN (PBKDF2-HMAC-SHA256 • 100k rounds)',
+          'Enter your personal 4-6 digit Quick PIN',
           style: TextStyle(
             fontSize: 12,
             color: colorScheme.onSurface.withValues(alpha: 0.65),
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
 
         TextField(
           controller: _pinController,
@@ -415,33 +537,28 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: colorScheme.primary,
             foregroundColor: colorScheme.onPrimary,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
             children: const [
-              Icon(Icons.lock_open),
+              Icon(Icons.lock_open, size: 18),
               SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  'Unlock Vault',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              Text('Unlock Vault', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
 
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _isOnlineLoginMode = true;
-              _errorMessage = null;
-            });
-          },
-          child: const Text('Log in with CRBCL credentials instead'),
+        // Prominent Switch User Option
+        OutlinedButton.icon(
+          onPressed: _handleSwitchUser,
+          icon: const Icon(Icons.swap_horiz, size: 18),
+          label: const Text('Switch Account / Sign In with Credentials'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         ),
       ],
     );
@@ -450,6 +567,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildOnlineLoginView() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -457,39 +575,90 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'CRBCL Staff Sign In',
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
             color: colorScheme.onSurface,
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
-          'Initial login requires active internet connection to authenticate and register device.',
+          'Log in to your account',
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             color: colorScheme.onSurface.withValues(alpha: 0.65),
           ),
           textAlign: TextAlign.center,
         ),
+        const SizedBox(height: 18),
+
+        // Continue with Google Button matching web
+        OutlinedButton(
+          onPressed: _handleGoogleAuth,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            side: BorderSide(color: isDark ? Colors.white24 : const Color(0xFFE8E3DF)),
+            backgroundColor: isDark ? colorScheme.surface : Colors.white,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              GoogleIcon(size: 18),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Continue with Google',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 16),
 
+        // OR Divider
+        Row(
+          children: [
+            Expanded(child: Divider(color: isDark ? Colors.white24 : const Color(0xFFE8E3DF))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                'OR',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            Expanded(child: Divider(color: isDark ? Colors.white24 : const Color(0xFFE8E3DF))),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Work Email
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           decoration: const InputDecoration(
-            labelText: 'Staff Email',
+            labelText: 'Staff Work Email',
+            hintText: 'you@crbcl.ca',
             prefixIcon: Icon(Icons.email_outlined),
             border: OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 14),
 
+        // Password
         TextField(
           controller: _passwordController,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
             labelText: 'Password',
+            hintText: '••••••••',
             prefixIcon: const Icon(Icons.key_outlined),
             suffixIcon: IconButton(
               icon: Icon(
@@ -504,35 +673,48 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           onSubmitted: (_) => _handleOnlineLogin(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
 
-        const SizedBox(height: 16),
+        // Forgot Password link
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+            style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+            child: const Text('Forgot password?'),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Login Button
         ElevatedButton(
           onPressed: _handleOnlineLogin,
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
             foregroundColor: colorScheme.onPrimary,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: const [
-              Icon(Icons.login),
+              Icon(Icons.login, size: 18),
               SizedBox(width: 8),
               Flexible(
                 child: Text(
                   'Authenticate & Register Device',
-                  maxLines: 1,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
 
-        // New Sign Up link
+        // Sign Up link matching web
         Wrap(
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -559,8 +741,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 12),
 
+        // Switch back to Quick PIN Access if user has credentials saved
         FutureBuilder<bool>(
-          future: _authService.hasSavedCredentials(),
+          future: _authService.hasSavedCredentials(email: _activeUserEmail),
           builder: (context, snapshot) {
             if (snapshot.data == true) {
               return TextButton(
@@ -658,20 +841,14 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: colorScheme.primary,
             foregroundColor: colorScheme.onPrimary,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
             children: const [
-              Icon(Icons.save),
+              Icon(Icons.save, size: 18),
               SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  'Save PIN & Enter App',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              Text('Save PIN & Enter App', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             ],
           ),
         ),

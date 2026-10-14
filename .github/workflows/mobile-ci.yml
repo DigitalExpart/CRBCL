@@ -5,6 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
   mobile-ci:
@@ -22,7 +23,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.19.6'
 
       - name: Install Pub Dependencies
         run: |
@@ -43,3 +43,40 @@ jobs:
         run: |
           cd mobile
           flutter build apk --debug
+
+  mobile-ios-build:
+    name: Build iOS App & IPA Artifact
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: |
+          cd mobile
+          flutter pub get
+
+      - name: Build iOS Application (Release, Unsigned)
+        run: |
+          cd mobile
+          flutter build ios --no-codesign --release
+
+      - name: Package Unsigned IPA for Sideloading & AltStore
+        run: |
+          cd mobile/build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r CRBCL_Field_Worker_iOS.ipa Payload
+          zip -r Runner.app.zip Runner.app
+
+      - name: Upload iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: crbcl-mobile-ios-ipa
+          path: |
+            mobile/build/ios/iphoneos/CRBCL_Field_Worker_iOS.ipa
+            mobile/build/ios/iphoneos/Runner.app.zip

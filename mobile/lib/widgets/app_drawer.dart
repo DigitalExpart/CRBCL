@@ -65,7 +65,6 @@ class _AppDrawerState extends State<AppDrawer> {
         ? _user['email'] as String
         : 'staff@crbcl.org';
     final roles = (_user['roles'] as List?)?.cast<String>() ?? [];
-    final roleLabel = roles.isNotEmpty ? roles.first : 'Field Staff';
 
     return Drawer(
       child: SafeArea(
@@ -146,22 +145,6 @@ class _AppDrawerState extends State<AppDrawer> {
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      roleLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
                   ),
                 ],
@@ -245,6 +228,14 @@ class _AppDrawerState extends State<AppDrawer> {
                     label: 'Appearance',
                     onTap: () => _navigateToRoute('/profile'),
                   ),
+                  if (roles.contains('admin') || roles.contains('it_admin') || _user['email'] == 'admin@crbcl.ca') ...[
+                    _buildDrawerTile(
+                      icon: Icons.admin_panel_settings_outlined,
+                      activeIcon: Icons.admin_panel_settings,
+                      label: 'IT Admin Console',
+                      onTap: () => _navigateToRoute('/admin-dashboard'),
+                    ),
+                  ],
                   _buildDrawerTile(
                     icon: Icons.lock_outline,
                     label: 'Lock Vault',
