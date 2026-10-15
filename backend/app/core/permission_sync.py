@@ -239,8 +239,6 @@ async def sync_system_permissions() -> None:
                             value=hash_password(staff.get("default_pin", "123456")),
                         )
                     )
-                elif staff.get("email") == "admin@crbcl.ca":
-                    pref_obj.value = hash_password(staff.get("default_pin", "123456"))
 
                 # Ensure active and clear lockout / failed attempts
                 user_obj.is_active = True

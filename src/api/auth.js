@@ -8,4 +8,6 @@ export const authApi = {
   register: (data) => api.auth.register(data),
   forgotPassword: (email) => api.auth.resetPasswordRequest(email),
   resetPassword: (data) => api.auth.resetPassword(data),
+  setPin: (pin) => api.auth.setPin(pin),
+  getPinStatus: (email) => api.auth.getPinStatus(email),
 };

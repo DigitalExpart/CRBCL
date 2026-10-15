@@ -22,6 +22,7 @@ import {
   Users,
   Trash2,
   Palette,
+  KeyRound,
 } from "lucide-react";
 import AppearanceSettings from "@/components/settings/AppearanceSettings";
 
@@ -35,6 +36,14 @@ export default function Profile() {
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // 6-Digit PIN fields state
+  const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [showPin, setShowPin] = useState(false);
+  const [savingPin, setSavingPin] = useState(false);
+  const [pinError, setPinError] = useState("");
+  const [pinSuccess, setPinSuccess] = useState(false);
 
   // Password fields state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -206,6 +215,43 @@ export default function Profile() {
       });
     } finally {
       setSavingPassword(false);
+    }
+  };
+
+  // Handle 6-digit PIN change
+  const handleSavePin = async (e) => {
+    e?.preventDefault();
+    setPinError("");
+    setPinSuccess(false);
+
+    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+      setPinError("PIN must be exactly 6 numeric digits.");
+      return;
+    }
+    if (pin !== confirmPin) {
+      setPinError("PIN and confirm PIN do not match.");
+      return;
+    }
+
+    setSavingPin(true);
+    try {
+      await api.auth.setPin(pin);
+      setPinSuccess(true);
+      setPin("");
+      setConfirmPin("");
+      toast({
+        title: "6-Digit PIN Updated",
+        description: "Your PIN is now synchronized for instant login across website and mobile app.",
+      });
+    } catch (err) {
+      setPinError(err.message || "Failed to update 6-digit PIN.");
+      toast({
+        title: "PIN Update Failed",
+        description: err.message || "Failed to save PIN.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingPin(false);
     }
   };
 
@@ -500,7 +546,120 @@ export default function Profile() {
         </TabsContent>
 
         {/* Tab 3: Security & Password */}
-        <TabsContent value="security">
+        <TabsContent value="security" className="space-y-6">
+          {/* Quick-Access 6-Digit PIN Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-primary" />
+                <CardTitle className="text-lg">Quick-Access 6-Digit PIN</CardTitle>
+              </div>
+              <CardDescription>
+                Set or change your 6-digit PIN. Changing it here synchronizes instantly with your CRBCL Mobile app and vice versa.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSavePin} className="space-y-4 max-w-md">
+                {pinError && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md flex items-center gap-2 text-destructive text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{pinError}</span>
+                  </div>
+                )}
+                {pinSuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md flex items-center gap-2 text-emerald-800 text-sm">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-600" />
+                    <span>6-digit PIN successfully updated and synchronized across all platforms.</span>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick_pin">New 6-Digit PIN *</Label>
+                  <div className="relative">
+                    <Input
+                      id="quick_pin"
+                      type={showPin ? "text" : "password"}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      value={pin}
+                      onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="••••••"
+                      className="tracking-widest font-mono text-center text-lg pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPin(!showPin)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Must be exactly 6 numeric digits.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm_quick_pin">Confirm 6-Digit PIN *</Label>
+                  <Input
+                    id="confirm_quick_pin"
+                    type={showPin ? "text" : "password"}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    value={confirmPin}
+                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="••••••"
+                    className="tracking-widest font-mono text-center text-lg"
+                    required
+                  />
+                  {pin && confirmPin && (
+                    <p
+                      className={`text-xs flex items-center gap-1 ${
+                        pin === confirmPin ? "text-emerald-600" : "text-destructive"
+                      }`}
+                    >
+                      {pin === confirmPin ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          PINs match
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          PINs do not match
+                        </>
+                      )}
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={savingPin || pin.length !== 6 || confirmPin.length !== 6}
+                    className="min-w-[150px]"
+                  >
+                    {savingPin ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Synchronizing...
+                      </>
+                    ) : (
+                      <>
+                        <KeyRound className="w-4 h-4 mr-2" />
+                        Save 6-Digit PIN
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Change Password Card */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Change Password</CardTitle>

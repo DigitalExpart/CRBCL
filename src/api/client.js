@@ -464,6 +464,30 @@ class AuthService {
     return data;
   }
 
+  async setPin(pin) {
+    const res = await this.apiClient.fetch('/api/v1/auth/pin/set', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: pin.trim() }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Failed to update 6-digit PIN';
+      throw new Error(msg);
+    }
+    return res.json();
+  }
+
+  async getPinStatus(email) {
+    const res = await this.apiClient.fetch(`/api/v1/auth/pin/status?email=${encodeURIComponent(email.trim())}`);
+    if (!res.ok) return { has_pin: false, email };
+    return res.json();
+  }
+
   async loginWithProvider(provider = 'google', redirectUrl = '/') {
     const base = this.apiClient.baseURL || '';
     window.location.href = `${base}/api/v1/auth/oauth/${provider}?returnTo=${encodeURIComponent(redirectUrl)}`;
