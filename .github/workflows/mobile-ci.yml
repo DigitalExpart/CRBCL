@@ -44,6 +44,19 @@ jobs:
           cd mobile
           flutter build apk --debug
 
+      - name: Build Release Android APK
+        run: |
+          cd mobile
+          flutter build apk --release
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: crbcl-mobile-android-apk
+          path: |
+            mobile/build/app/outputs/flutter-apk/app-release.apk
+            mobile/build/app/outputs/flutter-apk/app-debug.apk
+
   mobile-ios-build:
     name: Build iOS App & IPA Artifact
     runs-on: macos-14
