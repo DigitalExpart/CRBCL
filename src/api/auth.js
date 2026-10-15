@@ -2,6 +2,7 @@ import { api } from './client';
 
 export const authApi = {
   login: (email, password) => api.auth.loginViaEmailPassword(email, password),
+  loginViaPin: (email, pin) => api.auth.loginViaPin(email, pin),
   logout: (redirectUrl) => api.auth.logout(redirectUrl),
   me: () => api.auth.me(),
   register: (data) => api.auth.register(data),

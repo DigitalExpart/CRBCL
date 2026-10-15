@@ -441,6 +441,29 @@ class AuthService {
     }
   }
 
+  async loginViaPin(email, pin) {
+    const res = await this.apiClient.fetch('/api/v1/auth/pin/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim(), pin: pin.trim() }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err?.error?.message ||
+        err?.detail?.error?.message ||
+        err?.detail?.message ||
+        (typeof err?.detail === 'string' ? err.detail : '') ||
+        'Incorrect 6-digit PIN';
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    this.setToken(data.access_token || data.token || 'crbcl_token');
+    if (data.refresh_token) localStorage.setItem('crbcl_refresh_token', data.refresh_token);
+    if (data.user) StorageManager.set(USER_KEY, data.user);
+    return data;
+  }
+
   async loginWithProvider(provider = 'google', redirectUrl = '/') {
     const base = this.apiClient.baseURL || '';
     window.location.href = `${base}/api/v1/auth/oauth/${provider}?returnTo=${encodeURIComponent(redirectUrl)}`;
