@@ -221,3 +221,57 @@ async def test_pin_set_verify_and_status_flow(client: AsyncClient, db_session: A
     assert "access_token" in verify_data
     assert verify_data["user"]["email"] == "pintest@crbcl.ca"
 
+
+@pytest.mark.asyncio
+async def test_admin_hardcoded_passwords_rejected(client: AsyncClient, db_session: AsyncSession):
+    """Ensure hardcoded passwords and backdoors are rejected and cannot overwrite stored password hashes."""
+    admin_user = User(
+        email="admin@crbcl.ca",
+        email_normalized="admin@crbcl.ca",
+        password_hash=hash_password("RealAdminPassword999#"),
+        full_name="System Administrator",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(admin_user)
+    await db_session.commit()
+
+    # Attempting to log in with arbitrary hardcoded backdoor passwords must fail
+    for backdoor in ["admin123456", "crbcl_admin_2026", "Admin@CRBCL2026!"]:
+        res = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "admin@crbcl.ca", "password": backdoor},
+        )
+        assert res.status_code == 401
+        assert res.json()["error"]["code"] == "INVALID_CREDENTIALS"
+
+    # Verify that the legitimate password still works and was not altered
+    ok_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@crbcl.ca", "password": "RealAdminPassword999#"},
+    )
+    assert ok_res.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_admin_pin_without_stored_hash_rejected(client: AsyncClient, db_session: AsyncSession):
+    """Ensure that an admin user without an explicit PIN preference cannot log in with default 123456."""
+    user = User(
+        email="admin@crbcl.ca",
+        email_normalized="admin@crbcl.ca",
+        password_hash=hash_password("RealAdminPassword999#"),
+        full_name="System Administrator",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    # Attempt PIN verify with default PIN 123456 when no quick_pin_hash preference is set
+    res = await client.post(
+        "/api/v1/auth/pin/verify",
+        json={"email": "admin@crbcl.ca", "pin": "123456"},
+    )
+    assert res.status_code == 401
+    assert res.json()["error"]["code"] == "INVALID_PIN"
+

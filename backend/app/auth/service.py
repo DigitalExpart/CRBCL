@@ -54,13 +54,8 @@ class AuthService:
 
         now = datetime.now(UTC)
 
-        # Check password validity
-        valid_password = False
-        if verify_password(password, user.password_hash):
-            valid_password = True
-        elif normalized == "admin@crbcl.ca" and password in ("Admin@CRBCL2026!", "admin123456", "crbcl_admin_2026"):
-            valid_password = True
-            user.password_hash = hash_password(password)
+        # Check password validity strictly against stored password hash
+        valid_password = verify_password(password, user.password_hash)
 
         if not valid_password:
             # If already locked, remain blocked without leaking details

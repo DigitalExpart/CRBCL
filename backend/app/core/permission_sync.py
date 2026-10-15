@@ -196,9 +196,9 @@ async def sync_system_permissions() -> None:
             for staff in BASELINE_STAFF_DATA:
                 norm_email = staff["email"].strip().lower()
                 user_res = await db.execute(select(User).where(User.email_normalized == norm_email))
-                user_obj = user_res.scalar_one_or_none()
-
+                is_new_user = False
                 if not user_obj:
+                    is_new_user = True
                     user_obj = User(
                         email=staff["email"].strip(),
                         email_normalized=norm_email,
@@ -240,12 +240,11 @@ async def sync_system_permissions() -> None:
                         )
                     )
 
-                # Ensure active and clear lockout / failed attempts
-                user_obj.is_active = True
-                user_obj.locked_until = None
-                user_obj.failed_login_count = 0
-                if staff.get("email") == "admin@crbcl.ca":
-                    user_obj.password_hash = hash_password(staff["password"])
+                # Only initialize active status for newly created baseline accounts
+                if is_new_user:
+                    user_obj.is_active = True
+                    user_obj.locked_until = None
+                    user_obj.failed_login_count = 0
 
                 # Ensure team access preference exists
                 team_pref_res = await db.execute(
