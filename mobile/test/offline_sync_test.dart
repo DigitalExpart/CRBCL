@@ -41,18 +41,18 @@ void main() {
         'crbcl_pin_salt': 'test_salt_123',
       });
 
-      // User sets their personal PIN to 9876
-      await MobileAuthService.instance.setPin('9876');
+      // User sets their personal 6-digit PIN to 987654
+      await MobileAuthService.instance.setPin('987654');
 
-      // Attempting hardcoded PINs 1234 or 123456 must fail
+      // Attempting invalid length PIN or non-matching PIN must fail
       final result1234 = await MobileAuthService.instance.unlockWithPin('1234');
       expect(result1234.success, isFalse);
 
       final result123456 = await MobileAuthService.instance.unlockWithPin('123456');
       expect(result123456.success, isFalse);
 
-      // Personal PIN succeeds
-      final validResult = await MobileAuthService.instance.unlockWithPin('9876');
+      // Personal 6-digit PIN succeeds
+      final validResult = await MobileAuthService.instance.unlockWithPin('987654');
       expect(validResult.success, isTrue);
     });
 
@@ -61,16 +61,16 @@ void main() {
         'crbcl_access_token': 'valid_token',
         'crbcl_pin_salt': 'test_salt_xyz',
       });
-      await MobileAuthService.instance.setPin('8899');
+      await MobileAuthService.instance.setPin('889900');
 
       for (int i = 0; i < 4; i++) {
-        final res = await MobileAuthService.instance.unlockWithPin('0000');
+        final res = await MobileAuthService.instance.unlockWithPin('000000');
         expect(res.success, isFalse);
         expect(res.isLocked, isFalse);
       }
 
       // 5th attempt locks the application
-      final fifthRes = await MobileAuthService.instance.unlockWithPin('0000');
+      final fifthRes = await MobileAuthService.instance.unlockWithPin('000000');
       expect(fifthRes.success, isFalse);
       expect(fifthRes.isLocked, isTrue);
       expect(fifthRes.errorMessage, contains('Maximum PIN attempts exceeded'));
@@ -85,10 +85,10 @@ void main() {
         'crbcl_last_auth_time': expiredTimestamp,
       });
 
-      await MobileAuthService.instance.setPin('4321');
+      await MobileAuthService.instance.setPin('432100');
 
       // Unlocking with correct PIN must still be rejected due to 24-hr offline authorization expiry
-      final result = await MobileAuthService.instance.unlockWithPin('4321');
+      final result = await MobileAuthService.instance.unlockWithPin('432100');
       expect(result.success, isFalse);
       expect(result.isExpired, isTrue);
       expect(result.errorMessage, contains('Offline authorization expired'));

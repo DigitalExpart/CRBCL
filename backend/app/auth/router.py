@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import json
 import logging
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,16 +17,19 @@ from app.auth.schemas import (
     LoginRequest,
     LoginResponse,
     MessageResponse,
+    PinStatusResponse,
     RefreshRequest,
     RefreshResponse,
     RegisterRequest,
     RegisterResponse,
     ResendOtpRequest,
     ResetPasswordRequest,
+    SetPinRequest,
     UpdateProfileRequest,
     UserInfo,
     VerifyOtpRequest,
     VerifyOtpResponse,
+    VerifyPinRequest,
 )
 from app.auth.security import (
     create_reset_token,
@@ -534,4 +538,124 @@ async def reset_password(body: ResetPasswordRequest, db: AsyncSession = Depends(
     return MessageResponse(
         message="Your password has been successfully reset. You can now log in with your new password."
     )
+
+
+@router.post("/pin/set", response_model=MessageResponse)
+async def set_pin(
+    body: SetPinRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set or update user's quick-access 6-digit PIN."""
+    result = await db.execute(
+        select(UserPreference).where(
+            UserPreference.user_id == current_user.id,
+            UserPreference.key == "quick_pin_hash",
+        )
+    )
+    pref = result.scalars().first()
+    hashed_pin = hash_password(body.pin)
+
+    if pref:
+        pref.value = hashed_pin
+    else:
+        pref = UserPreference(
+            user_id=current_user.id,
+            key="quick_pin_hash",
+            value=hashed_pin,
+        )
+        db.add(pref)
+
+    await db.commit()
+    return MessageResponse(message="6-digit PIN saved successfully")
+
+
+@router.post("/pin/verify", response_model=LoginResponse)
+async def verify_pin(
+    request: Request,
+    response: Response,
+    body: VerifyPinRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Authenticate and create session via 6-digit PIN."""
+    auth = AuthService(db)
+    user = await auth.get_user_by_email(body.email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": {"code": "INVALID_PIN", "message": "Invalid email or PIN"}},
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": {"code": "USER_INACTIVE", "message": "Account is disabled"}},
+        )
+
+    now = datetime.now(UTC)
+    if user.locked_until and user.locked_until > now:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": {"code": "ACCOUNT_LOCKED", "message": "Account is temporarily locked. Please try again later."}},
+        )
+
+    result = await db.execute(
+        select(UserPreference).where(
+            UserPreference.user_id == user.id,
+            UserPreference.key == "quick_pin_hash",
+        )
+    )
+    pref = result.scalars().first()
+    if not pref or not verify_password(body.pin, pref.value):
+        user.failed_login_count += 1
+        if user.failed_login_count >= 5:
+            user.locked_until = now + timedelta(minutes=15)
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": {"code": "INVALID_PIN", "message": "Incorrect 6-digit PIN"}},
+        )
+
+    user.failed_login_count = 0
+    user.locked_until = None
+    user.last_login_at = now
+
+    access_token, refresh_token = await auth.create_session(
+        user,
+        user_agent=request.headers.get("user-agent"),
+        ip_address=request.client.host if request.client else None,
+    )
+    await db.commit()
+
+    csrf_token = generate_csrf_token()
+    _set_auth_cookies(response, access_token, refresh_token, csrf_token)
+
+    settings = get_settings()
+    return LoginResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.access_token_ttl,
+        user=_build_user_info(user),
+    )
+
+
+@router.get("/pin/status", response_model=PinStatusResponse)
+async def check_pin_status(
+    email: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Check whether a user has a 6-digit PIN configured on the backend."""
+    auth = AuthService(db)
+    user = await auth.get_user_by_email(email)
+    if not user:
+        return PinStatusResponse(has_pin=False, email=email)
+
+    result = await db.execute(
+        select(UserPreference).where(
+            UserPreference.user_id == user.id,
+            UserPreference.key == "quick_pin_hash",
+        )
+    )
+    pref = result.scalars().first()
+    return PinStatusResponse(has_pin=bool(pref and pref.value), email=email)
+
 

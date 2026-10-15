@@ -142,8 +142,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final pin = _newPinController.text.trim();
     final confirm = _confirmPinController.text.trim();
 
-    if (pin.length < 4 || pin.length > 6) {
-      setState(() => _errorMessage = 'PIN must be 4 to 6 numeric digits.');
+    if (pin.length != 6 || !RegExp(r'^\d{6}$').hasMatch(pin)) {
+      setState(() => _errorMessage = 'PIN must be exactly 6 numeric digits.');
       return;
     }
 
@@ -170,8 +170,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handlePinUnlock() async {
     final pin = _pinController.text.trim();
-    if (pin.length < 4 || pin.length > 6) {
-      setState(() => _errorMessage = 'Please enter a valid 4 or 6-digit PIN.');
+    if (pin.length != 6 || !RegExp(r'^\d{6}$').hasMatch(pin)) {
+      setState(() => _errorMessage = 'Please enter a valid 6-digit PIN.');
       return;
     }
 
@@ -499,7 +499,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 12),
 
         Text(
-          'Enter your personal 4-6 digit Quick PIN',
+          'Enter your personal 6-digit Quick PIN',
           style: TextStyle(
             fontSize: 12,
             color: colorScheme.onSurface.withValues(alpha: 0.65),
@@ -514,7 +514,7 @@ class _LoginScreenState extends State<LoginScreen> {
           obscureText: _obscurePin,
           maxLength: 6,
           decoration: InputDecoration(
-            labelText: 'Enter 4 or 6-digit PIN',
+            labelText: 'Enter 6-digit PIN',
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
               icon: Icon(
@@ -781,7 +781,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Create a 4 or 6-digit personal PIN for offline unlocking in the field.',
+          'Create a 6-digit personal PIN for offline unlocking in the field.',
           style: TextStyle(
             fontSize: 12,
             color: colorScheme.onSurface.withValues(alpha: 0.65),
@@ -796,7 +796,7 @@ class _LoginScreenState extends State<LoginScreen> {
           obscureText: _obscureNewPin,
           maxLength: 6,
           decoration: InputDecoration(
-            labelText: 'New PIN (4-6 digits)',
+            labelText: 'New 6-digit PIN',
             prefixIcon: const Icon(Icons.pin),
             suffixIcon: IconButton(
               icon: Icon(
@@ -818,7 +818,7 @@ class _LoginScreenState extends State<LoginScreen> {
           obscureText: _obscureConfirmPin,
           maxLength: 6,
           decoration: InputDecoration(
-            labelText: 'Confirm PIN',
+            labelText: 'Confirm 6-digit PIN',
             prefixIcon: const Icon(Icons.check_circle_outline),
             suffixIcon: IconButton(
               icon: Icon(

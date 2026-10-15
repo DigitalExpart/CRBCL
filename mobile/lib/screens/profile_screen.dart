@@ -99,8 +99,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () async {
                 final p = pinCtrl.text.trim();
                 final c = confirmCtrl.text.trim();
-                if (p.length < 4 || p.length > 6) {
-                  setDlgState(() => errorText = 'PIN must be 4 to 6 numeric digits.');
+                if (p.length != 6 || !RegExp(r'^\d{6}$').hasMatch(p)) {
+                  setDlgState(() => errorText = 'PIN must be exactly 6 numeric digits.');
                   return;
                 }
                 if (p != c) {
@@ -159,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'New PIN (4-6 digits)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'New 6-digit PIN', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -167,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Confirm New PIN', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Confirm New 6-digit PIN', border: OutlineInputBorder()),
               ),
             ],
           ),
@@ -188,8 +188,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   return;
                 }
 
-                if (p.length < 4 || p.length > 6) {
-                  setDlgState(() => errorText = 'New PIN must be 4 to 6 numeric digits.');
+                if (p.length != 6 || !RegExp(r'^\d{6}$').hasMatch(p)) {
+                  setDlgState(() => errorText = 'New PIN must be exactly 6 numeric digits.');
                   return;
                 }
                 if (p != c) {
@@ -262,7 +262,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   keyboardType: TextInputType.number,
                   maxLength: 6,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'New PIN (4-6 digits)', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: 'New 6-digit PIN', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -270,7 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   keyboardType: TextInputType.number,
                   maxLength: 6,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Confirm New PIN', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: 'Confirm New 6-digit PIN', border: OutlineInputBorder()),
                 ),
               ],
             ),
@@ -292,8 +292,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         setDlgState(() => errorText = 'Please enter your account password.');
                         return;
                       }
-                      if (p.length < 4 || p.length > 6) {
-                        setDlgState(() => errorText = 'New PIN must be 4 to 6 numeric digits.');
+                      if (p.length != 6 || !RegExp(r'^\d{6}$').hasMatch(p)) {
+                        setDlgState(() => errorText = 'New PIN must be exactly 6 numeric digits.');
                         return;
                       }
                       if (p != c) {

@@ -154,3 +154,70 @@ async def test_register_and_verify_otp_flow(client: AsyncClient, db_session: Asy
     verify_data = verify_res.json()
     assert "access_token" in verify_data
     assert verify_data["user"]["email"] == "newuser@crbcl.ca"
+
+
+@pytest.mark.asyncio
+async def test_pin_set_verify_and_status_flow(client: AsyncClient, db_session: AsyncSession):
+    # Setup test user
+    user = User(
+        email="pintest@crbcl.ca",
+        email_normalized="pintest@crbcl.ca",
+        password_hash=hash_password("Secret123!"),
+        full_name="PIN Tester",
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    # 1. Status should show false before PIN is set
+    status_res = await client.get("/api/v1/auth/pin/status?email=pintest@crbcl.ca")
+    assert status_res.status_code == 200
+    assert status_res.json()["has_pin"] is False
+
+    # 2. Log in to get access token
+    login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "pintest@crbcl.ca", "password": "Secret123!"},
+    )
+    assert login_res.status_code == 200
+    token = login_res.json()["access_token"]
+
+    # 3. Setting a 4-digit PIN should be rejected by validation
+    invalid_set = await client.post(
+        "/api/v1/auth/pin/set",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"pin": "1234"},
+    )
+    assert invalid_set.status_code == 422
+
+    # 4. Setting a valid 6-digit PIN succeeds
+    set_res = await client.post(
+        "/api/v1/auth/pin/set",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"pin": "654321"},
+    )
+    assert set_res.status_code == 200
+
+    # 5. Status should now show true
+    status_res2 = await client.get("/api/v1/auth/pin/status?email=pintest@crbcl.ca")
+    assert status_res2.status_code == 200
+    assert status_res2.json()["has_pin"] is True
+
+    # 6. Verify PIN with incorrect PIN fails
+    fail_verify = await client.post(
+        "/api/v1/auth/pin/verify",
+        json={"email": "pintest@crbcl.ca", "pin": "000000"},
+    )
+    assert fail_verify.status_code == 401
+
+    # 7. Verify PIN with correct 6-digit PIN succeeds and issues tokens
+    ok_verify = await client.post(
+        "/api/v1/auth/pin/verify",
+        json={"email": "pintest@crbcl.ca", "pin": "654321"},
+    )
+    assert ok_verify.status_code == 200
+    verify_data = ok_verify.json()
+    assert "access_token" in verify_data
+    assert verify_data["user"]["email"] == "pintest@crbcl.ca"
+

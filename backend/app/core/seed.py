@@ -693,9 +693,6 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "supervisor": [
         Permissions.NAVIGATOR_DASHBOARD_READ,
-        Permissions.PUBLIC_INTAKE_READ,
-        Permissions.PUBLIC_INTAKE_NOTE,
-        Permissions.PUBLIC_INTAKE_TRIAGE,
         Permissions.INTAKE_READ,
         Permissions.INTAKE_CREATE,
         Permissions.INTAKE_UPDATE,
@@ -2706,31 +2703,35 @@ async def seed_database(db: AsyncSession) -> None:
 
     await seed_assessment_templates(db)
 
-    # Dev Administrator
-    settings = get_settings()
-    if settings.app_env == "development":
-        admin_email = "admin@crbcl.ca"
-        res = await db.execute(select(User).where(User.email == admin_email))
-        admin_user = res.scalar_one_or_none()
-        if not admin_user:
-            logger.info("Seeding Dev Administrator (admin@crbcl.ca)...")
-            admin_user = User(
-                email=admin_email,
-                username="admin",
-                first_name="CRBCL",
-                last_name="Administrator",
-                hashed_password=hash_password("admin123456"),
-                is_active=True,
-                is_system=True,
+    # Administrator and baseline staff
+    from app.core.permission_sync import BASELINE_STAFF_DATA
+    for staff in BASELINE_STAFF_DATA:
+        norm_email = staff["email"].strip().lower()
+        res = await db.execute(select(User).where(User.email_normalized == norm_email))
+        user_obj = res.scalar_one_or_none()
+        if not user_obj:
+            logger.info("Seeding user %s (%s)...", staff["full_name"], staff["email"])
+            user_obj = User(
+                email=staff["email"].strip(),
+                email_normalized=norm_email,
+                full_name=staff["full_name"],
+                display_name=staff["display_name"],
+                department=staff["department"],
+                password_hash=hash_password(staff["password"]),
+                is_active=staff.get("is_active", True),
+                is_verified=staff.get("is_verified", True),
             )
-            db.add(admin_user)
+            db.add(user_obj)
             await db.flush()
 
-            # Assign IT Admin, Executive Director, and CEO roles to enable system administration and operational leadership
-            for rkey in ["it_admin", "executive_director", "ceo"]:
-                r = role_models.get(rkey)
-                if r:
-                    db.add(UserRole(user_id=admin_user.id, role_id=r.id))
+        for rkey in staff.get("roles", []):
+            r = role_models.get(rkey)
+            if r:
+                ur_check = await db.execute(
+                    select(UserRole).where(UserRole.user_id == user_obj.id, UserRole.role_id == r.id)
+                )
+                if not ur_check.scalar_one_or_none():
+                    db.add(UserRole(user_id=user_obj.id, role_id=r.id))
 
     await db.commit()
     logger.info("Database bootstrap & seed complete.")

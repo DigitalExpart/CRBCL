@@ -6,15 +6,100 @@ import logging
 
 from sqlalchemy import select
 
+from app.auth.security import hash_password
 from app.core.database import async_session_factory as AsyncSessionLocal
 from app.models.role import Permission, Role, RolePermission, UserRole
-from app.models.user import User
+from app.models.user import User, UserPreference
 
 logger = logging.getLogger("crbcl.permissions.sync")
 
+BASELINE_STAFF_DATA = [
+    {
+        "email": "admin@crbcl.ca",
+        "full_name": "System Administrator",
+        "display_name": "System Administrator",
+        "department": "Information Technology",
+        "roles": ["it_admin", "executive_director", "ceo"],
+        "default_pin": "123456",
+        "password": "admin123456",
+    },
+    {
+        "email": "s.standingready@crbcl.org",
+        "full_name": "Sarah Standingready",
+        "display_name": "Sarah Standingready",
+        "department": "Direct Client Care",
+        "roles": ["caseworker"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2025!",
+    },
+    {
+        "email": "m.osoup@crbcl.org",
+        "full_name": "Michael O’Soup",
+        "display_name": "Michael O’Soup",
+        "department": "Child Welfare Intake",
+        "roles": ["caseworker"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2025!",
+    },
+    {
+        "email": "j.severight@crbcl.org",
+        "full_name": "Jessica Severight",
+        "display_name": "Jessica Severight",
+        "department": "Operations & Facilities",
+        "roles": ["office_coordinator"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2025!",
+    },
+    {
+        "email": "d.brass@crbcl.org",
+        "full_name": "David Brass",
+        "display_name": "David Brass",
+        "department": "Elders & Ceremonies",
+        "roles": ["cultural_worker"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2025!",
+    },
+    {
+        "email": "a.whitehawk@crbcl.org",
+        "full_name": "Amanda Whitehawk",
+        "display_name": "Amanda Whitehawk",
+        "department": "Intake & Reception",
+        "roles": ["front_desk"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2025!",
+    },
+    {
+        "email": "d.keshane@crbcl.org",
+        "full_name": "Darren Keshane",
+        "display_name": "Darren Keshane",
+        "department": "Finance & Administration",
+        "roles": ["finance_staff"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2025!",
+    },
+    {
+        "email": "k.strongquill@crbcl.org",
+        "full_name": "Kendra Strongquill",
+        "display_name": "Kendra Strongquill",
+        "department": "Direct Client Care",
+        "roles": ["caseworker"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2025!",
+    },
+    {
+        "email": "r.musqua@crbcl.org",
+        "full_name": "Robert Musqua",
+        "display_name": "Robert Musqua",
+        "department": "Community Housing",
+        "roles": ["caseworker"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2025!",
+    },
+]
+
 
 async def sync_system_permissions() -> None:
-    """Ensure that all critical roles, permissions, and role mappings exist in the database."""
+    """Ensure that all critical roles, permissions, role mappings, and baseline staff exist in the database."""
     try:
         from app.core.seed import PERMISSIONS_DATA, ROLE_PERMISSIONS_MAP, ROLES_DATA
 
@@ -106,6 +191,69 @@ async def sync_system_permissions() -> None:
                     if not ur_check.scalar_one_or_none():
                         db.add(UserRole(user_id=u.id, role_id=ceo_role.id))
                         logger.info("Assigned CEO role to user %s (%s).", u.email, u.full_name)
+
+            # 5. Synchronize baseline staff roster and 6-digit PINs
+            for staff in BASELINE_STAFF_DATA:
+                norm_email = staff["email"].strip().lower()
+                user_res = await db.execute(select(User).where(User.email_normalized == norm_email))
+                user_obj = user_res.scalar_one_or_none()
+
+                if not user_obj:
+                    user_obj = User(
+                        email=staff["email"].strip(),
+                        email_normalized=norm_email,
+                        full_name=staff["full_name"],
+                        display_name=staff["display_name"],
+                        department=staff["department"],
+                        password_hash=hash_password(staff["password"]),
+                        is_active=staff.get("is_active", True),
+                        is_verified=staff.get("is_verified", True),
+                    )
+                    db.add(user_obj)
+                    await db.flush()
+                    logger.info("Seeded baseline staff: %s (%s)", staff["full_name"], staff["email"])
+
+                # Ensure roles
+                for rkey in staff.get("roles", []):
+                    role_obj = role_models.get(rkey)
+                    if role_obj:
+                        ur_res = await db.execute(
+                            select(UserRole).where(UserRole.user_id == user_obj.id, UserRole.role_id == role_obj.id)
+                        )
+                        if not ur_res.scalar_one_or_none():
+                            db.add(UserRole(user_id=user_obj.id, role_id=role_obj.id))
+
+                # Ensure 6-digit PIN hash exists
+                pin_pref_res = await db.execute(
+                    select(UserPreference).where(
+                        UserPreference.user_id == user_obj.id,
+                        UserPreference.key == "quick_pin_hash",
+                    )
+                )
+                if not pin_pref_res.scalars().first():
+                    db.add(
+                        UserPreference(
+                            user_id=user_obj.id,
+                            key="quick_pin_hash",
+                            value=hash_password(staff.get("default_pin", "123456")),
+                        )
+                    )
+
+                # Ensure team access preference exists
+                team_pref_res = await db.execute(
+                    select(UserPreference).where(
+                        UserPreference.user_id == user_obj.id,
+                        UserPreference.key == "team_access",
+                    )
+                )
+                if not team_pref_res.scalars().first():
+                    db.add(
+                        UserPreference(
+                            user_id=user_obj.id,
+                            key="team_access",
+                            value='["all"]',
+                        )
+                    )
 
             await db.commit()
             if new_rp_count > 0:

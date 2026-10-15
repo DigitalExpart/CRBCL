@@ -66,7 +66,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Find PIN text field
-      final pinFinder = find.widgetWithText(TextField, 'Enter 4 or 6-digit PIN');
+      final pinFinder = find.widgetWithText(TextField, 'Enter 6-digit PIN');
       expect(pinFinder, findsOneWidget);
 
       final TextField initialPinField = tester.widget<TextField>(pinFinder);

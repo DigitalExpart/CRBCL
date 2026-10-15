@@ -546,9 +546,14 @@ class MobileAuthService {
     }
   }
 
-  /// Set or update the user's personal 4 to 6-digit PIN
+  /// Validate 6-digit numeric PIN format
+  static bool isValidPinFormat(String pin) {
+    return pin.length == 6 && RegExp(r'^\d{6}$').hasMatch(pin);
+  }
+
+  /// Set or update the user's personal 6-digit PIN (stored locally and synced with central backend)
   Future<bool> setPin(String pin, {String? email}) async {
-    if (pin.length < 4 || pin.length > 6) return false;
+    if (!isValidPinFormat(pin)) return false;
     final targetEmail = email ?? await _secureStorage.read(key: _keyUserEmail);
     final salt = await getOrCreateSalt(email: targetEmail);
     final pinHash = derivePbkdf2PinKey(pin, salt);
@@ -563,18 +568,57 @@ class MobileAuthService {
       await _secureStorage.delete(key: _keyFailedAttempts);
       await _secureStorage.delete(key: _keyLockedUntil);
     }
+
+    // Sync to backend if access token is available
+    final token = await getAccessToken();
+    if (token != null && token.isNotEmpty) {
+      try {
+        final serverUrl = await getServerUrl();
+        final uri = Uri.parse('$serverUrl/api/v1/auth/pin/set');
+        await http.post(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'pin': pin}),
+        ).timeout(const Duration(seconds: 10));
+      } catch (_) {}
+    }
+
     return true;
   }
 
-  /// Unlock application offline using personal PIN
+  /// Check whether user has 6-digit PIN set on backend
+  Future<bool> checkBackendPinStatus(String email) async {
+    try {
+      final serverUrl = await getServerUrl();
+      final uri = Uri.parse('$serverUrl/api/v1/auth/pin/status?email=${Uri.encodeComponent(email.trim())}');
+      final res = await http.get(uri).timeout(const Duration(seconds: 6));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['has_pin'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  /// Unlock application using 6-digit PIN with central server verification & offline fallback
   Future<PinUnlockResult> unlockWithPin(String pin, {String? email}) async {
+    if (!isValidPinFormat(pin)) {
+      return PinUnlockResult(
+        success: false,
+        errorMessage: 'PIN must be exactly 6 numeric digits.',
+      );
+    }
+
     final targetEmail = email ?? await _secureStorage.read(key: _keyUserEmail);
 
     final lockedKey = _userKey(targetEmail, _keyLockedUntil);
     final failedKey = _userKey(targetEmail, _keyFailedAttempts);
     final hashKey = _userKey(targetEmail, _keyPinHash);
 
-    // 1. Check lockout status
+    // 1. Check local lockout status
     final lockedUntilStr = (targetEmail != null ? await _secureStorage.read(key: lockedKey) : null) ??
         await _secureStorage.read(key: _keyLockedUntil);
     if (lockedUntilStr != null) {
@@ -605,11 +649,96 @@ class MobileAuthService {
       }
     }
 
-    // 3. Verify PIN hash
+    // 3. Attempt online central server PIN verification if email is available
+    if (targetEmail != null && targetEmail.isNotEmpty) {
+      try {
+        final serverUrl = await getServerUrl();
+        final uri = Uri.parse('$serverUrl/api/v1/auth/pin/verify');
+        final response = await http
+            .post(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'email': targetEmail.trim(),
+                'pin': pin,
+              }),
+            )
+            .timeout(const Duration(seconds: 10));
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final accessToken = data['access_token'] as String;
+          final refreshToken = data['refresh_token'] as String?;
+          final user = data['user'] as Map<String, dynamic>;
+
+          // Store authentication material securely
+          await _secureStorage.write(key: _keyAccessToken, value: accessToken);
+          if (refreshToken != null) {
+            await _secureStorage.write(key: _keyRefreshToken, value: refreshToken);
+          }
+          await _secureStorage.write(key: _keyUserId, value: user['id']?.toString() ?? '');
+          await _secureStorage.write(key: _keyUserEmail, value: targetEmail.trim().toLowerCase());
+          await _secureStorage.write(key: _keyUserName, value: user['display_name']?.toString() ?? '');
+          await _secureStorage.write(key: _keyUserRoles, value: jsonEncode(user['roles'] ?? []));
+          await _secureStorage.write(key: _keyUserPermissions, value: jsonEncode(user['permissions'] ?? []));
+          await touchAuthTimestamp();
+
+          // Sync local PBKDF2 hash so offline mode works with this exact verified PIN
+          final salt = await getOrCreateSalt(email: targetEmail);
+          final pinHash = derivePbkdf2PinKey(pin, salt);
+          await _secureStorage.write(key: hashKey, value: pinHash);
+
+          // Clear lockout and failed attempts
+          await _secureStorage.delete(key: failedKey);
+          await _secureStorage.delete(key: lockedKey);
+          await _secureStorage.delete(key: _keyFailedAttempts);
+          await _secureStorage.delete(key: _keyLockedUntil);
+
+          return PinUnlockResult(success: true);
+        } else if (response.statusCode == 401 || response.statusCode == 403) {
+          String msg = 'Incorrect 6-digit PIN.';
+          try {
+            final data = jsonDecode(response.body);
+            if (data is Map && data['detail'] is Map && data['detail']['error'] is Map) {
+              msg = data['detail']['error']['message'] ?? msg;
+            } else if (data is Map && data['detail'] is String) {
+              msg = data['detail'];
+            }
+          } catch (_) {}
+
+          // Increment failed attempts
+          final attemptsStr = await _secureStorage.read(key: failedKey) ?? await _secureStorage.read(key: _keyFailedAttempts);
+          int failedAttempts = (attemptsStr != null ? int.tryParse(attemptsStr) ?? 0 : 0) + 1;
+          await _secureStorage.write(key: failedKey, value: failedAttempts.toString());
+          await _secureStorage.write(key: _keyFailedAttempts, value: failedAttempts.toString());
+
+          if (failedAttempts >= maxFailedAttempts) {
+            final lockedUntil = DateTime.now().add(lockoutDuration);
+            await _secureStorage.write(key: lockedKey, value: lockedUntil.toIso8601String());
+            await _secureStorage.write(key: _keyLockedUntil, value: lockedUntil.toIso8601String());
+            return PinUnlockResult(
+              success: false,
+              isLocked: true,
+              errorMessage: 'Maximum PIN attempts exceeded. App locked for 15 minutes.',
+              remainingAttempts: 0,
+            );
+          }
+          final remaining = maxFailedAttempts - failedAttempts;
+          return PinUnlockResult(
+            success: false,
+            errorMessage: '$msg $remaining attempt${remaining == 1 ? '' : 's'} remaining.',
+            remainingAttempts: remaining,
+          );
+        }
+      } catch (_) {
+        // Network connection error: proceed to local offline PBKDF2 verification below
+      }
+    }
+
+    // 4. Fallback: Verify local PBKDF2 PIN hash offline
     final salt = await getOrCreateSalt(email: targetEmail);
     final enteredHash = derivePbkdf2PinKey(pin, salt);
 
-    // Strictly user-scoped lookup when account email is provided, avoiding cross-account leaks
     String? storedHash;
     if (targetEmail != null && targetEmail.isNotEmpty) {
       storedHash = await _secureStorage.read(key: hashKey);
@@ -618,7 +747,6 @@ class MobileAuthService {
     }
 
     if (storedHash != null && enteredHash == storedHash) {
-      // Success: Clear lockout and failed attempts
       if (targetEmail != null) {
         await _secureStorage.delete(key: failedKey);
         await _secureStorage.delete(key: lockedKey);
@@ -655,12 +783,12 @@ class MobileAuthService {
     final remaining = maxFailedAttempts - failedAttempts;
     return PinUnlockResult(
       success: false,
-      errorMessage: 'Invalid PIN. $remaining attempt${remaining == 1 ? '' : 's'} remaining.',
+      errorMessage: 'Invalid 6-digit PIN. $remaining attempt${remaining == 1 ? '' : 's'} remaining.',
       remainingAttempts: remaining,
     );
   }
 
-  /// Verify account password with central server and set a new PIN
+  /// Verify account password with central server and set a new 6-digit PIN
   Future<Map<String, dynamic>> verifyPasswordAndResetPin({
     required String password,
     required String newPin,
@@ -670,8 +798,8 @@ class MobileAuthService {
     if (targetEmail == null || targetEmail.isEmpty) {
       return {'success': false, 'errorMessage': 'No active account email found.'};
     }
-    if (newPin.length < 4 || newPin.length > 6) {
-      return {'success': false, 'errorMessage': 'New PIN must be 4 to 6 numeric digits.'};
+    if (!isValidPinFormat(newPin)) {
+      return {'success': false, 'errorMessage': 'New PIN must be exactly 6 numeric digits.'};
     }
 
     // Verify credentials against server

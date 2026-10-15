@@ -49,8 +49,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
   Future<void> _handleAdminPinUnlock() async {
     final pin = _pinController.text.trim();
-    if (pin.length < 4 || pin.length > 6) {
-      setState(() => _errorMessage = 'Please enter a valid 4 or 6-digit PIN.');
+    if (pin.length != 6 || !RegExp(r'^\d{6}$').hasMatch(pin)) {
+      setState(() => _errorMessage = 'Please enter a valid 6-digit PIN.');
       return;
     }
 
@@ -274,7 +274,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                               maxLength: 6,
                               obscureText: _obscurePin,
                               decoration: InputDecoration(
-                                labelText: 'Enter 4 or 6-digit PIN',
+                                labelText: 'Enter 6-digit Admin PIN',
                                 prefixIcon: const Icon(Icons.pin_outlined),
                                 border: const OutlineInputBorder(),
                                 suffixIcon: IconButton(

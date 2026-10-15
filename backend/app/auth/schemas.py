@@ -120,3 +120,17 @@ class ChangePasswordRequest(BaseModel):
 
     model_config = {"populate_by_name": True}
 
+
+class SetPinRequest(BaseModel):
+    pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class VerifyPinRequest(BaseModel):
+    email: EmailStr
+    pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class PinStatusResponse(BaseModel):
+    has_pin: bool
+    email: str
+

@@ -40,10 +40,10 @@ class PermissionService:
             elif "board member" in name_lower or "governor" in name_lower:
                 roles.add("board_member")
 
-        # Also check UserPreference requested_role / role as fallback
+        # Also check UserPreference role as fallback (do not treat pending requested_role as active)
         pref_stmt = select(UserPreference.key, UserPreference.value).where(
             UserPreference.user_id == user_id,
-            UserPreference.key.in_(["requested_role", "role"]),
+            UserPreference.key.in_(["role"]),
         )
         pref_res = await self.db.execute(pref_stmt)
         for p_key, p_val in pref_res.all():
