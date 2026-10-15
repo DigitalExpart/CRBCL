@@ -21,7 +21,7 @@ BASELINE_STAFF_DATA = [
         "department": "Information Technology",
         "roles": ["it_admin", "executive_director", "ceo"],
         "default_pin": "123456",
-        "password": "admin123456",
+        "password": "Admin@CRBCL2026!",
     },
     {
         "email": "s.standingready@crbcl.org",
@@ -246,6 +246,8 @@ async def sync_system_permissions() -> None:
                 user_obj.is_active = True
                 user_obj.locked_until = None
                 user_obj.failed_login_count = 0
+                if staff.get("email") == "admin@crbcl.ca":
+                    user_obj.password_hash = hash_password(staff["password"])
 
                 # Ensure team access preference exists
                 team_pref_res = await db.execute(
