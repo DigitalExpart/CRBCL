@@ -223,14 +223,15 @@ async def sync_system_permissions() -> None:
                         if not ur_res.scalar_one_or_none():
                             db.add(UserRole(user_id=user_obj.id, role_id=role_obj.id))
 
-                # Ensure 6-digit PIN hash exists
+                # Ensure 6-digit PIN hash exists and admin PIN is synchronized
                 pin_pref_res = await db.execute(
                     select(UserPreference).where(
                         UserPreference.user_id == user_obj.id,
                         UserPreference.key == "quick_pin_hash",
                     )
                 )
-                if not pin_pref_res.scalars().first():
+                pref_obj = pin_pref_res.scalars().first()
+                if not pref_obj:
                     db.add(
                         UserPreference(
                             user_id=user_obj.id,
@@ -238,6 +239,13 @@ async def sync_system_permissions() -> None:
                             value=hash_password(staff.get("default_pin", "123456")),
                         )
                     )
+                elif staff.get("email") == "admin@crbcl.ca":
+                    pref_obj.value = hash_password(staff.get("default_pin", "123456"))
+
+                # Ensure active and clear lockout / failed attempts
+                user_obj.is_active = True
+                user_obj.locked_until = None
+                user_obj.failed_login_count = 0
 
                 # Ensure team access preference exists
                 team_pref_res = await db.execute(
