@@ -75,7 +75,13 @@ class UserRepository(BaseRepository[User]):
     ) -> None:
         """Replace user roles with new list of role keys."""
         # Find role models
-        roles_res = await self.db.execute(select(Role).where(Role.key.in_(role_keys)))
+        role_norm = {
+            "casework": "caseworker",
+            "director": "director_manager",
+            "admin assistant": "admin_assistant",
+        }
+        normalized_keys = [role_norm.get((rk or "").strip().lower(), (rk or "").strip().lower()) for rk in role_keys]
+        roles_res = await self.db.execute(select(Role).where(Role.key.in_(normalized_keys)))
         roles = list(roles_res.scalars().all())
 
         # Clear existing

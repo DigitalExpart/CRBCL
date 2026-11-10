@@ -26,6 +26,17 @@ class Document(Base, TimestampMixin, SoftDeleteMixin):
     entity_type: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     entity_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
 
+    title: Mapped[str] = mapped_column(String(255), default="", nullable=False)
+    category: Mapped[str] = mapped_column(String(100), default="General", nullable=False)
+    team_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
+    access_mode: Mapped[str] = mapped_column(String(50), default="INHERIT", nullable=False)
+    allowed_roles: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    allowed_user_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    restricted_roles: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    restricted_user_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    document_content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_confidential: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     uploaded_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     is_approved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     scan_status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
@@ -83,3 +94,22 @@ class DocumentAccessEvent(Base):
         DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now()
     )
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+
+
+class ItemAccessRequest(Base, TimestampMixin):
+    __tablename__ = "item_access_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    item_type: Mapped[str] = mapped_column(String(50), default="document", nullable=False)
+    item_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    requester_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    status: Mapped[str] = mapped_column(String(50), default="PENDING", nullable=False)  # PENDING, APPROVED, DENIED, REVOKED
+    reason: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    reviewer_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    review_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+

@@ -120,6 +120,10 @@ import Appointments from '@/pages/Appointments';
 import Funding from '@/pages/Funding';
 import Donations from '@/pages/Donations';
 import Documents from '@/pages/Documents';
+import CompanyPolicy from '@/pages/CompanyPolicy';
+import PolicyDataDashboard from '@/pages/PolicyDataDashboard';
+import NursingDashboard from '@/pages/NursingDashboard';
+import TherapyDashboard from '@/pages/TherapyDashboard';
 import Incidents from '@/pages/Incidents';
 import AskRedBear from '@/pages/AskRedBear';
 import Teams from '@/pages/Teams';
@@ -262,6 +266,14 @@ const AuthenticatedApp = () => {
             <Route path="/funding" element={<Funding />} />
             <Route path="/donations" element={<Donations />} />
             <Route path="/documents" element={<Documents />} />
+            <Route path="/company-policy" element={<CompanyPolicy />} />
+            <Route path="/policies" element={<CompanyPolicy />} />
+            <Route path="/policy-data" element={<PolicyDataDashboard />} />
+            <Route path="/nursing" element={<NursingDashboard />} />
+            <Route path="/therapy" element={<TherapyDashboard />} />
+            <Route path="/post-majority" element={<Navigate to="/teams/22" replace />} />
+            <Route path="/finance-administration" element={<Navigate to="/teams/14" replace />} />
+            <Route path="/human-resources" element={<Navigate to="/teams/13" replace />} />
             <Route path="/incidents" element={<Incidents />} />
             <Route path="/clinical-notes" element={<ClinicalNotes />} />
             <Route path="/ask-red-bear" element={<AskRedBear />} />

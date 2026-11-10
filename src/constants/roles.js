@@ -5,10 +5,25 @@
  * edit, user approval, and access administration workflows.
  */
 
-export const ROLES = [
-  { key: "caseworker", label: "Caseworker — Direct Client & Case Management" },
+export const POST_MAJORITY_ROLES = [
+  { key: "mentor", label: "Mentor — Youth Mentorship & Life Skills Support" },
+  { key: "caseworker", label: "Casework / Caseworker — Direct Client & Case Management" },
+  { key: "admin_assistant", label: "Admin Assistant — Departmental Operations & Document Support" },
   { key: "supervisor", label: "Supervisor — Casework Approvals & Reviews" },
-  { key: "director_manager", label: "Director / Manager — Departmental Operations" },
+  { key: "director_manager", label: "Director — Departmental Leadership & Operations" },
+];
+
+export const ROLES = [
+  // ── Post Majority & Core Practice Staff Roles ───────────────────
+  { key: "mentor", label: "Mentor — Youth Mentorship & Life Skills Support" },
+  { key: "caseworker", label: "Caseworker / Casework — Direct Client & Case Management" },
+  { key: "admin_assistant", label: "Admin Assistant — Departmental Administration & Document Support" },
+  { key: "supervisor", label: "Supervisor — Casework Approvals & Reviews" },
+  { key: "director_manager", label: "Director / Manager — Departmental Leadership & Operations" },
+  { key: "casework", label: "Casework — Direct Client & Case Management" },
+  { key: "director", label: "Director — Departmental Leadership" },
+
+  // ── Operational & Specialized Unit Roles ────────────────────────
   { key: "front_desk", label: "Front Desk / First Impression — Intake Reception & Form Triage" },
   { key: "office_coordinator", label: "Office Coordinator — Operations, Facilities & Fleet Coordination" },
   { key: "navigator", label: "Navigator — System Navigation Specialist & Referral Intake" },

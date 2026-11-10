@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Loader2, UserPlus, Mail, Lock, Eye, EyeOff, Copy, Check, Sparkles, ShieldCheck } from "lucide-react";
 import { api } from "@/api";
 import TeamAccessPicker from "@/components/admin/TeamAccessPicker";
@@ -112,7 +112,10 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
   const getDashboardPath = (roleKey) => {
     if (roleKey === "ceo") return "/ceo (CEO Dashboard)";
     if (roleKey === "executive_director") return "/executive (Executive Dashboard)";
-    if (roleKey === "director_manager") return "/director (Director's Dashboard)";
+    if (roleKey === "director_manager" || roleKey === "director") return "/director (Director's Dashboard)";
+    if (roleKey === "supervisor") return "/teams (Team Dashboard — Casework Approvals)";
+    if (roleKey === "mentor") return "/teams (Post Majority Team Dashboard — Youth Mentorship)";
+    if (roleKey === "admin_assistant") return "/teams (Post Majority Team Dashboard — Administrative Support)";
     if (roleKey === "it_admin") return "/admin (IT Admin Portal)";
     if (roleKey && roleKey.startsWith("resource_")) return "/resource-team (Resource Team Dashboard)";
     return "/ (Staff Dashboard)";
@@ -210,9 +213,18 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
 
               <div className="space-y-1.5">
                 <Label>Department</Label>
-                <Select value={department} onValueChange={setDepartment} disabled={loading}>
+                <Select
+                  value={department}
+                  onValueChange={(val) => {
+                    setDepartment(val);
+                    if (val && val.toLowerCase().includes("post") && !teamAccess.includes("22") && !teamAccess.includes("all")) {
+                      setTeamAccess([...teamAccess, "22"]);
+                    }
+                  }}
+                  disabled={loading}
+                >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue placeholder="Select department..." />
                   </SelectTrigger>
                   <SelectContent>
                     {DEPARTMENTS.map((d) => (
@@ -223,7 +235,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                   </SelectContent>
                 </Select>
                 <p className="text-[11px] text-muted-foreground">
-                  Operational department (e.g. Resource Team, Growing Up Well). Distinct from role.
+                  Operational department (e.g. Post Majority, Resource Team). Distinct from role.
                 </p>
               </div>
 
@@ -234,11 +246,47 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {AVAILABLE_ROLES.map((r) => (
-                      <SelectItem key={r.key} value={r.key}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
+                    {department && department.toLowerCase().includes("post") ? (
+                      <>
+                        <SelectGroup>
+                          <SelectLabel className="text-xs font-bold text-primary px-2 py-1 uppercase tracking-wider">
+                            Post Majority Staff Roles
+                          </SelectLabel>
+                          <SelectItem value="mentor">
+                            Mentor — Youth Mentorship & Life Skills Support
+                          </SelectItem>
+                          <SelectItem value="caseworker">
+                            Casework / Caseworker — Direct Client & Case Management
+                          </SelectItem>
+                          <SelectItem value="admin_assistant">
+                            Admin Assistant — Departmental Operations & Document Support
+                          </SelectItem>
+                          <SelectItem value="supervisor">
+                            Supervisor — Casework Approvals & Reviews
+                          </SelectItem>
+                          <SelectItem value="director_manager">
+                            Director — Departmental Leadership & Operations
+                          </SelectItem>
+                        </SelectGroup>
+                        <SelectSeparator />
+                        <SelectGroup>
+                          <SelectLabel className="text-xs font-semibold text-muted-foreground px-2 py-1 uppercase tracking-wider">
+                            All Other Agency Roles
+                          </SelectLabel>
+                          {AVAILABLE_ROLES.filter((r) => !["mentor", "caseworker", "casework", "admin_assistant", "supervisor", "director_manager", "director"].includes(r.key)).map((r) => (
+                            <SelectItem key={r.key} value={r.key}>
+                              {r.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </>
+                    ) : (
+                      AVAILABLE_ROLES.map((r) => (
+                        <SelectItem key={r.key} value={r.key}>
+                          {r.label}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 <p className="text-[11px] text-muted-foreground">

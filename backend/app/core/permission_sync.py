@@ -34,8 +34,8 @@ BASELINE_STAFF_DATA = [
     },
     {
         "email": "m.osoup@crbcl.org",
-        "full_name": "Michael O’Soup",
-        "display_name": "Michael O’Soup",
+        "full_name": "Michael O'Soup",
+        "display_name": "Michael O'Soup",
         "department": "Child Welfare Intake",
         "roles": ["caseworker"],
         "default_pin": "123456",
@@ -94,6 +94,70 @@ BASELINE_STAFF_DATA = [
         "roles": ["caseworker"],
         "default_pin": "123456",
         "password": "CRBCLStaff2025!",
+    },
+    # ── Post-Majority (Young Adults) Operational Staff ───────────
+    {
+        "email": "tobi.heavyrunner@redbearlodge.ca",
+        "full_name": "Tobi Heavy Runner",
+        "display_name": "Tobi Heavy Runner",
+        "department": "Post-Majority (Young Adults)",
+        "roles": ["director_manager"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
+    },
+    {
+        "email": "tracy.delorme@redbearlodge.ca",
+        "full_name": "Tracy Delorme",
+        "display_name": "Tracy Delorme",
+        "department": "Post-Majority (Young Adults)",
+        "roles": ["supervisor"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
+    },
+    {
+        "email": "dean.sparvier@redbearlodge.ca",
+        "full_name": "Dean Sparvier",
+        "display_name": "Dean Sparvier",
+        "department": "Post-Majority (Young Adults)",
+        "roles": ["caseworker"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
+    },
+    {
+        "email": "chasity.delorme@redbearlodge.ca",
+        "full_name": "Chasity Delorme",
+        "display_name": "Chasity Delorme",
+        "department": "Post-Majority (Young Adults)",
+        "roles": ["caseworker"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
+    },
+    {
+        "email": "andrea.tanner@redbearlodge.ca",
+        "full_name": "Andrea Tanner",
+        "display_name": "Andrea Tanner",
+        "department": "Post-Majority (Young Adults)",
+        "roles": ["caseworker"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
+    },
+    {
+        "email": "trevor.desjarlais@redbearlodge.ca",
+        "full_name": "Trevor Desjarlais",
+        "display_name": "Trevor Desjarlais",
+        "department": "Post-Majority (Young Adults)",
+        "roles": ["mentor"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
+    },
+    {
+        "email": "denise.pelletier@redbearlodge.ca",
+        "full_name": "Denise Pelletier",
+        "display_name": "Denise Pelletier",
+        "department": "Post-Majority (Young Adults)",
+        "roles": ["admin_assistant"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
     },
 ]
 
@@ -196,6 +260,7 @@ async def sync_system_permissions() -> None:
             for staff in BASELINE_STAFF_DATA:
                 norm_email = staff["email"].strip().lower()
                 user_res = await db.execute(select(User).where(User.email_normalized == norm_email))
+                user_obj = user_res.scalar_one_or_none()
                 is_new_user = False
                 if not user_obj:
                     is_new_user = True

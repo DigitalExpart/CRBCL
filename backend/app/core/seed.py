@@ -21,7 +21,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.compiler import compiles
 
 from app.auth.security import hash_password
-from app.core.config import get_settings
 from app.core.database import async_session_factory
 
 
@@ -159,6 +158,18 @@ ROLES_DATA = [
         "key": "navigator",
         "name": "Navigator / System Navigation Specialist",
         "description": "System navigation support, community referral coordination, and intake reception.",
+        "is_system": True,
+    },
+    {
+        "key": "mentor",
+        "name": "Mentor",
+        "description": "Youth mentor and life skills guide supporting young adults transitioning out of care in Post-Majority.",
+        "is_system": True,
+    },
+    {
+        "key": "admin_assistant",
+        "name": "Administrative Assistant",
+        "description": "Departmental administrative assistant supporting casework documentation, scheduling, and operations in Post-Majority.",
         "is_system": True,
     },
     {
@@ -445,6 +456,11 @@ PERMISSIONS_DATA = [
     {"key": Permissions.DOCUMENT_READ, "name": "Read Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_UPLOAD, "name": "Upload Documents", "category": "documents"},
     {"key": Permissions.DOCUMENT_DELETE, "name": "Delete Documents", "category": "documents"},
+    {"key": Permissions.DOCUMENT_RESTRICT, "name": "Configure Item-Level Access Restrictions", "category": "documents"},
+    {"key": Permissions.DOCUMENT_APPROVE_ACCESS, "name": "Approve Document Access Requests", "category": "documents"},
+    # Company Policy
+    {"key": Permissions.POLICY_READ, "name": "Read Company Policies", "category": "policy"},
+    {"key": Permissions.POLICY_WRITE, "name": "Edit Company Policy Content", "category": "policy"},
     # Administration
     {"key": Permissions.ADMIN_USERS_MANAGE, "name": "Manage Users", "category": "admin"},
     {"key": Permissions.ADMIN_ROLES_MANAGE, "name": "Manage Roles", "category": "admin"},
@@ -550,6 +566,9 @@ ROLE_PERMISSIONS_MAP = {
     "executive_director": [p["key"] for p in PERMISSIONS_DATA],
     "director_manager": [
         Permissions.HR_DASHBOARD_READ,
+        Permissions.DOCUMENT_RESTRICT,
+        Permissions.DOCUMENT_APPROVE_ACCESS,
+        Permissions.POLICY_READ,
         Permissions.HR_EMPLOYEE_READ,
         Permissions.HR_CERTIFICATION_READ,
         Permissions.NAVIGATOR_DASHBOARD_READ,
@@ -693,6 +712,9 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "supervisor": [
         Permissions.NAVIGATOR_DASHBOARD_READ,
+        Permissions.DOCUMENT_RESTRICT,
+        Permissions.DOCUMENT_APPROVE_ACCESS,
+        Permissions.POLICY_READ,
         Permissions.INTAKE_READ,
         Permissions.INTAKE_CREATE,
         Permissions.INTAKE_UPDATE,
@@ -846,6 +868,7 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "caseworker": [
         Permissions.PUBLIC_INTAKE_READ,
+        Permissions.POLICY_READ,
         Permissions.PUBLIC_INTAKE_NOTE,
         Permissions.INTAKE_READ,
         Permissions.INTAKE_CREATE,
@@ -975,6 +998,30 @@ ROLE_PERMISSIONS_MAP = {
         Permissions.DOCUMENT_UPLOAD,
         Permissions.TIMELINE_READ,
     ],
+    "mentor": [
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_SUBMIT,
+        Permissions.CLIENT_CULTURAL_READ,
+        Permissions.CLIENT_DOCUMENTS_READ,
+        Permissions.CASE_READ,
+        Permissions.CASE_NOTE_READ,
+        Permissions.CASE_NOTE_CREATE,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.POLICY_READ,
+        Permissions.TIMELINE_READ,
+    ],
+    "admin_assistant": [
+        Permissions.CLIENT_READ,
+        Permissions.CLIENT_DOCUMENTS_READ,
+        Permissions.CASE_READ,
+        Permissions.DOCUMENT_READ,
+        Permissions.DOCUMENT_UPLOAD,
+        Permissions.POLICY_READ,
+        Permissions.TIMELINE_READ,
+        Permissions.INTAKE_READ,
+        Permissions.PUBLIC_INTAKE_READ,
+    ],
     "case_aide": [
         Permissions.CLIENT_READ,
         Permissions.CLIENT_SUBMIT,
@@ -1001,6 +1048,7 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "finance_staff": [
         Permissions.CLIENT_READ,
+        Permissions.POLICY_READ,
         Permissions.CLIENT_IDENTIFIERS_READ,
         Permissions.PROVIDER_READ,
         Permissions.DOCUMENT_READ,
@@ -1027,6 +1075,7 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "hr_staff": [
         Permissions.ADMIN_USERS_MANAGE,
+        Permissions.POLICY_READ,
         Permissions.ADMIN_TEAMS_MANAGE,
         Permissions.HR_DASHBOARD_READ,
         Permissions.HR_EMPLOYEE_READ,
@@ -1167,6 +1216,9 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "resource_supervisor": [
         Permissions.CLIENT_READ,
+        Permissions.DOCUMENT_RESTRICT,
+        Permissions.DOCUMENT_APPROVE_ACCESS,
+        Permissions.POLICY_READ,
         Permissions.CLIENT_SUBMIT,
         Permissions.CLIENT_APPROVE,
         Permissions.CLIENT_RETURN,
@@ -1231,6 +1283,9 @@ ROLE_PERMISSIONS_MAP = {
     ],
     "resource_director": [
         Permissions.CLIENT_READ,
+        Permissions.DOCUMENT_RESTRICT,
+        Permissions.DOCUMENT_APPROVE_ACCESS,
+        Permissions.POLICY_READ,
         Permissions.CLIENT_SUBMIT,
         Permissions.CLIENT_APPROVE,
         Permissions.CLIENT_RETURN,

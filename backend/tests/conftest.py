@@ -137,6 +137,14 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     # Create Office Coordinator Role
     oc_role = Role(key="office_coordinator", name="Office Coordinator", is_system=True)
     db_session.add(oc_role)
+
+    # Create Mentor Role
+    mentor_role = Role(key="mentor", name="Mentor", is_system=True)
+    db_session.add(mentor_role)
+
+    # Create Admin Assistant Role
+    admin_assistant_role = Role(key="admin_assistant", name="Administrative Assistant", is_system=True)
+    db_session.add(admin_assistant_role)
     await db_session.flush()
 
     # Grant Executive Director ALL permissions

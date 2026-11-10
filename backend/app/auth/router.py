@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
 import json
 import logging
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import func, select
@@ -354,6 +354,11 @@ VALID_PLATFORM_ROLES: frozenset[str] = frozenset({
     "board_member",
     "navigator",
     "office_coordinator",
+    "mentor",
+    "admin_assistant",
+    "admin assistant",
+    "casework",
+    "director",
 })
 
 
@@ -367,7 +372,18 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
             detail={"error": {"code": "EMAIL_EXISTS", "message": "An account with this email already exists"}},
         )
 
-    requested_role = (body.requested_role or "caseworker").strip().lower()
+    raw_role = (body.requested_role or "caseworker").strip().lower()
+    if raw_role not in VALID_PLATFORM_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": {"code": "INVALID_ROLE", "message": f"Requested role '{raw_role}' is not a valid platform role"}},
+        )
+    role_norm_map = {
+        "casework": "caseworker",
+        "director": "director_manager",
+        "admin assistant": "admin_assistant",
+    }
+    requested_role = role_norm_map.get(raw_role, raw_role)
     if requested_role not in VALID_PLATFORM_ROLES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

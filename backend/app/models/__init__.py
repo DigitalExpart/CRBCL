@@ -46,7 +46,13 @@ from app.models.client import Client, ClientApprovalHistory  # noqa: F401
 from app.models.config import LookupList, LookupValue, SystemConfig  # noqa: F401
 from app.models.department_update import DepartmentExecutiveUpdate, DepartmentExecutiveUpdateHistory  # noqa: F401
 from app.models.device import MobileDevice  # noqa: F401
-from app.models.document import Document, DocumentAccessEvent, DocumentLink, DocumentVersion  # noqa: F401
+from app.models.document import (  # noqa: F401
+    Document,
+    DocumentAccessEvent,
+    DocumentLink,
+    DocumentVersion,
+    ItemAccessRequest,
+)
 from app.models.executive_initiative import (  # noqa: F401
     ExecutiveInitiative,
     ExecutiveInitiativeHistory,
@@ -169,6 +175,7 @@ from app.models.plan import (  # noqa: F401
     PlanStrength,
     PlanVersion,
 )
+from app.models.policy import CompanyPolicy, CompanyPolicyVersion  # noqa: F401
 from app.models.provider import (  # noqa: F401
     ClientProvider,
     Provider,

@@ -146,6 +146,12 @@ class Permissions(StrEnum):
     DOCUMENT_READ = "document.read"
     DOCUMENT_UPLOAD = "document.upload"
     DOCUMENT_DELETE = "document.delete"
+    DOCUMENT_RESTRICT = "document.restrict"
+    DOCUMENT_APPROVE_ACCESS = "document.approve_access"
+
+    # Company Policy permissions
+    POLICY_READ = "policy.read"
+    POLICY_WRITE = "policy.write"
 
     # Assessment Engine permissions (Phase 5)
     ASSESSMENT_READ = "assessment.read"

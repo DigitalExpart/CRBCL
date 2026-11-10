@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/api";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Lock } from "lucide-react";
+import { ChevronRight, Lock, Activity, Heart } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 
 export const TEAMS = [
@@ -166,6 +166,63 @@ export default function Teams() {
             </button>
           );
         })}
+      </div>
+
+      {/* Preliminary Department Shells */}
+      <div className="pt-8 border-t border-border space-y-4">
+        <div>
+          <h2 className="text-lg font-bold font-heading text-foreground">Preliminary Department Shells</h2>
+          <p className="text-xs text-muted-foreground">
+            This is a preliminary department dashboard shell. Department-specific workflows, information, reporting, and access requirements are pending confirmation.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <button
+            onClick={() => navigate("/nursing")}
+            className="bg-card rounded-xl border border-border p-5 text-left transition-all hover:shadow-md hover:border-primary/30 cursor-pointer group"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-xl bg-blue-700 flex items-center justify-center flex-shrink-0 text-white">
+                <Activity className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground text-sm leading-tight">Nursing</p>
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Shell</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary flex-shrink-0 transition-colors" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  This is a preliminary department dashboard shell. Department-specific workflows, information, reporting, and access requirements are pending confirmation.
+                </p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate("/therapy")}
+            className="bg-card rounded-xl border border-border p-5 text-left transition-all hover:shadow-md hover:border-primary/30 cursor-pointer group"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-xl bg-teal-700 flex items-center justify-center flex-shrink-0 text-white">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground text-sm leading-tight">Therapy</p>
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Shell</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary flex-shrink-0 transition-colors" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  This is a preliminary department dashboard shell. Department-specific workflows, information, reporting, and access requirements are pending confirmation.
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
   );

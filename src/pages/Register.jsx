@@ -226,7 +226,13 @@ export default function Register() {
             <select
               id="department"
               value={department}
-              onChange={(e) => setDepartment(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setDepartment(val);
+                if (val && val.toLowerCase().includes("post") && !["mentor", "caseworker", "casework", "admin_assistant", "supervisor", "director_manager", "director"].includes(requestedRole)) {
+                  setRequestedRole("caseworker");
+                }
+              }}
               className="flex h-12 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               required
             >
@@ -255,15 +261,34 @@ export default function Register() {
               className="flex h-12 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               required
             >
-              {ROLES.map((r) => (
-                <option key={r.key} value={r.key}>
-                  {r.label}
-                </option>
-              ))}
+              {department && department.toLowerCase().includes("post") ? (
+                <>
+                  <optgroup label="Post Majority Staff Positions">
+                    <option value="mentor">Mentor — Youth Mentorship & Life Skills Support</option>
+                    <option value="caseworker">Casework / Caseworker — Direct Client & Case Management</option>
+                    <option value="admin_assistant">Admin Assistant — Departmental Operations & Document Support</option>
+                    <option value="supervisor">Supervisor — Casework Approvals & Reviews</option>
+                    <option value="director_manager">Director — Departmental Leadership & Operations</option>
+                  </optgroup>
+                  <optgroup label="All Other Agency Roles">
+                    {ROLES.filter((r) => !["mentor", "caseworker", "casework", "admin_assistant", "supervisor", "director_manager", "director"].includes(r.key)).map((r) => (
+                      <option key={r.key} value={r.key}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                </>
+              ) : (
+                ROLES.map((r) => (
+                  <option key={r.key} value={r.key}>
+                    {r.label}
+                  </option>
+                ))
+              )}
             </select>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Select your staff position (e.g. Front Desk, Office Coordinator, Caseworker, Supervisor). Role selection is reviewed and approved by an IT Administrator.
+            Select your staff position (e.g. Mentor, Caseworker, Admin Assistant, Supervisor, Director). Role selection is reviewed and approved by an IT Administrator.
           </p>
         </div>
 

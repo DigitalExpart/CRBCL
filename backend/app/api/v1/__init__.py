@@ -42,6 +42,7 @@ from app.api.v1.placement_homes import router as placement_homes_router
 from app.api.v1.placement_matching import router as placement_matching_router
 from app.api.v1.placements import router as placements_router
 from app.api.v1.plans import router as plans_router
+from app.api.v1.policies import router as policies_router
 from app.api.v1.providers import router as providers_router
 from app.api.v1.qa import router as qa_router
 from app.api.v1.referrals import router as referrals_router
@@ -118,5 +119,6 @@ api_v1_router.include_router(front_desk_router)
 api_v1_router.include_router(ceo_dashboard_router)
 api_v1_router.include_router(board_dashboard_router)
 api_v1_router.include_router(dashboard_control_router)
+api_v1_router.include_router(policies_router)
 api_v1_router.include_router(operations_router)
 api_v1_router.include_router(org_ops_router, prefix="/org-ops", tags=["Organizational Operations"])
