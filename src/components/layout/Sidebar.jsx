@@ -92,6 +92,7 @@ const getNavItems = (userRoles = [], userEmail = "", userPermissions = []) => {
     { label: "Team Calendar", icon: CalendarDays, path: "/schedule/team" },
     { label: "Staffing Facilitator", icon: UserCheck, path: "/staffing" },
     { label: "Team Dashboards", icon: LayoutGrid, path: "/teams" },
+    { label: "Company Policy", icon: BookOpen, path: "/company-policy" },
     { label: "Cases", icon: FolderOpen, path: "/cases" },
     { label: "Placement Homes", icon: Home, path: "/placement-homes" },
     { label: "Resource Team", icon: Building, path: "/resource-team" },

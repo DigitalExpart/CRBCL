@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/api";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Lock, Activity, Heart } from "lucide-react";
+import { ChevronRight, Lock, Activity, Heart, BookOpen, FileText } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
 
 export const TEAMS = [
   { id: 1, name: "Executive Leadership", short: "Executive Leadership Team", color: "bg-red-900", responsibilities: "Strategic planning, governance, partnerships, funding, organizational leadership." },
@@ -29,6 +30,7 @@ export const TEAMS = [
   { id: 22, name: "Post Majority", short: "Post Majority (Young Adult) Team", color: "bg-indigo-800", responsibilities: "Young adult transition support, independent living skills, aftercare services, life skills for youth aging out of care." },
   { id: 23, name: "Office Coordination & Facilities", short: "Office Coordination & Operations Team", color: "bg-teal-800", responsibilities: "Operational requests, fleet coordination, vehicle reservations, key custody, room booking, and facilities supplies.", directRoute: "/office-coordinator" },
   { id: 24, name: "Front Desk / First Impression", short: "Front Desk & Reception Triage Team", color: "bg-amber-700", responsibilities: "Community reception, public inquiry triage, Google Forms intake processing, visitor coordination, and referral routing.", directRoute: "/front-desk" },
+  { id: 25, name: "Policy & Data", short: "Policy & Data Team", color: "bg-purple-800", responsibilities: "Operational governance, agency policy lifecycle, data analytics, and company policy management.", directRoute: "/policy-data" },
 ];
 
 const getStoredUser = () => {
@@ -104,13 +106,36 @@ export default function Teams() {
     hasAll ||
     access.some((a) => String(a) === String(teamId)) ||
     (teamId === 23 && (isOfficeCoordinator || permissions.includes("office_coordinator.dashboard.read") || permissions.includes("operations.request.read"))) ||
-    (teamId === 24 && (isFrontDesk || hasPublicIntakeRead || permissions.includes("front_desk.dashboard.read")));
+    (teamId === 24 && (isFrontDesk || hasPublicIntakeRead || permissions.includes("front_desk.dashboard.read"))) ||
+    (teamId === 25 && (roles.includes("policy") || roles.includes("research_and_policy_analyst") || permissions.includes("policy.read") || permissions.includes("policy.write")));
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Team Dashboards"
         subtitle="Select a team to view their operational dashboard"
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/policy-data")}
+              className="gap-1.5"
+            >
+              <BookOpen className="w-4 h-4" />
+              Policy Dashboard
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/company-policy")}
+              className="gap-1.5"
+            >
+              <FileText className="w-4 h-4" />
+              Company Policy
+            </Button>
+          </div>
+        }
       />
       {!isAdmin && !hasAll && access.length === 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-3">
@@ -168,12 +193,12 @@ export default function Teams() {
         })}
       </div>
 
-      {/* Preliminary Department Shells */}
+      {/* Department Dashboards & Specialized Shells */}
       <div className="pt-8 border-t border-border space-y-4">
         <div>
-          <h2 className="text-lg font-bold font-heading text-foreground">Preliminary Department Shells</h2>
+          <h2 className="text-lg font-bold font-heading text-foreground">Department Dashboards & Specialized Shells</h2>
           <p className="text-xs text-muted-foreground">
-            This is a preliminary department dashboard shell. Department-specific workflows, information, reporting, and access requirements are pending confirmation.
+            Specialized department operational dashboards and preliminary service shells for agency programs.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -218,6 +243,29 @@ export default function Teams() {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                   This is a preliminary department dashboard shell. Department-specific workflows, information, reporting, and access requirements are pending confirmation.
+                </p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate("/policy-data")}
+            className="bg-card rounded-xl border border-border p-5 text-left transition-all hover:shadow-md hover:border-primary/30 cursor-pointer group"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-xl bg-purple-700 flex items-center justify-center flex-shrink-0 text-white">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground text-sm leading-tight">Policy & Data</p>
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-700 dark:text-purple-300 font-semibold">Department</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary flex-shrink-0 transition-colors" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  Operational governance, agency policy lifecycle, data analytics, and company policy management.
                 </p>
               </div>
             </div>

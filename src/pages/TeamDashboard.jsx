@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import React, { useState, useEffect } from "react";
 import { api } from "@/api";
 import { useParams, Link, Navigate } from "react-router-dom";
@@ -37,6 +38,7 @@ const TEAM_FOCUS = {
   22: { cases: true, clients: true, programs: true, appointments: true, label: "Young adult transition & aftercare" },
   23: { operations: true, label: "Office Coordination & Facilities Operations" },
   24: { front_desk: true, label: "Front Desk & Public Intake Reception" },
+  25: { cases: true, documents: true, label: "Policy governance, data quality & compliance" },
 };
 
 export default function TeamDashboard() {
@@ -157,6 +159,9 @@ export default function TeamDashboard() {
   if (teamId === 23) {
     return <Navigate to="/office-coordinator" replace />;
   }
+  if (teamId === 25) {
+    return <Navigate to="/policy-data" replace />;
+  }
 
   if (!team) return <div className="p-8 text-center text-muted-foreground">Team not found.</div>;
 
@@ -235,6 +240,14 @@ export default function TeamDashboard() {
         <PageHeader
           title={team.short}
           subtitle={focus.label || team.responsibilities}
+          actions={
+            <Link to="/company-policy">
+              <Button variant="outline" size="sm">
+                <BookOpen className="w-4 h-4 mr-1.5" />
+                Agency Policies
+              </Button>
+            </Link>
+          }
         />
       </div>
 
