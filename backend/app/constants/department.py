@@ -8,7 +8,6 @@ DEPARTMENTS = [
     "Resource Team",
     "Growing Up Well (Protection Services)",
     "Enhancement & Preservation (Prevention Services)",
-    "Post Majority",
     "Post-Majority (Young Adults)",
     "Culture & Traditional Healing",
     "Early Learning / Daycare",
@@ -24,6 +23,7 @@ DEPARTMENTS = [
     "Communications",
     "Governance & Executive Leadership",
     # Legacy aliases retained for backward-compatible test data
+    "Post Majority",
     "Case Management",
     "Administration",
 ]

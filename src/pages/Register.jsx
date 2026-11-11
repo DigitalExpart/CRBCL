@@ -231,6 +231,8 @@ export default function Register() {
                 setDepartment(val);
                 if (val && val.toLowerCase().includes("post") && !["mentor", "caseworker", "casework", "admin_assistant", "supervisor", "director_manager", "director"].includes(requestedRole)) {
                   setRequestedRole("caseworker");
+                } else if (val && val.toLowerCase().includes("policy") && !["policy_staff", "policy_analyst", "policy_manager", "admin_assistant", "director_manager"].includes(requestedRole)) {
+                  setRequestedRole("policy_staff");
                 }
               }}
               className="flex h-12 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -263,7 +265,7 @@ export default function Register() {
             >
               {department && department.toLowerCase().includes("post") ? (
                 <>
-                  <optgroup label="Post Majority Staff Positions">
+                  <optgroup label="Post-Majority Staff Positions">
                     <option value="mentor">Mentor — Youth Mentorship & Life Skills Support</option>
                     <option value="caseworker">Casework / Caseworker — Direct Client & Case Management</option>
                     <option value="admin_assistant">Admin Assistant — Departmental Operations & Document Support</option>
@@ -272,6 +274,23 @@ export default function Register() {
                   </optgroup>
                   <optgroup label="All Other Agency Roles">
                     {ROLES.filter((r) => !["mentor", "caseworker", "casework", "admin_assistant", "supervisor", "director_manager", "director"].includes(r.key)).map((r) => (
+                      <option key={r.key} value={r.key}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                </>
+              ) : department && department.toLowerCase().includes("policy") ? (
+                <>
+                  <optgroup label="Policy & Data Staff Positions">
+                    <option value="policy_staff">Policy Staff — Policy Analysis, Governance & Documentation</option>
+                    <option value="policy_analyst">Research & Policy Analyst — Policy & Data Governance</option>
+                    <option value="policy_manager">Policy Manager — Departmental Leadership & Approvals</option>
+                    <option value="admin_assistant">Admin Assistant — Departmental Administration & Document Support</option>
+                    <option value="director_manager">Director / Manager — Departmental Leadership</option>
+                  </optgroup>
+                  <optgroup label="All Other Agency Roles">
+                    {ROLES.filter((r) => !["policy_staff", "policy_analyst", "policy_manager", "admin_assistant", "director_manager"].includes(r.key)).map((r) => (
                       <option key={r.key} value={r.key}>
                         {r.label}
                       </option>

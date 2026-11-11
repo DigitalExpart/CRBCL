@@ -13,6 +13,12 @@ export const POST_MAJORITY_ROLES = [
   { key: "director_manager", label: "Director — Departmental Leadership & Operations" },
 ];
 
+export const POLICY_DATA_ROLES = [
+  { key: "policy_staff", label: "Policy Staff — Policy Analysis, Governance & Documentation" },
+  { key: "policy_analyst", label: "Research & Policy Analyst — Policy & Data Governance" },
+  { key: "policy_manager", label: "Policy Manager — Departmental Leadership & Approvals" },
+];
+
 export const ROLES = [
   // ── Post Majority & Core Practice Staff Roles ───────────────────
   { key: "mentor", label: "Mentor — Youth Mentorship & Life Skills Support" },
@@ -22,6 +28,11 @@ export const ROLES = [
   { key: "director_manager", label: "Director / Manager — Departmental Leadership & Operations" },
   { key: "casework", label: "Casework — Direct Client & Case Management" },
   { key: "director", label: "Director — Departmental Leadership" },
+
+  // ── Policy & Data Staff Roles ──────────────────────────────────
+  { key: "policy_staff", label: "Policy Staff — Policy Analysis, Governance & Documentation" },
+  { key: "policy_analyst", label: "Research & Policy Analyst — Policy & Data Governance" },
+  { key: "policy_manager", label: "Policy Manager — Departmental Leadership & Approvals" },
 
   // ── Operational & Specialized Unit Roles ────────────────────────
   { key: "front_desk", label: "Front Desk / First Impression — Intake Reception & Form Triage" },

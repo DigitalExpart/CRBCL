@@ -122,11 +122,25 @@ def _build_user_info(user: User, prefs: list[UserPreference] | None = None) -> U
         or "admin" in (user.email or "").lower()
         or getattr(user, "is_system", False)
         or "admin.users.manage" in permissions
-        or any(r in roles for r in ["executive_director", "it_admin", "director_manager", "admin", "ceo"])
+        or any(r in roles for r in ["executive_director", "it_admin",
+    "policy_staff",
+    "policy_analyst",
+    "policy_manager",
+    "policy",
+    "policy staff",
+    "policy analyst",
+    "policy manager", "director_manager", "admin", "ceo"])
     )
 
     if user.email == "admin@crbcl.ca" or getattr(user, "is_system", False):
-        for sys_role in ["it_admin", "executive_director", "ceo"]:
+        for sys_role in ["it_admin",
+    "policy_staff",
+    "policy_analyst",
+    "policy_manager",
+    "policy",
+    "policy staff",
+    "policy analyst",
+    "policy manager", "executive_director", "ceo"]:
             if sys_role not in roles:
                 roles.append(sys_role)
 
@@ -383,6 +397,13 @@ async def change_password(
 
 VALID_PLATFORM_ROLES: frozenset[str] = frozenset({
     "it_admin",
+    "policy_staff",
+    "policy_analyst",
+    "policy_manager",
+    "policy",
+    "policy staff",
+    "policy analyst",
+    "policy manager",
     "executive_director",
     "ceo",
     "supervisor",
@@ -429,6 +450,10 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
         "casework": "caseworker",
         "director": "director_manager",
         "admin assistant": "admin_assistant",
+        "policy": "policy_staff",
+        "policy staff": "policy_staff",
+        "policy analyst": "policy_analyst",
+        "policy manager": "policy_manager",
     }
     requested_role = role_norm_map.get(raw_role, raw_role)
     if requested_role not in VALID_PLATFORM_ROLES:
@@ -461,7 +486,14 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
             select(User.id)
             .join(UserRole, UserRole.user_id == User.id)
             .join(Role, Role.id == UserRole.role_id)
-            .where(Role.key.in_(["executive_director", "it_admin", "director_manager"]), User.is_active.is_(True))
+            .where(Role.key.in_(["executive_director", "it_admin",
+    "policy_staff",
+    "policy_analyst",
+    "policy_manager",
+    "policy",
+    "policy staff",
+    "policy analyst",
+    "policy manager", "director_manager"]), User.is_active.is_(True))
         )
         admin_res = await db.execute(admin_query)
         admin_ids = set(admin_res.scalars().all())

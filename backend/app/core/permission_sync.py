@@ -159,6 +159,25 @@ BASELINE_STAFF_DATA = [
         "default_pin": "123456",
         "password": "CRBCLStaff2026!",
     },
+    # ── Policy & Data Staff ──────────────────────────────────────────
+    {
+        "email": "angela.yellowbird@redbearlodge.ca",
+        "full_name": "Angela Yellow Bird",
+        "display_name": "Angela Yellow Bird",
+        "department": "Policy & Data",
+        "roles": ["policy_manager"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
+    },
+    {
+        "email": "thomas.favel@redbearlodge.ca",
+        "full_name": "Thomas Favel",
+        "display_name": "Thomas Favel",
+        "department": "Policy & Data",
+        "roles": ["policy_analyst"],
+        "default_pin": "123456",
+        "password": "CRBCLStaff2026!",
+    },
 ]
 
 

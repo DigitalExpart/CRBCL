@@ -744,6 +744,7 @@ export default function AdminDashboard() {
                               else if (r === "director_manager" || r === "director") badgeColor = "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-bold";
                               else if (r === "supervisor") badgeColor = "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-semibold";
                               else if (r === "mentor") badgeColor = "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-semibold";
+                              else if (r === "policy_staff" || r === "policy_analyst" || r === "policy_manager") badgeColor = "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-semibold";
                               else if (r === "admin_assistant") badgeColor = "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 font-semibold";
                               else if (r === "caseworker" || r === "casework") badgeColor = "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300";
                               else if (r.startsWith("resource_")) badgeColor = "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-300/40";

@@ -145,6 +145,14 @@ async def seed_roles_and_permissions(db_session: AsyncSession):
     # Create Admin Assistant Role
     admin_assistant_role = Role(key="admin_assistant", name="Administrative Assistant", is_system=True)
     db_session.add(admin_assistant_role)
+
+    # Create Policy Roles
+    policy_staff_role = Role(key="policy_staff", name="Policy Staff", is_system=True)
+    db_session.add(policy_staff_role)
+    policy_analyst_role = Role(key="policy_analyst", name="Research & Policy Analyst", is_system=True)
+    db_session.add(policy_analyst_role)
+    policy_manager_role = Role(key="policy_manager", name="Policy Manager", is_system=True)
+    db_session.add(policy_manager_role)
     await db_session.flush()
 
     # Grant Executive Director ALL permissions

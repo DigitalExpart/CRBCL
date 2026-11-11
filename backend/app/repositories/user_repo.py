@@ -79,6 +79,10 @@ class UserRepository(BaseRepository[User]):
             "casework": "caseworker",
             "director": "director_manager",
             "admin assistant": "admin_assistant",
+            "policy": "policy_staff",
+            "policy staff": "policy_staff",
+            "policy analyst": "policy_analyst",
+            "policy manager": "policy_manager",
         }
         normalized_keys = [role_norm.get((rk or "").strip().lower(), (rk or "").strip().lower()) for rk in role_keys]
         roles_res = await self.db.execute(select(Role).where(Role.key.in_(normalized_keys)))

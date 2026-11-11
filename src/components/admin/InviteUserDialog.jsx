@@ -116,6 +116,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
     if (roleKey === "supervisor") return "/teams (Team Dashboard — Casework Approvals)";
     if (roleKey === "mentor") return "/teams (Post Majority Team Dashboard — Youth Mentorship)";
     if (roleKey === "admin_assistant") return "/teams (Post Majority Team Dashboard — Administrative Support)";
+    if (roleKey === "policy_staff" || roleKey === "policy_analyst" || roleKey === "policy_manager") return "/policy-data (Policy & Data Dashboard)";
     if (roleKey === "it_admin") return "/admin (IT Admin Portal)";
     if (roleKey && roleKey.startsWith("resource_")) return "/resource-team (Resource Team Dashboard)";
     return "/ (Staff Dashboard)";
@@ -219,6 +220,14 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                     setDepartment(val);
                     if (val && val.toLowerCase().includes("post") && !teamAccess.includes("22") && !teamAccess.includes("all")) {
                       setTeamAccess([...teamAccess, "22"]);
+                      if (!["mentor", "caseworker", "casework", "admin_assistant", "supervisor", "director_manager", "director"].includes(role)) {
+                        setRole("caseworker");
+                      }
+                    } else if (val && val.toLowerCase().includes("policy") && !teamAccess.includes("25") && !teamAccess.includes("all")) {
+                      setTeamAccess([...teamAccess, "25"]);
+                      if (!["policy_staff", "policy_analyst", "policy_manager", "admin_assistant", "director_manager"].includes(role)) {
+                        setRole("policy_staff");
+                      }
                     }
                   }}
                   disabled={loading}
@@ -235,7 +244,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                   </SelectContent>
                 </Select>
                 <p className="text-[11px] text-muted-foreground">
-                  Operational department (e.g. Post Majority, Resource Team). Distinct from role.
+                  Operational department (e.g. Post-Majority (Young Adults), Policy & Data, Resource Team). Distinct from role.
                 </p>
               </div>
 
@@ -250,7 +259,7 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                       <>
                         <SelectGroup>
                           <SelectLabel className="text-xs font-bold text-primary px-2 py-1 uppercase tracking-wider">
-                            Post Majority Staff Roles
+                            Post-Majority Staff Roles
                           </SelectLabel>
                           <SelectItem value="mentor">
                             Mentor — Youth Mentorship & Life Skills Support
@@ -274,6 +283,40 @@ export default function InviteUserDialog({ open, onOpenChange, onInvited }) {
                             All Other Agency Roles
                           </SelectLabel>
                           {AVAILABLE_ROLES.filter((r) => !["mentor", "caseworker", "casework", "admin_assistant", "supervisor", "director_manager", "director"].includes(r.key)).map((r) => (
+                            <SelectItem key={r.key} value={r.key}>
+                              {r.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </>
+                    ) : department && department.toLowerCase().includes("policy") ? (
+                      <>
+                        <SelectGroup>
+                          <SelectLabel className="text-xs font-bold text-primary px-2 py-1 uppercase tracking-wider">
+                            Policy & Data Staff Roles
+                          </SelectLabel>
+                          <SelectItem value="policy_staff">
+                            Policy Staff — Policy Analysis, Governance & Documentation
+                          </SelectItem>
+                          <SelectItem value="policy_analyst">
+                            Research & Policy Analyst — Policy & Data Governance
+                          </SelectItem>
+                          <SelectItem value="policy_manager">
+                            Policy Manager — Departmental Leadership & Approvals
+                          </SelectItem>
+                          <SelectItem value="admin_assistant">
+                            Admin Assistant — Departmental Operations & Document Support
+                          </SelectItem>
+                          <SelectItem value="director_manager">
+                            Director / Manager — Departmental Leadership
+                          </SelectItem>
+                        </SelectGroup>
+                        <SelectSeparator />
+                        <SelectGroup>
+                          <SelectLabel className="text-xs font-semibold text-muted-foreground px-2 py-1 uppercase tracking-wider">
+                            All Other Agency Roles
+                          </SelectLabel>
+                          {AVAILABLE_ROLES.filter((r) => !["policy_staff", "policy_analyst", "policy_manager", "admin_assistant", "director_manager"].includes(r.key)).map((r) => (
                             <SelectItem key={r.key} value={r.key}>
                               {r.label}
                             </SelectItem>

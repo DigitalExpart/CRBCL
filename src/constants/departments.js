@@ -9,7 +9,6 @@ export const DEPARTMENTS = [
   "Resource Team",
   "Growing Up Well (Protection Services)",
   "Enhancement & Preservation (Prevention Services)",
-  "Post Majority",
   "Post-Majority (Young Adults)",
   "Culture & Traditional Healing",
   "Early Learning / Daycare",

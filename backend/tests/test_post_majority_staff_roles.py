@@ -83,7 +83,7 @@ async def test_admin_create_post_majority_staff_accounts(client, setup_post_majo
                 "full_name": name,
                 "email": email,
                 "password": "TemporaryPassword2026!",
-                "department": "Post Majority",
+                "department": "Post-Majority (Young Adults)",
                 "role_keys": [role_key],
                 "team_access": ["22"],
             },
@@ -92,7 +92,7 @@ async def test_admin_create_post_majority_staff_accounts(client, setup_post_majo
         data = resp.json()
         assert data["is_active"] is True
         assert data["is_verified"] is True
-        assert data["department"] == "Post Majority"
+        assert data["department"] == "Post-Majority (Young Adults)"
         expected_role = "caseworker" if role_key == "casework" else ("director_manager" if role_key == "director" else role_key)
         assert expected_role in data["roles"], f"Expected {expected_role} in roles {data['roles']}"
 
@@ -114,3 +114,14 @@ async def test_post_majority_staff_seeded_in_baseline():
         staff = baseline_map[email.lower()]
         assert expected_role in staff["roles"], f"Expected role {expected_role} for {email}, got {staff['roles']}"
         assert staff.get("department") == "Post-Majority (Young Adults)"
+
+    # Verify Policy and Data staff
+    policy_emails = {
+        "angela.yellowbird@redbearlodge.ca": "policy_manager",
+        "thomas.favel@redbearlodge.ca": "policy_analyst",
+    }
+    for p_email, p_role in policy_emails.items():
+        assert p_email.lower() in baseline_map, f"Missing policy staff {p_email} in baseline"
+        p_staff = baseline_map[p_email.lower()]
+        assert p_role in p_staff["roles"], f"Expected role {p_role} for {p_email}, got {p_staff['roles']}"
+        assert p_staff.get("department") == "Policy & Data"
