@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Users, ShieldCheck, Clock, CheckCircle2, RotateCcw, XCircle, Phone, Mail, MapPin, Calendar, ArrowRight, Pencil } from "lucide-react";
+import { Plus, Search, Users, ShieldCheck, Clock, CheckCircle2, RotateCcw, XCircle, Phone, Mail, MapPin, Calendar, ArrowRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +10,51 @@ import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import AddClientModal from "@/components/clients/AddClientModal";
 import EditClientModal from "@/components/clients/EditClientModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { clientsApi } from "@/api/clients";
 import { api } from "@/api";
 import { useToast } from "@/components/ui/use-toast";
+
+const SUPERVISOR_UPWARD_ROLES = [
+  "supervisor",
+  "resource_supervisor",
+  "director_manager",
+  "resource_director",
+  "director",
+  "manager",
+  "executive_director",
+  "ceo",
+  "chief_executive_officer",
+  "it_admin",
+  "admin",
+  "administrator",
+  "system_admin",
+  "super_admin",
+  "system administrator",
+];
+
+function hasSupervisorOrAboveAuthority(u) {
+  if (!u || typeof u !== "object") return false;
+  const email = String(u?.email || "").toLowerCase().trim();
+  if (email === "admin@crbcl.ca" || email.startsWith("admin@")) return true;
+  const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+  const normalized = roles.map((r) =>
+    String(typeof r === "string" ? r : (r?.key || r?.name || "")).toLowerCase().trim()
+  );
+  if (normalized.some((r) => SUPERVISOR_UPWARD_ROLES.includes(r))) return true;
+  const perms = Array.isArray(u?.permissions) ? u.permissions : [];
+  if (perms.includes("client.delete") || perms.includes("client.approve")) return true;
+  return false;
+}
 
 export default function Clients() {
   const navigate = useNavigate();
@@ -24,23 +66,44 @@ export default function Clients() {
   const [activeTab, setActiveTab] = useState("ALL");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  const [clientToDelete, setClientToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [clientToRestore, setClientToRestore] = useState(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [clientToPurge, setClientToPurge] = useState(null);
+  const [isPurging, setIsPurging] = useState(false);
+  const [serverCounts, setServerCounts] = useState({ all: 0, approved: 0, pending: 0, returned: 0, trash: 0 });
   const [canApprove, setCanApprove] = useState(() => {
     try {
       const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
-      const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
-      const normalized = roles.map(r => String(typeof r === "string" ? r : (r?.key || r?.name || "")).toLowerCase().trim());
-      return normalized.some(r => ["supervisor", "director_manager", "executive_director", "ceo", "it_admin", "admin"].includes(r));
+      return hasSupervisorOrAboveAuthority(u);
     } catch {
       return false;
     }
   });
 
-  const loadClients = async () => {
+  const [canDelete, setCanDelete] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
+      return hasSupervisorOrAboveAuthority(u);
+    } catch {
+      return false;
+    }
+  });
+
+  const loadClients = async (tab = activeTab) => {
     try {
       setLoading(true);
-      const res = await clientsApi.listFiltered(null, 100, 0);
+      const isTrash = tab === "TRASH";
+      const [res, countRes] = await Promise.all([
+        clientsApi.listFiltered(isTrash ? null : (tab === "ALL" ? null : tab), 100, 0, isTrash),
+        clientsApi.getCounts(),
+      ]);
       const items = Array.isArray(res) ? res : res?.items || [];
       setClients(items);
+      if (countRes) {
+        setServerCounts(countRes);
+      }
     } catch (err) {
       console.error("Failed to load clients:", err);
       toast({
@@ -54,25 +117,100 @@ export default function Clients() {
     }
   };
 
+  const handleTabChange = (val) => {
+    setActiveTab(val);
+    loadClients(val);
+  };
+
+  const handleDeleteClient = async () => {
+    if (!clientToDelete) return;
+    try {
+      setIsDeleting(true);
+      await clientsApi.delete(clientToDelete.id);
+      toast({
+        title: "Moved to Trash (45-Day Retention)",
+        description: `${clientToDelete.first_name || "Client"} ${clientToDelete.last_name || ""} has been moved to Trash. It will be kept for 45 days before permanent deletion.`,
+      });
+      setClientToDelete(null);
+      await loadClients(activeTab);
+    } catch (err) {
+      console.error("Failed to delete client:", err);
+      toast({
+        title: "Deletion Failed",
+        description: err.message || "Could not delete client record.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleRestoreClient = async () => {
+    if (!clientToRestore) return;
+    try {
+      setIsRestoring(true);
+      await clientsApi.restore(clientToRestore.id);
+      toast({
+        title: "Client Restored",
+        description: `${clientToRestore.first_name || "Client"} ${clientToRestore.last_name || ""} has been restored from the trash back to active directory.`,
+      });
+      setClientToRestore(null);
+      await loadClients(activeTab);
+    } catch (err) {
+      console.error("Failed to restore client:", err);
+      toast({
+        title: "Restore Failed",
+        description: err.message || "Could not restore client record.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const handlePermanentDeleteClient = async () => {
+    if (!clientToPurge) return;
+    try {
+      setIsPurging(true);
+      await clientsApi.permanentDelete(clientToPurge.id);
+      toast({
+        title: "Client Permanently Erased",
+        description: `${clientToPurge.first_name || "Client"} ${clientToPurge.last_name || ""} has been permanently purged from CRBCL records.`,
+      });
+      setClientToPurge(null);
+      await loadClients(activeTab);
+    } catch (err) {
+      console.error("Failed to permanently delete client:", err);
+      toast({
+        title: "Permanent Deletion Failed",
+        description: err.message || "Could not permanently delete client record.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPurging(false);
+    }
+  };
+
   useEffect(() => {
-    loadClients();
+    loadClients(activeTab);
     api?.auth?.me?.().then(u => {
       if (u) {
-        const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
-        const normalized = roles.map(r => String(typeof r === "string" ? r : (r?.key || r?.name || "")).toLowerCase().trim());
-        setCanApprove(normalized.some(r => ["supervisor", "director_manager", "executive_director", "ceo", "it_admin", "admin"].includes(r)));
+        const allowed = hasSupervisorOrAboveAuthority(u);
+        setCanApprove(allowed);
+        setCanDelete(allowed);
       }
     }).catch(() => {});
   }, []);
 
   const counts = useMemo(() => {
     return {
-      all: clients.length,
-      approved: clients.filter((c) => c.approval_status === "APPROVED").length,
-      pending: clients.filter((c) => c.approval_status === "PENDING_APPROVAL").length,
-      returned: clients.filter((c) => c.approval_status === "RETURNED").length,
+      all: serverCounts.all ?? clients.filter(c => !c.deleted_at).length,
+      approved: serverCounts.approved ?? clients.filter((c) => !c.deleted_at && c.approval_status === "APPROVED").length,
+      pending: serverCounts.pending ?? clients.filter((c) => !c.deleted_at && c.approval_status === "PENDING_APPROVAL").length,
+      returned: serverCounts.returned ?? clients.filter((c) => !c.deleted_at && c.approval_status === "RETURNED").length,
+      trash: serverCounts.trash ?? clients.filter((c) => !!c.deleted_at).length,
     };
-  }, [clients]);
+  }, [clients, serverCounts]);
 
   const filtered = useMemo(() => {
     return clients.filter((c) => {
@@ -80,6 +218,7 @@ export default function Clients() {
       if (activeTab === "APPROVED" && c.approval_status !== "APPROVED") return false;
       if (activeTab === "PENDING_APPROVAL" && c.approval_status !== "PENDING_APPROVAL") return false;
       if (activeTab === "RETURNED" && c.approval_status !== "RETURNED") return false;
+      // When activeTab === "TRASH", all items loaded are trash records
 
       // Search filter
       if (!search.trim()) return true;
@@ -207,8 +346,8 @@ export default function Clients() {
           />
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
-          <TabsList className="flex overflow-x-auto no-scrollbar sm:grid sm:grid-cols-4 h-10 bg-muted/60 p-1 w-full sm:w-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full sm:w-auto">
+          <TabsList className={`flex overflow-x-auto no-scrollbar sm:grid ${canDelete ? "sm:grid-cols-5" : "sm:grid-cols-4"} h-10 bg-muted/60 p-1 w-full sm:w-auto`}>
             <TabsTrigger value="ALL" className="text-xs px-2.5 sm:px-3 py-1.5 whitespace-nowrap flex-1 sm:flex-initial">
               All ({counts.all})
             </TabsTrigger>
@@ -221,6 +360,12 @@ export default function Clients() {
             <TabsTrigger value="RETURNED" className="text-xs px-2.5 sm:px-3 py-1.5 whitespace-nowrap flex-1 sm:flex-initial">
               Returned ({counts.returned})
             </TabsTrigger>
+            {canDelete && (
+              <TabsTrigger value="TRASH" className="text-xs px-2.5 sm:px-3 py-1.5 whitespace-nowrap flex-1 sm:flex-initial text-rose-700 dark:text-rose-400 gap-1.5 font-medium">
+                <Trash2 className="w-3.5 h-3.5" />
+                Trash ({counts.trash})
+              </TabsTrigger>
+            )}
           </TabsList>
         </Tabs>
       </div>
@@ -339,51 +484,108 @@ export default function Clients() {
                 </div>
 
                 {/* Card Footer: Submitter / Approval Audit & Actions */}
-                <div className="mt-4 pt-3 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                  <div className="truncate">
-                    {c.approval_status === "PENDING_APPROVAL" && c.submitted_by_name ? (
-                      <span className="font-medium text-amber-700 dark:text-amber-400">
-                        Submitted by {c.submitted_by_name}
-                      </span>
-                    ) : c.approval_status === "APPROVED" && c.decided_by_name ? (
-                      <span>Approved by {c.decided_by_name}</span>
-                    ) : (
-                      <span>Status: {c.status || "Active"}</span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-2 pt-1 sm:pt-0">
-                    {c.approval_status === "PENDING_APPROVAL" && canApprove && (
-                      <span
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          navigate(`/intake/approvals?tab=clients&reviewId=${c.id}`);
-                        }}
-                        className="text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-semibold inline-flex items-center gap-1 cursor-pointer bg-amber-50 dark:bg-amber-950/40 px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800/50"
-                      >
-                        <Clock className="w-3 h-3" />
-                        Review Proposal
-                      </span>
+                <div className="mt-4 pt-3 border-t border-border/60 flex flex-col gap-2 text-[11px] text-muted-foreground">
+                  {activeTab !== "TRASH" &&
+                    ((c.approval_status === "PENDING_APPROVAL" && c.submitted_by_name) ||
+                      (c.approval_status === "APPROVED" && c.decided_by_name)) && (
+                      <div className="truncate">
+                        {c.approval_status === "PENDING_APPROVAL" && c.submitted_by_name ? (
+                          <span className="font-medium text-amber-700 dark:text-amber-400">
+                            Submitted by {c.submitted_by_name}
+                          </span>
+                        ) : (
+                          <span>Approved by {c.decided_by_name}</span>
+                        )}
+                      </div>
                     )}
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setEditingClient(c);
-                      }}
-                      className="h-7 px-2 text-xs gap-1 hover:text-foreground text-muted-foreground"
-                    >
-                      <Pencil className="w-3 h-3" />
-                      <span>Edit</span>
-                    </Button>
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {activeTab === "TRASH" && canDelete ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setClientToRestore(c);
+                            }}
+                            className="h-7 px-2.5 text-xs gap-1.5 text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 border-emerald-300/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-semibold whitespace-nowrap shrink-0"
+                            title="Restore client from trash"
+                          >
+                            <RotateCcw className="w-3 h-3 shrink-0" />
+                            <span>Restore</span>
+                          </Button>
 
-                    <div className="flex items-center text-primary font-medium group-hover:translate-x-1 transition-transform ml-auto sm:ml-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setClientToPurge(c);
+                            }}
+                            className="h-7 px-2.5 text-xs gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold whitespace-nowrap shrink-0"
+                            title="Permanently erase client"
+                          >
+                            <Trash2 className="w-3 h-3 shrink-0" />
+                            <span>Delete Permanently</span>
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          {c.approval_status === "PENDING_APPROVAL" && canApprove && (
+                            <span
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                navigate(`/intake/approvals?tab=clients&reviewId=${c.id}`);
+                              }}
+                              className="text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-semibold inline-flex items-center gap-1 cursor-pointer bg-amber-50 dark:bg-amber-950/40 px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800/50 whitespace-nowrap shrink-0"
+                            >
+                              <Clock className="w-3 h-3 shrink-0" />
+                              Review Proposal
+                            </span>
+                          )}
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setEditingClient(c);
+                            }}
+                            className="h-7 px-2 text-xs gap-1 hover:text-foreground text-muted-foreground whitespace-nowrap shrink-0"
+                          >
+                            <Pencil className="w-3 h-3 shrink-0" />
+                            <span>Edit</span>
+                          </Button>
+
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setClientToDelete(c);
+                              }}
+                              className="h-7 px-2 text-xs gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10 whitespace-nowrap shrink-0"
+                              title="Move to trash (45 days retention)"
+                            >
+                              <Trash2 className="w-3 h-3 shrink-0" />
+                              <span>Delete</span>
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    <div className="inline-flex items-center whitespace-nowrap shrink-0 text-primary font-medium group-hover:translate-x-1 transition-transform ml-auto">
                       <span>View Profile</span>
-                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                      <ArrowRight className="w-3.5 h-3.5 ml-1 shrink-0" />
                     </div>
                   </div>
                 </div>
@@ -411,6 +613,87 @@ export default function Clients() {
           loadClients();
         }}
       />
+
+      {/* Delete (Move to Trash) Confirmation Dialog */}
+      <AlertDialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Move Client Record to Trash?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong className="text-foreground">{clientToDelete?.first_name} {clientToDelete?.last_name}</strong> (#{clientToDelete?.person_id_number || clientToDelete?.id})?
+              <br /><br />
+              The client record will be kept in the <strong>Trash for 45 days</strong>, during which it can be restored at any time before automated permanent purging.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteClient}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {isDeleting ? "Moving to Trash..." : "Yes, Move to Trash"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Restore Confirmation Dialog */}
+      <AlertDialog open={!!clientToRestore} onOpenChange={(open) => !open && setClientToRestore(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+              <RotateCcw className="w-5 h-5" />
+              Restore Client Record?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to restore <strong className="text-foreground">{clientToRestore?.first_name} {clientToRestore?.last_name}</strong> (#{clientToRestore?.person_id_number || clientToRestore?.id})?
+              <br /><br />
+              This record will be recovered from the Trash and returned to the active client directory and caseloads.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRestoring}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRestoreClient}
+              disabled={isRestoring}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+            >
+              {isRestoring ? "Restoring..." : "Yes, Restore Record"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Delete Confirmation Dialog */}
+      <AlertDialog open={!!clientToPurge} onOpenChange={(open) => !open && setClientToPurge(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Permanently Delete Client Record?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently erase <strong className="text-foreground">{clientToPurge?.first_name} {clientToPurge?.last_name}</strong> (#{clientToPurge?.person_id_number || clientToPurge?.id})?
+              <br /><br />
+              <span className="font-semibold text-destructive">WARNING: This action cannot be undone.</span> The client profile, notes, and canonical intake data will be permanently wiped from the database immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPurging}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePermanentDeleteClient}
+              disabled={isPurging}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium"
+            >
+              {isPurging ? "Purging Record..." : "Yes, Permanently Erase"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -35,9 +35,9 @@ export const ROLES = [
   { key: "case_aide", label: "Case Aide — Support Worker" },
   { key: "finance_staff", label: "Finance Staff — Billing & Invoices" },
   { key: "hr_staff", label: "HR Staff — Human Resources & Personnel Management" },
-  { key: "it_admin", label: "IT Administrator — Standalone System Admin" },
+  { key: "it_admin", label: "IT Admin (IT Administrator)" },
   { key: "executive_director", label: "Executive Director — Cross-Agency Leadership" },
-  { key: "ceo", label: "Chief Executive Officer (CEO) — Strategic Leadership & Governance" },
+  { key: "ceo", label: "CEO (Chief Executive Officer)" },
   { key: "board_member", label: "Board Member — Governance Oversight & Review" },
   { key: "external_worker", label: "External Worker — Partner Agency Access" },
 ];

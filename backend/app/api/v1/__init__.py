@@ -43,6 +43,7 @@ from app.api.v1.placement_matching import router as placement_matching_router
 from app.api.v1.placements import router as placements_router
 from app.api.v1.plans import router as plans_router
 from app.api.v1.policies import router as policies_router
+from app.api.v1.prevention_healing import router as prevention_healing_router
 from app.api.v1.providers import router as providers_router
 from app.api.v1.qa import router as qa_router
 from app.api.v1.referrals import router as referrals_router
@@ -82,6 +83,7 @@ api_v1_router.include_router(case_notes_router)
 api_v1_router.include_router(assessment_templates_router)
 api_v1_router.include_router(assessments_router)
 api_v1_router.include_router(plans_router)
+api_v1_router.include_router(prevention_healing_router)
 api_v1_router.include_router(active_efforts_router)
 api_v1_router.include_router(background_checks_router)
 api_v1_router.include_router(court_events_router)

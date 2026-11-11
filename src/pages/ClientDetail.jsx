@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { clientsApi, casesApi } from '@/api';
+import { api, clientsApi, casesApi } from '@/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,57 @@ import {
   Activity,
   Pencil,
   Camera,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  RotateCcw,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
 import ClientEpisodesTab from "@/components/placements/ClientEpisodesTab";
 import EditClientModal from "@/components/clients/EditClientModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const SUPERVISOR_UPWARD_ROLES = [
+  "supervisor",
+  "resource_supervisor",
+  "director_manager",
+  "resource_director",
+  "director",
+  "manager",
+  "executive_director",
+  "ceo",
+  "chief_executive_officer",
+  "it_admin",
+  "admin",
+  "administrator",
+  "system_admin",
+  "super_admin",
+  "system administrator",
+];
+
+function hasSupervisorOrAboveAuthority(u) {
+  if (!u || typeof u !== "object") return false;
+  const email = String(u?.email || "").toLowerCase().trim();
+  if (email === "admin@crbcl.ca" || email.startsWith("admin@")) return true;
+  const roles = Array.isArray(u?.roles) ? u.roles : (u?.role ? [u.role] : []);
+  const normalized = roles.map((r) =>
+    String(typeof r === "string" ? r : (r?.key || r?.name || "")).toLowerCase().trim()
+  );
+  if (normalized.some((r) => SUPERVISOR_UPWARD_ROLES.includes(r))) return true;
+  const perms = Array.isArray(u?.permissions) ? u.permissions : [];
+  if (perms.includes("client.delete") || perms.includes("client.approve")) return true;
+  return false;
+}
 
 export default function ClientDetail() {
 
@@ -39,6 +85,101 @@ export default function ClientDetail() {
 
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isPermanentDeleteDialogOpen, setIsPermanentDeleteDialogOpen] = useState(false);
+  const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
+  const tabsScrollRef = useRef(null);
+
+  const [canDelete, setCanDelete] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("crbcl_current_user") || "{}");
+      return hasSupervisorOrAboveAuthority(u);
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    api?.auth?.me?.().then((u) => {
+      if (u) {
+        setCanDelete(hasSupervisorOrAboveAuthority(u));
+      }
+    }).catch(() => {});
+  }, []);
+
+  const scrollTabs = (direction) => {
+    if (tabsScrollRef.current) {
+      const offset = direction === 'left' ? -240 : 240;
+      tabsScrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+  };
+
+  const handleDeleteClient = async () => {
+    try {
+      setIsDeleting(true);
+      await clientsApi.delete(id);
+      toast({
+        title: "Client Moved to Trash",
+        description: `Client record has been moved to Trash (held for 45 days).`,
+      });
+      navigate("/clients");
+    } catch (err) {
+      toast({
+        title: "Deletion Failed",
+        description: err.message || "Could not delete client record.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const handleRestoreClient = async () => {
+    try {
+      setIsRestoring(true);
+      await clientsApi.restore(id);
+      toast({
+        title: "Client Profile Restored",
+        description: `Client profile has been successfully restored from Trash.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['client', id] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    } catch (err) {
+      toast({
+        title: "Restore Failed",
+        description: err.message || "Could not restore client profile.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreDialogOpen(false);
+    }
+  };
+
+  const handlePermanentDeleteClient = async () => {
+    try {
+      setIsPermanentDeleting(true);
+      await clientsApi.permanentDelete(id);
+      toast({
+        title: "Client Permanently Deleted",
+        description: `Client record has been permanently purged from the system.`,
+      });
+      navigate("/clients");
+    } catch (err) {
+      toast({
+        title: "Permanent Delete Failed",
+        description: err.message || "Could not purge client record.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPermanentDeleting(false);
+      setIsPermanentDeleteDialogOpen(false);
+    }
+  };
 
   // Form states for modals/sub-resources
   const [newAllergy, setNewAllergy] = useState({ allergen: '', reaction: '', severity: 'Moderate' });
@@ -46,10 +187,10 @@ export default function ClientDetail() {
   const [newStrength, setNewStrength] = useState({ name: '' });
   const [newChallenge, setNewChallenge] = useState({ name: '', severity: 'Moderate' });
 
-  // 1. Main Client Query
+  // 1. Main Client Query (allow deleted so Trash profiles can be inspected)
   const { data: client, isLoading, error } = useQuery({
     queryKey: ['client', id],
-    queryFn: () => clientsApi.get(id),
+    queryFn: () => clientsApi.get(id, true),
   });
 
   // 2. Medical Data Query
@@ -189,22 +330,92 @@ export default function ClientDetail() {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-0 border-border/60">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setIsEditModalOpen(true)}
-              className="gap-1.5 shadow-sm"
-            >
-              <Pencil className="w-4 h-4" /> Edit Profile
-            </Button>
-            <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
-              <Link to={`/cases?client_id=${client.id}`}>
-                <FileText className="w-4 h-4 mr-1.5" /> View Cases
-              </Link>
-            </Button>
+            {client.is_deleted ? (
+              canDelete && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsRestoreDialogOpen(true)}
+                    className="gap-1.5 text-emerald-600 hover:text-emerald-700 border-emerald-500/40 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                  >
+                    <RotateCcw className="w-4 h-4" /> Restore Client
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setIsPermanentDeleteDialogOpen(true)}
+                    className="gap-1.5"
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete Permanently
+                  </Button>
+                </>
+              )
+            ) : (
+              <>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="gap-1.5 shadow-sm"
+                >
+                  <Pencil className="w-4 h-4" /> Edit Profile
+                </Button>
+                <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
+                  <Link to={`/cases?client_id=${client.id}`}>
+                    <FileText className="w-4 h-4 mr-1.5" /> View Cases
+                  </Link>
+                </Button>
+                {canDelete && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete Record
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Trash Notice Banner */}
+      {client.is_deleted && canDelete && (
+        <div className="bg-destructive/10 border-2 border-destructive/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-destructive">
+          <div className="flex items-center gap-3">
+            <Trash2 className="w-6 h-6 shrink-0" />
+            <div>
+              <p className="font-bold text-sm">
+                This client record is currently in Trash ({client.days_until_purge ?? 45} days remaining)
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Profiles in trash are hidden from normal rosters and active caseloads. You can restore this client or delete them permanently.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsRestoreDialogOpen(true)}
+              className="gap-1.5 border-emerald-500/50 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 w-full sm:w-auto"
+            >
+              <RotateCcw className="w-4 h-4" /> Restore
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setIsPermanentDeleteDialogOpen(true)}
+              className="gap-1.5 w-full sm:w-auto"
+            >
+              <Trash2 className="w-4 h-4" /> Delete Permanently
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Pending Approval Notice for Reviewers */}
       {client.approval_status === "PENDING_APPROVAL" && (
@@ -229,25 +440,53 @@ export default function ClientDetail() {
         </div>
       )}
 
-      {/* 14-Tab Detail Workspace */}
+      {/* 14-Tab Detail Workspace (Single-line straight track with scroll arrows) */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <div className="overflow-x-auto pb-1">
-          <TabsList className="bg-muted/60 p-1 h-auto flex flex-wrap gap-1">
-            <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-            <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
-            <TabsTrigger value="physical" className="text-xs">Physical Description</TabsTrigger>
-            <TabsTrigger value="medical" className="text-xs">Medical Profile</TabsTrigger>
-            <TabsTrigger value="medications" className="text-xs">Medications</TabsTrigger>
-            <TabsTrigger value="providers" className="text-xs">Providers</TabsTrigger>
-            <TabsTrigger value="schools" className="text-xs">School / Daycare</TabsTrigger>
-            <TabsTrigger value="characteristics" className="text-xs">Characteristics</TabsTrigger>
-            <TabsTrigger value="cultural" className="text-xs">Cultural Connections</TabsTrigger>
-            <TabsTrigger value="family" className="text-xs">Family</TabsTrigger>
-            <TabsTrigger value="timeline" className="text-xs">Sacred Timeline</TabsTrigger>
-            <TabsTrigger value="documents" className="text-xs">Documents</TabsTrigger>
-            <TabsTrigger value="alerts" className="text-xs">Alerts</TabsTrigger>
-            <TabsTrigger value="history" className="text-xs">Episodes & History</TabsTrigger>
-          </TabsList>
+        <div className="relative flex items-center bg-muted/60 p-1 rounded-xl border border-border/60">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 rounded-lg hover:bg-background/80 text-muted-foreground hover:text-foreground shadow-2xs"
+            onClick={() => scrollTabs('left')}
+            aria-label="Scroll tabs left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+
+          <div
+            ref={tabsScrollRef}
+            className="flex-1 overflow-x-auto scrollbar-none scroll-smooth py-0.5 px-1.5"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <TabsList className="bg-transparent p-0 h-auto flex flex-nowrap shrink-0 gap-1.5">
+              <TabsTrigger value="overview" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Overview</TabsTrigger>
+              <TabsTrigger value="basic" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Basic Info</TabsTrigger>
+              <TabsTrigger value="physical" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Physical Description</TabsTrigger>
+              <TabsTrigger value="medical" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Medical Profile</TabsTrigger>
+              <TabsTrigger value="medications" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Medications</TabsTrigger>
+              <TabsTrigger value="providers" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Providers</TabsTrigger>
+              <TabsTrigger value="schools" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">School / Daycare</TabsTrigger>
+              <TabsTrigger value="characteristics" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Characteristics</TabsTrigger>
+              <TabsTrigger value="cultural" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Cultural Connections</TabsTrigger>
+              <TabsTrigger value="family" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Family</TabsTrigger>
+              <TabsTrigger value="timeline" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Sacred Timeline</TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Documents</TabsTrigger>
+              <TabsTrigger value="alerts" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Alerts</TabsTrigger>
+              <TabsTrigger value="history" className="text-xs shrink-0 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-xs">Episodes & History</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 rounded-lg hover:bg-background/80 text-muted-foreground hover:text-foreground shadow-2xs"
+            onClick={() => scrollTabs('right')}
+            aria-label="Scroll tabs right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
         </div>
 
         {/* Tab 1: Overview */}
@@ -661,6 +900,85 @@ export default function ClientDetail() {
           queryClient.invalidateQueries({ queryKey: ['clients'] });
         }}
       />
+
+      {/* Delete Client Confirmation Modal (Move to Trash) */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Move Client to Trash?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to move <strong className="text-foreground">{client?.first_name} {client?.last_name}</strong> (#{client?.person_id_number || client?.id}) to the Trash?
+              The record will be kept in Trash for <strong>45 days</strong> before being permanently purged, during which it can be restored at any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteClient}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {isDeleting ? "Moving..." : "Move to Trash"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Restore Client Confirmation Modal */}
+      <AlertDialog open={isRestoreDialogOpen} onOpenChange={setIsRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-emerald-600">
+              <RotateCcw className="w-5 h-5" />
+              Restore Client Profile?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Restore <strong className="text-foreground">{client?.first_name} {client?.last_name}</strong> (#{client?.person_id_number || client?.id}) back to active directories?
+              The client will immediately reappear in the active clients directory and caseload rosters.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRestoring}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRestoreClient}
+              disabled={isRestoring}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {isRestoring ? "Restoring..." : "Restore Client"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Delete Confirmation Modal */}
+      <AlertDialog open={isPermanentDeleteDialogOpen} onOpenChange={setIsPermanentDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Permanently Delete Client Record?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              ⚠️ <strong className="text-destructive font-semibold">Warning: This action is permanent and cannot be undone.</strong>
+              <br /><br />
+              All data associated with <strong className="text-foreground">{client?.first_name} {client?.last_name}</strong> will be irreversibly purged from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPermanentDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePermanentDeleteClient}
+              disabled={isPermanentDeleting}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {isPermanentDeleting ? "Purging..." : "Permanently Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
