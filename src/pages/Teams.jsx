@@ -193,12 +193,12 @@ export default function Teams() {
         })}
       </div>
 
-      {/* Department Dashboards & Specialized Shells */}
+      {/* Preliminary Department Shells */}
       <div className="pt-8 border-t border-border space-y-4">
         <div>
-          <h2 className="text-lg font-bold font-heading text-foreground">Department Dashboards & Specialized Shells</h2>
+          <h2 className="text-lg font-bold font-heading text-foreground">Preliminary Department Shells</h2>
           <p className="text-xs text-muted-foreground">
-            Specialized department operational dashboards and preliminary service shells for agency programs.
+            This is a preliminary department dashboard shell. Department-specific workflows, information, reporting, and access requirements are pending confirmation.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -243,29 +243,6 @@ export default function Teams() {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                   This is a preliminary department dashboard shell. Department-specific workflows, information, reporting, and access requirements are pending confirmation.
-                </p>
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate("/policy-data")}
-            className="bg-card rounded-xl border border-border p-5 text-left transition-all hover:shadow-md hover:border-primary/30 cursor-pointer group"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-11 h-11 rounded-xl bg-purple-700 flex items-center justify-center flex-shrink-0 text-white">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-foreground text-sm leading-tight">Policy & Data</p>
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-700 dark:text-purple-300 font-semibold">Department</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary flex-shrink-0 transition-colors" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  Operational governance, agency policy lifecycle, data analytics, and company policy management.
                 </p>
               </div>
             </div>
