@@ -16,7 +16,6 @@ Tables created:
 from __future__ import annotations
 
 import uuid
-from decimal import Decimal
 
 import sqlalchemy as sa
 from alembic import op

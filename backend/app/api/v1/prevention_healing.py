@@ -50,14 +50,14 @@ import hashlib
 import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from io import BytesIO
 from typing import Any
 
+import openpyxl
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from io import BytesIO
 from pydantic import BaseModel
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-import openpyxl
 
 from app.auth.security import hash_password
 from app.core import get_settings
@@ -68,10 +68,10 @@ from app.models.prevention_healing import (
     EnhancementProgram,
     FamilySupportRecord,
     OtherNationsSupport,
+    PendingStaffProfile,
     PHClientRef,
     PHImportBatch,
     PHImportRow,
-    PendingStaffProfile,
 )
 from app.models.user import User
 from app.permissions.constants import Permissions
@@ -634,7 +634,7 @@ async def verify_and_link_staff(
     current_user: User = Depends(require_permission(Permissions.PH_STAFF_ONBOARD_MANAGE)),
 ):
     """Verify an employee's contact details and link historical records.
-    
+
     IMPORTANT: This creates or matches an Employee record and links historical
     prevention records. It strictly DOES NOT create a login User account.
     Staff members cannot authenticate until an account is separately activated.
@@ -1293,7 +1293,7 @@ async def analyze_import(
     try:
         wb = openpyxl.load_workbook(BytesIO(contents), data_only=True)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to parse Excel file: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to parse Excel file: {e}") from e
 
     # Determine which worksheet to use
     sheet_name = worksheet_name
@@ -1717,7 +1717,7 @@ async def analyze_import(
                     )
                     existing_matches = (await db.execute(q_dup)).scalars().all()
                     for fm in existing_matches:
-                        fm_cost = (
+                        _fm_cost = (
                             fm.expense_gift_card + fm.expense_purchase_order + fm.expense_eft +
                             fm.expense_cheque + fm.expense_credit_card + fm.expense_petty_cash + fm.expense_courtesy_card
                         )

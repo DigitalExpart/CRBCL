@@ -176,6 +176,15 @@ from app.models.plan import (  # noqa: F401
     PlanVersion,
 )
 from app.models.policy import CompanyPolicy, CompanyPolicyVersion  # noqa: F401
+from app.models.prevention_healing import (  # noqa: F401
+    EnhancementProgram,
+    FamilySupportRecord,
+    OtherNationsSupport,
+    PendingStaffProfile,
+    PHClientRef,
+    PHImportBatch,
+    PHImportRow,
+)
 from app.models.provider import (  # noqa: F401
     ClientProvider,
     Provider,
@@ -241,12 +250,3 @@ from app.models.team import Team, TeamMembership, UserTeamAccess  # noqa: F401
 from app.models.terminology import TerminologyKey, TerminologyTranslation  # noqa: F401
 from app.models.timeline import TimelineEvent  # noqa: F401
 from app.models.user import EmailVerificationCode, Session, User, UserPreference  # noqa: F401
-from app.models.prevention_healing import (  # noqa: F401
-    EnhancementProgram,
-    FamilySupportRecord,
-    OtherNationsSupport,
-    PHClientRef,
-    PHImportBatch,
-    PHImportRow,
-    PendingStaffProfile,
-)

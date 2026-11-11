@@ -13,7 +13,7 @@ Covers:
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -27,13 +27,11 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import AuditMixin, Base, TimestampMixin
-
 
 # ---------------------------------------------------------------------------
 # 1.  Pending Staff Onboarding Profile

@@ -33,10 +33,10 @@ from app.models.prevention_healing import (
     EnhancementProgram,
     FamilySupportRecord,
     OtherNationsSupport,
+    PendingStaffProfile,
     PHClientRef,
     PHImportBatch,
     PHImportRow,
-    PendingStaffProfile,
 )
 
 
